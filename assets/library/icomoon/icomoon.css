@@ -25,14 +25,8 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-facebook .path1:before {
+.icon-facebook:before {
   content: "\e908";
-  color: rgb(0, 0, 0);
-}
-.icon-facebook .path2:before {
-  content: "\e909";
-  margin-left: -1em;
-  color: rgb(250, 250, 250);
 }
 .icon-gallery:before {
   content: "\e90a";

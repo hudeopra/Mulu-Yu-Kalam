@@ -68,7 +68,7 @@
                     <h1>Ink Your Story</h1>
                 </div>
                 <div class="ph-banner__protfolio ">
-                    <a href="#" class="ph-btn">portfolio</a>
+                    <a href="#" class="ph-btn "> <i class="icon-gallery"></i><span class=""> Portfolio</span><span class="ph-btn__extra">Enjoy</span></a>
                 </div>
             </section>
             <section class="ph-about">
@@ -87,10 +87,8 @@
                             </li>
                             <li>
                                 <a href="">
-                                    <span class="icon-facebook">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </span>
+                                    <i class="icon-facebook">
+                                    </i>
                                 </a>
                             </li>
                             <li>
@@ -233,24 +231,39 @@
                         </div>
                         <div class="col-6">
                             <div class="ph-contact__form">
-                                <form action="" method="POST">
+                                <form action="" method="POST" id="appointment_form">
                                     <div class="ph-contact__form--option">
                                         <p>
                                             I wanna have tattoo in...
                                         </p>
                                         <div class="ph-option__item">
-                                            <input type="radio" id="Arm" name="tattoo_location" value="Arm">
-                                            <input type="radio" id="Back" name="tattoo_location" value="Back">
-                                            <input type="radio" id="Leg" name="tattoo_location" value="Leg">
-                                            <input type="radio" id="Chest" name="tattoo_location" value="Chest">
-                                            <input type="radio" id="Other" name="tattoo_location" value="Other">
+                                            <div class="ph-option__item--radio">
+                                                <input type="radio" id="arm-tattoo" name="tattoo_location" aria-label="arm" value="Arm">
+                                                <label for="arm-tattoo">Arm</label>
+                                            </div>
+                                            <div class="ph-option__item--radio">
+                                                <input type="radio" id="back-tattoo" name="tattoo_location" aria-label="back" value="Back">
+                                                <label for="back-tattoo">Back</label>
+                                            </div>
+                                            <div class="ph-option__item--radio">
+                                                <input type="radio" id="leg-tattoo" name="tattoo_location" aria-label="leg" value="Leg">
+                                                <label for="leg-tattoo">Leg</label>
+                                            </div>
+                                            <div class="ph-option__item--radio">
+                                                <input type="radio" id="chest-tattoo" name="tattoo_location" aria-label="chest" value="Chest">
+                                                <label for="chest-tattoo">Chest</label>
+                                            </div>
+                                            <div class="ph-option__item--radio">
+                                                <input type="radio" id="other-tattoo" name="tattoo_location" aria-label="other" value="Other">
+                                                <label for="other-tattoo">Other</label>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="ph-contact__form--input">
                                         <div class="ph-input-wrapper">
                                             <input type="text" name="" id="" placeholder="Your Name">
                                         </div>
-                                        <div class="phphalf">
+                                        <div class="ph-half">
                                             <div class="ph-input-wrapper">
                                                 <input type="email" name="" id="" placeholder="Your Email">
                                             </div>
@@ -258,7 +271,7 @@
                                                 <input type="text" name="" id="" placeholder="Your Phone No.">
                                             </div>
                                         </div>
-                                        <div class="phphalf">
+                                        <div class="ph-half">
                                             <div class="ph-input-wrapper">
                                                 <input type="time" name="" id="" placeholder="appointment">
                                             </div>
@@ -266,7 +279,8 @@
                                                 <input type="date" name="" id="" placeholder="appointment.">
                                             </div>
                                         </div>
-                                        <input type="submit" value="Book Appointment">
+                                        <button type="submit" form="appointment_form" value="Submit"><i class="icon-submit"></i>Book Appointment</button>
+
                                     </div>
                                 </form>
                             </div>
@@ -277,10 +291,12 @@
         </main>
         <footer>
             <div class="container">
-                <div class="row">
-                    <p>
-                        copyright
-                    </p>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-6 text-center">
+                        <p>
+                            Copyright © 2023 Mulu Yu kalam. All rights reserved.
+                        </p>
+                    </div>
                 </div>
             </div>
         </footer>

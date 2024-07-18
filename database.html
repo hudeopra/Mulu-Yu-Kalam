@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prabin Movie Rating</title>
+
+<!-- google fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600;700&amp;family=Roboto+Slab:wght@100..900&amp;display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+    body {
+      background-color: #f1f5f9;
+      font-family: "Josefin Sans", sans-serif;
+    }
+  
+    tbody tr:nth-of-type(odd) {
+      background-color: #f2f2f2 !important; /* Decide on the desired background color */
+    }
+  
+    .table {
+      background-color: #ffffff; /* White background for table */
+      box-shadow: 0px 4px 8px 2px rgba(0, 0, 0, 0.2);
+    }
+  
+    thead ,.modal-header{
+      background-color: #019879;
+      color: #fff;
+    }
+  
+    th {
+    }
+    tbody tr:hover{
+        color: #07976E;
+    }
+  
+    .table td,
+    .table th {
+      border: 0;
+      font-weight: 600 !important;
+      align-content: center;
+    }
+  
+    .table tr {
+      transition: background-color 0.3s ease; /* Smooth background color transition */
+    }
+  
+    .btn-sort {
+      width: 25px;
+      height: 25px;
+      padding: 0;
+      cursor: pointer; /* Move cursor property here */
+    }
+  
+    .btn-edit,
+    .btn-delete {
+      padding: 5px;
+    }
+  
+    .dropdown-item.active,
+    .dropdown-item:active,
+    .dropdown-item:focus,
+    .dropdown-item:hover {
+      background-color: #019879 !important;
+    }
+    .main-body{
+        max-width: 1200px;
+        margin: auto;
+        padding: 120px 15px;
+    }
+    header{
+        padding: 10px 50px;
+        background-color: #019879;
+        color: #fff;
+    }
+    .close span{
+        font-size: 20px;
+    }
+   .table-head:hover,footer{
+    background-color: #016e59;
+   }
+   footer{
+    color: #fff;
+   }
+   main{
+    height: calc(100vh - 90px);
+   }
+   p{
+    margin-bottom: 0;
+    font-weight: bold;
+   }
+  </style>
+  
+</head>
+<body>
+    
+  <header class="d-flex justify-content-between align-items-center">
+    
+    <h4>tattoo Database</h4>
+  </header>
+  <main class="main-body">
+      <table class="table">
+          <thead>
+              <tr>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between">
+                      <span>timestamp</span> 
+                    <span class="dropdown-item btn-sort" data-sort="timestamp">
+                      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                    </span>
+                    </div>
+                  </th>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between"><span>name</span>
+                      <span class="dropdown-item btn-sort" data-sort="name">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                      </span>
+
+                    </div></th>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between">
+                      <span>email</span> 
+                      <span class="dropdown-item btn-sort" data-sort="email">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                      </span>
+
+                    </div>
+                  </th>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between"><span>number</span> 
+                      <span class="dropdown-item btn-sort" data-sort="number">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                      </span>
+                    </div>
+                  </th>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between"><span>tattooLocation</span> 
+                      <span class="dropdown-item btn-sort" data-sort="tattooLocation">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                      </span>
+                    </div>
+                  </th>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between"><span>appointmentDate</span> 
+                      <span class="dropdown-item btn-sort" data-sort="appointmentDate">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                      </span>
+                    </div>
+                  </th>
+                  <th class="table-head">
+                    <div class="d-flex justify-content-between"><span>appointmentTime</span> 
+                      <span class="dropdown-item btn-sort" data-sort="appointmentTime">
+                        <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%" x="0" y="0" viewBox="0 0 24 24" style="enable-background:new 0 0 512 512" xml:space="preserve" class=""><g><path fill="#fff" fill-rule="evenodd" d="m12.47 15.53 3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V6a.75.75 0 0 0-1.5 0v10.19l-1.72-1.72a.75.75 0 1 0-1.06 1.06zM8.53 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 1.06 1.06l1.72-1.72V18a.75.75 0 0 0 1.5 0V7.81l1.72 1.72a.75.75 0 1 0 1.06-1.06z" clip-rule="evenodd" opacity="1" data-original="#fff" class=""></path></g></svg>
+                      </span>
+                    </div>
+                  </th>
+              
+              </tr>
+          </thead>
+          <tbody id="ratingsList">
+              <!-- Movie list with rating display container -->
+          </tbody>
+      </table>
+  </main>
+  <footer class="text-center p-2">
+    <p>Prabin Maharjan | UID: 2358823</p>
+  </footer>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>

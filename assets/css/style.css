@@ -65,6 +65,10 @@ input[type=text]:active, input[type=text]:focus, input[type=text]:focus-visible,
   outline: 0;
 }
 
+input[type=text]:visited, input[type=email]:visited, input[type=time]:visited, input[type=date]:visited {
+  color: red;
+}
+
 .ph-half {
   display: -webkit-box;
   display: -ms-flexbox;

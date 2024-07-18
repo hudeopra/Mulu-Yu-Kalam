@@ -42,6 +42,9 @@ input[type=text],input[type=email],input[type=time],input[type=date]{
         color: #2E0249;
         outline: 0;
     }
+    &:visited{
+        color: red;
+    }
 }
 .ph-half{
     display: flex;

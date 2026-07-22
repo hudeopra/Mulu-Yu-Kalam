@@ -6,9 +6,9 @@ This file tracks the operational execution across the 5 project phases. Tasks wi
 
 ## Phase 1: Core Setup & Client-Side Compression
 
-- [ ] **1.1 Configure Environment**: Update `.gitignore` to prevent `.env` leaks, create `.env` with Supabase keys, and commit `.env.example`.
-- [ ] **1.2 Install Dependencies**: Run `pnpm add @supabase/supabase-js react-router-dom`.
-- [ ] **1.3 Create Supabase Client**: Create `src/lib/supabase.ts` singleton client with TypeScript types and `VITE_`/`NEXT_PUBLIC_` fallback.
+- [x] **1.1 Configure Environment**: Update `.gitignore` to prevent `.env` leaks, create `.env` with Supabase keys, and commit `.env.example`.
+- [x] **1.2 Install Dependencies**: Run `pnpm add @supabase/supabase-js react-router`.
+- [x] **1.3 Create Supabase Client**: Create `src/lib/supabase.ts` singleton client with TypeScript types and `VITE_`/`NEXT_PUBLIC_` fallback.
 - [ ] **1.4 Build Canvas Compressor**: Implement `src/utils/imageCompressor.ts` using native HTML5 `<canvas>` to downscale (max 1600px) and enforce size <= 500KB.
 - [ ] **1.5 Upgrade FileUpload UI**: Update `src/components/FileUpload.tsx` to auto-compress on select/drop, show reduction badge, and display preview.
 

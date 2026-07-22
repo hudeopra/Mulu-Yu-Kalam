@@ -59,8 +59,7 @@ This log documents the entire architectural journey, implementation history, tec
 ### Milestone 4: Supabase Database & Storage Integration
 
 - **Supabase Instance**:
-  - URL: `https://ffvlzlabxetifjybthiw.supabase.co`
-  - Publishable Key: `sb_publishable_CDY3Eq0h6heollZziPlARQ_quQQKLtp`
+  - Configured via environment variables (`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`) in `.env`.
 - **Finalized Database Table**: `public.appointments`
   - Columns: `id`, `created_at`, `updated_at`, `tattoo_location`, `name`, `email`, `phone`, `appointment_date`, `appointment_time`, `reference_image_url`, `notes`, `internal_notes`, `estimated_price`, `deposit_status`, `status`.
   - Row Level Security (RLS) policies for `anon` INSERT/SELECT and `authenticated` ALL.

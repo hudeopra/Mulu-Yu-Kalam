@@ -93,7 +93,7 @@ create policy "Staff can delete appointments"
 
 - **Public Marketing & Appointment Landing Page** (`mulu-yu-kalam`): Public-facing (`anon` role), lightweight, fast, no administrative bundles.
 - **Internal Invoicing & Studio Management** (`invoice-generator`): Private/internal tool for studio staff.
-- **Shared Database Model**: Both point to `https://ffvlzlabxetifjybthiw.supabase.co`. When a visitor books an appointment, it writes directly into `public.appointments`. Your invoicing app can immediately read this table to view bookings or convert clients into `customers` and `invoices`.
+- **Shared Database Model**: Both point to the same Supabase project (configured via `VITE_SUPABASE_URL`). When a visitor books an appointment, it writes directly into `public.appointments`. Your invoicing app can immediately read this table to view bookings or convert clients into `customers` and `invoices`.
 
 ---
 

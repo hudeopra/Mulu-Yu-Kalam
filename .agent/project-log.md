@@ -96,7 +96,41 @@ This log documents the entire architectural journey, implementation history, tec
     - Interactive status toggling (`pending` 🟡, `confirmed` 🟢, `completed` 🔵, `canceled` 🔴).
     - Record price estimates, deposit status, and staff internal notes.
     - Delete canceled records.
-- **Architecture**: Client-side routing with `react-router-dom` cleanly separating `/` (public landing), `/login`, and `/admin` (guarded dashboard).
+- **Architecture**: Client-side routing with `react-router` cleanly separating `/` (public landing), `/login`, and `/admin` (guarded dashboard).
+
+---
+
+### Milestone 7: Client/Device Rate Limiting Guard
+
+- **Requirements**: Guard against spam and DB exhaustion by limiting submissions per device/browser.
+- **Solution**:
+  - Implemented `src/utils/rateLimiter.ts` using timestamp arrays in `localStorage`.
+  - Enforces a strict maximum of **3 submissions per device within a 24-hour window**.
+  - Provides a self-purging expiration mechanism and friendly time formatting (`X hours Y minutes remaining`).
+  - Integrated into `src/components/AppointmentForm.tsx` before triggering image uploads or database writes.
+
+---
+
+### Milestone 8: Full Appointments Dashboard & Detailed Inspector Modal
+
+- **Components Implemented**:
+  - `src/components/admin/AppointmentDetailModal.tsx`:
+    - Direct communication links: WhatsApp (`wa.me`), Call (`tel:`), and Email (`mailto:`).
+    - Artwork reference viewer with high-res zoom lightbox & download button.
+    - Interactive status pills (`pending`, `confirmed`, `completed`, `canceled`) with immediate Supabase update.
+    - Session rescheduling (date picker & time slot inputs).
+    - Pricing quotes & deposit status (`unpaid`, `partial`, `paid`).
+    - Private internal staff notes.
+    - Danger zone record deletion with confirmation safeguards.
+  - `src/pages/AdminDashboard.tsx`:
+    - Real-time Supabase postgres change subscription (`appointments-realtime-feed`) for instant live updates.
+    - Dynamic studio metrics cards (Total, Pending Action Needed, Confirmed, Completed).
+    - Status filtering tabs with live counters.
+    - Search bar filtering by client name, email, phone, and tattoo placement.
+    - Sort toggles (Newest first vs Upcoming session date).
+    - Desktop table layout and mobile card responsiveness.
+  - `src/App.tsx`:
+    - Code splitting with `React.lazy` and `Suspense` for administrative pages to keep public landing bundle lean.
 
 ---
 

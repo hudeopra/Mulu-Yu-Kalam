@@ -10,6 +10,8 @@ import {
   User,
   Mail,
   Phone,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import {
   appointmentSchema,
@@ -17,10 +19,13 @@ import {
   tattooLocations,
 } from "../schemas/appointmentSchema";
 import { FileUpload } from "./FileUpload";
+import { supabase, type Appointment } from "../lib/supabase";
 
 export const AppointmentForm: React.FC = () => {
-  const [submittedData, setSubmittedData] =
-    useState<AppointmentFormData | null>(null);
+  const [createdAppointment, setCreatedAppointment] =
+    useState<Appointment | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string>("");
 
   const {
     register,
@@ -43,64 +48,146 @@ export const AppointmentForm: React.FC = () => {
     mode: "onTouched",
   });
 
-  const onSubmit = (data: AppointmentFormData) => {
-    // Purely local submission handling as requested
-    console.log("Locally submitted appointment data:", data);
-    setSubmittedData(data);
+  const onSubmit = async (data: AppointmentFormData) => {
+    setSubmissionError(null);
+
+    try {
+      let referenceImageUrl: string | null = null;
+
+      // 1. Upload compressed reference image to Supabase Storage if present
+      if (data.referenceFile) {
+        setStatusMessage("Uploading reference artwork to Supabase...");
+        const cleanName = data.referenceFile.name.replace(
+          /[^a-zA-Z0-9._-]/g,
+          "_",
+        );
+        const filePath = `${Date.now()}-${cleanName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("tattoo-references")
+          .upload(filePath, data.referenceFile, {
+            contentType: data.referenceFile.type,
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error(
+            `Failed to upload reference artwork: ${uploadError.message}`,
+          );
+        }
+
+        const { data: urlData } = supabase.storage
+          .from("tattoo-references")
+          .getPublicUrl(filePath);
+
+        referenceImageUrl = urlData.publicUrl;
+      }
+
+      // 2. Insert record into Supabase public.appointments
+      setStatusMessage("Booking your session in studio database...");
+
+      const { data: record, error: insertError } = await supabase
+        .from("appointments")
+        .insert({
+          tattoo_location: data.tattooLocation,
+          name: data.name,
+          email: data.email,
+          phone: data.number,
+          appointment_date: data.appointmentDate,
+          appointment_time: data.appointmentTime,
+          reference_image_url: referenceImageUrl,
+          notes: data.notes || null,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        throw new Error(`Failed to record appointment: ${insertError.message}`);
+      }
+
+      setCreatedAppointment(record as Appointment);
+    } catch (err: unknown) {
+      console.error("Submission error:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred. Please try again.";
+      setSubmissionError(message);
+    } finally {
+      setStatusMessage("");
+    }
   };
 
   const handleBookAnother = () => {
-    setSubmittedData(null);
+    setCreatedAppointment(null);
+    setSubmissionError(null);
     reset();
   };
 
   return (
     <div className="bg-[#f2f2f2] rounded-3xl p-6 sm:p-10 shadow-xl border border-black/5">
-      {submittedData ? (
-        <div className="text-center py-8 space-y-6 animate-in fade-in zoom-in-95 duration-300">
+      {createdAppointment ? (
+        <div className="text-center py-6 space-y-6 animate-in fade-in zoom-in-95 duration-300">
           <div className="w-16 h-16 bg-[#ffecd0] text-[#ff7b01] rounded-full flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle2 className="w-10 h-10" />
           </div>
+
           <div>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#ff7b01] bg-[#ffecd0] px-3 py-1 rounded-full mb-2">
+              <Sparkles className="w-3.5 h-3.5" /> Booking Recorded
+            </span>
             <h3 className="text-2xl sm:text-3xl font-bold text-[#2e0249]">
-              Appointment Booked!
+              Appointment Confirmed!
             </h3>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
               Thank you,{" "}
               <span className="font-semibold text-[#ff7b01]">
-                {submittedData.name}!
+                {createdAppointment.name}
               </span>
-              Your request has been recorded. We will contact you soon as
-              possible.
+              ! Your session request is saved in the studio system.
             </p>
           </div>
 
           <div className="bg-white rounded-2xl p-5 text-left max-w-md mx-auto space-y-3 shadow-sm border border-orange-100 text-sm">
             <div className="flex justify-between border-b pb-2">
+              <span className="text-gray-500">Booking ID:</span>
+              <span
+                className="font-mono text-xs text-gray-700 truncate max-w-[200px]"
+                title={createdAppointment.id}
+              >
+                {createdAppointment.id.slice(0, 8)}...
+              </span>
+            </div>
+            <div className="flex justify-between border-b pb-2">
               <span className="text-gray-500">Placement:</span>
               <span className="font-bold text-[#2e0249]">
-                {submittedData.tattooLocation}
+                {createdAppointment.tattoo_location}
               </span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-gray-500">Date & Time:</span>
               <span className="font-bold text-[#2e0249]">
-                {submittedData.appointmentDate} at{" "}
-                {submittedData.appointmentTime}
+                {createdAppointment.appointment_date} at{" "}
+                {createdAppointment.appointment_time}
               </span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-gray-500">Contact:</span>
               <span className="font-bold text-[#2e0249]">
-                {submittedData.number} ({submittedData.email})
+                {createdAppointment.phone} ({createdAppointment.email})
               </span>
             </div>
-            {submittedData.referenceFile && (
-              <div className="flex justify-between items-center pt-1">
-                <span className="text-gray-500">Reference:</span>
-                <span className="font-medium text-[#ff7b01] truncate max-w-[200px]">
-                  {submittedData.referenceFile.name}
+            {createdAppointment.reference_image_url && (
+              <div className="pt-2">
+                <span className="text-gray-500 block mb-2">
+                  Uploaded Reference:
                 </span>
+                <img
+                  src={createdAppointment.reference_image_url}
+                  alt="Tattoo reference"
+                  className="w-20 h-20 object-cover rounded-xl border border-gray-200 shadow-sm"
+                />
               </div>
             )}
           </div>
@@ -119,6 +206,16 @@ export const AppointmentForm: React.FC = () => {
           noValidate
           className="space-y-8"
         >
+          {submissionError && (
+            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Unable to complete appointment</p>
+                <p className="text-xs text-red-600 mt-0.5">{submissionError}</p>
+              </div>
+            </div>
+          )}
+
           {/* Tattoo Location Radio Selector */}
           <div className="space-y-3">
             <label className="block text-base font-semibold text-gray-800">
@@ -157,7 +254,7 @@ export const AppointmentForm: React.FC = () => {
             )}
           </div>
 
-          {/* Text Inputs */}
+          {/* Inputs Section */}
           <div className="space-y-6">
             {/* Name Input */}
             <div>
@@ -182,9 +279,8 @@ export const AppointmentForm: React.FC = () => {
               )}
             </div>
 
-            {/* Email and Phone number row */}
+            {/* Email & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Email */}
               <div>
                 <div className="relative">
                   <Mail className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
@@ -207,7 +303,6 @@ export const AppointmentForm: React.FC = () => {
                 )}
               </div>
 
-              {/* Phone number */}
               <div>
                 <div className="relative">
                   <Phone className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
@@ -231,9 +326,8 @@ export const AppointmentForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Time and Date row */}
+            {/* Time & Date */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Time */}
               <div>
                 <div className="relative">
                   <Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
@@ -256,7 +350,6 @@ export const AppointmentForm: React.FC = () => {
                 )}
               </div>
 
-              {/* Date */}
               <div>
                 <div className="relative">
                   <Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
@@ -294,16 +387,31 @@ export const AppointmentForm: React.FC = () => {
             />
           </div>
 
-          {/* Submit Button */}
-          <div>
+          {/* Submit Button & Live Status */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <button
               type="submit"
               disabled={isSubmitting}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#ff7b01] text-white font-bold text-base shadow-lg shadow-[#ff7b01]/30 hover:bg-[#e66f00] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
             >
-              <Send className="w-5 h-5" />
-              <span>{isSubmitting ? "Booking..." : "Book Appointment"}</span>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  <span>Book Appointment</span>
+                </>
+              )}
             </button>
+
+            {isSubmitting && statusMessage && (
+              <span className="text-xs sm:text-sm font-semibold text-[#ff7b01] animate-pulse">
+                {statusMessage}
+              </span>
+            )}
           </div>
         </form>
       )}

@@ -9,15 +9,15 @@ This file tracks the operational execution across the 5 project phases. Tasks wi
 - [x] **1.1 Configure Environment**: Update `.gitignore` to prevent `.env` leaks, create `.env` with Supabase keys, and commit `.env.example`.
 - [x] **1.2 Install Dependencies**: Run `pnpm add @supabase/supabase-js react-router`.
 - [x] **1.3 Create Supabase Client**: Create `src/lib/supabase.ts` singleton client with TypeScript types and `VITE_`/`NEXT_PUBLIC_` fallback.
-- [ ] **1.4 Build Canvas Compressor**: Implement `src/utils/imageCompressor.ts` using native HTML5 `<canvas>` to downscale (max 1600px) and enforce size <= 500KB.
-- [ ] **1.5 Upgrade FileUpload UI**: Update `src/components/FileUpload.tsx` to auto-compress on select/drop, show reduction badge, and display preview.
+- [x] **1.4 Build Canvas Compressor**: Implement `src/utils/imageCompressor.ts` using native HTML5 `<canvas>` to downscale (max 1600px) and enforce size <= 500KB.
+- [x] **1.5 Upgrade FileUpload UI**: Update `src/components/FileUpload.tsx` to auto-compress on select/drop, show reduction badge, and display preview.
 
 ## Phase 2: Booking Form & Database Pipeline
 
-- [ ] **2.1 Update Zod Schema**: Update `src/schemas/appointmentSchema.ts` with strict 500KB validation rule.
-- [ ] **2.2 Storage Upload**: Connect form to upload compressed file to `tattoo-references` bucket and obtain public URL.
-- [ ] **2.3 Database Insert**: Insert booking record into `public.appointments` table.
-- [ ] **2.4 UI States & Confirmation**: Add loading states ("Optimizing...", "Uploading...", "Booking...") and show confirmation card with Supabase UUID.
+- [x] **2.1 Update Zod Schema**: Update `src/schemas/appointmentSchema.ts` with strict 500KB validation rule.
+- [x] **2.2 Storage Upload**: Connect form to upload compressed file to `tattoo-references` bucket and obtain public URL.
+- [x] **2.3 Database Insert**: Insert booking record into `public.appointments` table.
+- [x] **2.4 UI States & Confirmation**: Add loading states ("Optimizing...", "Uploading...", "Booking...") and show confirmation card with Supabase UUID.
 
 ## Phase 3: Authentication & Security Guard
 

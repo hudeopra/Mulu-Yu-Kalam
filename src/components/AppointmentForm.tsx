@@ -68,9 +68,10 @@ export const AppointmentForm: React.FC = () => {
             <p className="text-gray-600 mt-2">
               Thank you,{" "}
               <span className="font-semibold text-[#ff7b01]">
-                {submittedData.name}
+                {submittedData.name}!
               </span>
-              ! Your request has been recorded locally.
+              Your request has been recorded. We will contact you soon as
+              possible.
             </p>
           </div>
 

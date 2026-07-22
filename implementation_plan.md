@@ -155,7 +155,7 @@ When clicking on an appointment, a comprehensive management drawer opens contain
 
 ---
 
-## 7. In-Browser Image Optimization & 500KB Constraint
+## 7. In-Browser Image Optimization & Rate Limiting Guard
 
 ### 7.1 Canvas Compressor Engine (`src/utils/imageCompressor.ts`)
 
@@ -165,22 +165,32 @@ When clicking on an appointment, a comprehensive management drawer opens contain
 - **Live UX Metrics**: Displays `Original size → Compressed size (-X%)`.
 - **Zod Guard**: Enforces 500KB maximum size ceiling in form schema.
 
+### 7.2 Submission Rate Limiting Guard (`src/utils/rateLimiter.ts`)
+
+- **Constraint**: Strict maximum of **3 submissions per device/browser in a rolling 24-hour window**.
+- **Mechanism**:
+  - Tracks submission timestamps in local persistent storage (`mulu_appointment_rate_limit`).
+  - Evaluates window on form submission _before_ any Supabase network query or storage upload is triggered.
+  - If limit is exceeded, blocks submission with a friendly advisory banner: _"Submission limit reached (3 bookings per 24 hours). Please contact the studio directly via phone or WhatsApp."_
+  - Automatically purges expired timestamps older than 24 hours.
+
 ---
 
 ## 8. Phased Implementation Roadmap
 
 ### Phase 1: Core Setup & Client-Side Compression
 
-- Install `@supabase/supabase-js` and `react-router-dom`.
+- Install `@supabase/supabase-js` and `react-router`.
 - Set up `.env` with Supabase keys and `.env.example`.
 - Build native HTML5 Canvas WebP image compressor with 500KB limit (`src/utils/imageCompressor.ts`).
 - Update `FileUpload.tsx` with compression metrics badge and preview.
 
-### Phase 2: Booking Form & Database Pipeline
+### Phase 2: Booking Form, Database Pipeline & Rate Limiting
 
 - Connect `AppointmentForm.tsx` to upload compressed image to `tattoo-references` bucket.
 - Insert booking record into `public.appointments`.
 - Real-time loading states and confirmation card with real Supabase UUID.
+- **Rate Limiting Guard**: Implement device/client rate limiting (`src/utils/rateLimiter.ts`) capping submissions to 3 per 24 hours. (Marked Incomplete)
 
 ### Phase 3: Authentication & Security Guard
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -12,6 +12,7 @@ import {
   Phone,
   Loader2,
   Sparkles,
+  ShieldAlert,
 } from "lucide-react";
 import {
   appointmentSchema,
@@ -20,12 +21,23 @@ import {
 } from "../schemas/appointmentSchema";
 import { FileUpload } from "./FileUpload";
 import { supabase, type Appointment } from "../lib/supabase";
+import {
+  checkRateLimit,
+  recordSubmission,
+  type RateLimitStatus,
+} from "../utils/rateLimiter";
 
 export const AppointmentForm: React.FC = () => {
   const [createdAppointment, setCreatedAppointment] =
     useState<Appointment | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [rateLimit, setRateLimit] = useState<RateLimitStatus>(checkRateLimit());
+
+  useEffect(() => {
+    // Recheck rate limit on mount
+    setRateLimit(checkRateLimit());
+  }, []);
 
   const {
     register,
@@ -51,10 +63,20 @@ export const AppointmentForm: React.FC = () => {
   const onSubmit = async (data: AppointmentFormData) => {
     setSubmissionError(null);
 
+    // 1. Guard against abuse: check 3 submissions in 24 hours limit
+    const currentLimit = checkRateLimit();
+    if (!currentLimit.isAllowed) {
+      setRateLimit(currentLimit);
+      setSubmissionError(
+        `Submission limit reached (3 bookings per 24 hours). Next booking slot frees up in ${currentLimit.formattedResetTime}. Please contact us via phone or WhatsApp for direct assistance.`,
+      );
+      return;
+    }
+
     try {
       let referenceImageUrl: string | null = null;
 
-      // 1. Upload compressed reference image to Supabase Storage if present
+      // 2. Upload compressed reference image to Supabase Storage if present
       if (data.referenceFile) {
         setStatusMessage("Uploading reference artwork to Supabase...");
         const cleanName = data.referenceFile.name.replace(
@@ -83,7 +105,7 @@ export const AppointmentForm: React.FC = () => {
         referenceImageUrl = urlData.publicUrl;
       }
 
-      // 2. Insert record into Supabase public.appointments
+      // 3. Insert record into Supabase public.appointments
       setStatusMessage("Booking your session in studio database...");
 
       const { data: record, error: insertError } = await supabase
@@ -106,6 +128,9 @@ export const AppointmentForm: React.FC = () => {
         throw new Error(`Failed to record appointment: ${insertError.message}`);
       }
 
+      // 4. Record submission in local rate limiter
+      recordSubmission();
+      setRateLimit(checkRateLimit());
       setCreatedAppointment(record as Appointment);
     } catch (err: unknown) {
       console.error("Submission error:", err);
@@ -122,6 +147,7 @@ export const AppointmentForm: React.FC = () => {
   const handleBookAnother = () => {
     setCreatedAppointment(null);
     setSubmissionError(null);
+    setRateLimit(checkRateLimit());
     reset();
   };
 
@@ -206,6 +232,25 @@ export const AppointmentForm: React.FC = () => {
           noValidate
           className="space-y-8"
         >
+          {/* Rate limit warning banner if reached */}
+          {!rateLimit.isAllowed && (
+            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-sm flex items-start gap-3 shadow-sm">
+              <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Daily Booking Limit Reached</p>
+                <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                  You have reached the maximum of 3 bookings in 24 hours from
+                  this device. Your next booking slot unlocks in{" "}
+                  <strong className="text-amber-950 font-bold">
+                    {rateLimit.formattedResetTime}
+                  </strong>
+                  . For urgent inquiries, please contact us directly via
+                  WhatsApp or Phone.
+                </p>
+              </div>
+            </div>
+          )}
+
           {submissionError && (
             <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -391,8 +436,8 @@ export const AppointmentForm: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#ff7b01] text-white font-bold text-base shadow-lg shadow-[#ff7b01]/30 hover:bg-[#e66f00] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
+              disabled={isSubmitting || !rateLimit.isAllowed}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#ff7b01] text-white font-bold text-base shadow-lg shadow-[#ff7b01]/30 hover:bg-[#e66f00] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

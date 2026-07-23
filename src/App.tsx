@@ -8,6 +8,7 @@ import { AboutSection } from "./components/AboutSection";
 import { GallerySection } from "./components/GallerySection";
 import { ContactSection } from "./components/ContactSection";
 import { Footer } from "./components/Footer";
+import { CursorTrail } from "./components/ui/CursorTrail";
 import { Loader2 } from "lucide-react";
 
 const LoginPage = lazy(() =>
@@ -31,6 +32,7 @@ const PageLoadingFallback: React.FC = () => (
 const PublicLandingPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white text-gray-900 selection:bg-[#ff7b01] selection:text-white font-sans antialiased">
+      <CursorTrail />
       <Header />
       <main className="flex-1">
         <HeroBanner />

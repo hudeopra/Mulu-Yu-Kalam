@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -30,8 +30,15 @@ const PageLoadingFallback: React.FC = () => (
 );
 
 const PublicLandingPage: React.FC = () => {
+  useEffect(() => {
+    document.body.classList.add("custom-cursor-page");
+    return () => {
+      document.body.classList.remove("custom-cursor-page");
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col bg-white text-gray-900 selection:bg-[#ff7b01] selection:text-white font-sans antialiased">
+    <div className="custom-cursor-page min-h-screen flex flex-col bg-white text-gray-900 selection:bg-[#ff7b01] selection:text-white font-sans antialiased">
       <CursorTrail />
       <Header />
       <main className="flex-1">

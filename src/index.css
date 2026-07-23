@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./custom-cursor.css";
 
 @theme {
   --font-sans: "Josefin Sans", sans-serif;

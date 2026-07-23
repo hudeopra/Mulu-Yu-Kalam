@@ -20,28 +20,28 @@ export const ContactSection: React.FC = () => {
             <ul className="space-y-4">
               <li>
                 <a
-                  href="mailto:SaulDesign@gmail.com"
+                  href="mailto:contact@muluyakalam.com.np"
                   className="flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-[#ff7b01] hover:bg-[#ffbd5b]/40 transition-all duration-200 group bg-white/40"
                 >
                   <div className="w-12 h-12 rounded-xl bg-[#ffecd0] text-[#ff7b01] flex items-center justify-center transition-transform group-hover:scale-110">
                     <Mail className="w-6 h-6" />
                   </div>
                   <span className="text-[#2e0249] font-bold text-base sm:text-lg">
-                    SaulDesign@gmail.com
+                    contact@muluyakalam.com.np
                   </span>
                 </a>
               </li>
 
               <li>
                 <a
-                  href="tel:+123456789"
+                  href="tel:+9779768404187"
                   className="flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-[#ff7b01] hover:bg-[#ffbd5b]/40 transition-all duration-200 group bg-white/40"
                 >
                   <div className="w-12 h-12 rounded-xl bg-[#ffecd0] text-[#ff7b01] flex items-center justify-center transition-transform group-hover:scale-110">
                     <Phone className="w-6 h-6" />
                   </div>
                   <span className="text-[#2e0249] font-bold text-base sm:text-lg">
-                    +123 456 789
+                    +977 976-8404187
                   </span>
                 </a>
               </li>
@@ -57,7 +57,7 @@ export const ContactSection: React.FC = () => {
                     <MapPin className="w-6 h-6" />
                   </div>
                   <span className="text-[#2e0249] font-bold text-base sm:text-lg">
-                    123 Street 456 House
+                    Harisiddhi, LMC-29, Lalitpur
                   </span>
                 </a>
               </li>
@@ -65,11 +65,11 @@ export const ContactSection: React.FC = () => {
 
             {/* Unalome spiritual symbol decoration */}
             <div className="pt-4 flex items-center">
-              <div className="p-4 bg-white/50 rounded-2xl inline-block shadow-sm">
+              <div className="p-4 inline-block ">
                 <img
-                  src="/assets/icons/unalome.svg"
+                  src="/assets/img/Mulu-Yu-Kalam.svg"
                   alt="Unalome Symbol"
-                  className="w-14 h-14 object-contain"
+                  className=" object-contain"
                 />
               </div>
             </div>

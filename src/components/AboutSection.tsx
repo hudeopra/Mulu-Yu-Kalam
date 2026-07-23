@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { MessageCircle, Camera, Share2, Video, MapPin } from "lucide-react";
 
 interface CounterProps {
   target: number;
@@ -78,7 +79,7 @@ const AnimatedCounter: React.FC<CounterProps> = ({
 
 export const AboutSection: React.FC = () => {
   return (
-    <section id="about" className="relative w-full bg-white overflow-hidden">
+    <section id="about" className="relative w-full  bg-white overflow-hidden">
       {/* Top right floating social bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="absolute right-4 sm:right-6 lg:right-8 -top-0 z-20">
@@ -89,13 +90,9 @@ export const AboutSection: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
-                className="block hover:scale-125 transition-transform"
+                className="block text-white hover:text-[#ffbd5b] hover:scale-125 transition-all"
               >
-                <img
-                  src="/assets/icons/whatsapp.svg"
-                  alt="WhatsApp"
-                  className="w-7 h-7 invert brightness-0 invert"
-                />
+                <MessageCircle className="w-7 h-7" />
               </a>
             </li>
             <li>
@@ -104,13 +101,9 @@ export const AboutSection: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="block hover:scale-125 transition-transform"
+                className="block text-white hover:text-[#ffbd5b] hover:scale-125 transition-all"
               >
-                <img
-                  src="/assets/icons/insta.svg"
-                  alt="Instagram"
-                  className="w-7 h-7 invert brightness-0 invert"
-                />
+                <Camera className="w-7 h-7" />
               </a>
             </li>
             <li>
@@ -119,13 +112,9 @@ export const AboutSection: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="block hover:scale-125 transition-transform"
+                className="block text-white hover:text-[#ffbd5b] hover:scale-125 transition-all"
               >
-                <img
-                  src="/assets/icons/facebook.svg"
-                  alt="Facebook"
-                  className="w-7 h-7 invert brightness-0 invert"
-                />
+                <Share2 className="w-7 h-7" />
               </a>
             </li>
             <li>
@@ -134,13 +123,9 @@ export const AboutSection: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
-                className="block hover:scale-125 transition-transform"
+                className="block text-white hover:text-[#ffbd5b] hover:scale-125 transition-all"
               >
-                <img
-                  src="/assets/icons/tiktok.svg"
-                  alt="TikTok"
-                  className="w-7 h-7 invert brightness-0 invert"
-                />
+                <Video className="w-7 h-7" />
               </a>
             </li>
             <li>
@@ -149,13 +134,9 @@ export const AboutSection: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Google Maps Location"
-                className="block hover:scale-125 transition-transform"
+                className="block text-white hover:text-[#ffbd5b] hover:scale-125 transition-all"
               >
-                <img
-                  src="/assets/icons/map.svg"
-                  alt="Location"
-                  className="w-7 h-7 invert brightness-0 invert"
-                />
+                <MapPin className="w-7 h-7" />
               </a>
             </li>
           </ul>
@@ -163,7 +144,7 @@ export const AboutSection: React.FC = () => {
       </div>
 
       {/* Main About content container with background vector */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 lg:py-48 bg-[url('/assets/img/bg-img.svg')] bg-no-repeat bg-contain bg-[center_160px]">
+      <div className="relative min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 lg:py-48 bg-[url('/assets/img/bg-img.svg')] bg-no-repeat bg-contain bg-size-[70%]  bg-[center_115%]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 justify-between items-center">
           {/* Text content column */}
           <div className="lg:col-span-6 space-y-6">

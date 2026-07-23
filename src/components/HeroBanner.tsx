@@ -1,12 +1,26 @@
 import React, { useState } from "react";
-import { Image as GalleryIcon } from "lucide-react";
+import { Image as GalleryIcon, Calendar } from "lucide-react";
 
 export const HeroBanner: React.FC = () => {
   const [isEnjoyActive, setIsEnjoyActive] = useState(false);
+  const [isBookingActive, setIsBookingActive] = useState(false);
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsBookingActive(true);
+    setIsEnjoyActive(false);
+    const contactElement = document.getElementById("contact");
+    if (contactElement) {
+      setTimeout(() => {
+        contactElement.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+    }
+  };
 
   const handleBtnClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsEnjoyActive(true);
+    setIsBookingActive(false);
     // Smooth scroll down to gallery
     const galleryElement = document.getElementById("gallery");
     if (galleryElement) {
@@ -32,24 +46,49 @@ export const HeroBanner: React.FC = () => {
         </h1>
       </div>
 
-      {/* Interactive CTA Portfolio button */}
-      <div className="absolute top-[48%] sm:top-[50%] lg:top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+      {/* Interactive CTA Action Buttons */}
+      <div className="absolute top-[48%] sm:top-[50%] lg:top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+        {/* Book an Appointment Button */}
+        <a
+          href="#contact"
+          onClick={handleBookClick}
+          className={`inline-flex items-center justify-center gap-3 px-7 sm:px-9 py-3.5 sm:py-4 rounded-xl text-white font-semibold text-base sm:text-lg transition-all duration-300 shadow-xl backdrop-blur-sm border border-white/20 hover:scale-105 active:scale-95 ${
+            isBookingActive
+              ? "bg-gradient-to-r from-[#ff7b01] to-[#ff4500] ring-4 ring-[#ffbd5b]/50"
+              : "bg-gradient-to-r from-[#ff7b01] via-[#e65c00] to-[#ff7b01] hover:brightness-110 shadow-orange-500/25"
+          }`}
+        >
+          <Calendar
+            className={`w-6 h-6 transition-transform ${isBookingActive ? "scale-125 rotate-12" : ""}`}
+          />
+          {!isBookingActive ? (
+            <span className="tracking-wide whitespace-nowrap">
+              Book an Appointment
+            </span>
+          ) : (
+            <span className="animate-tracking-in text-[#ffeedd] font-bold whitespace-nowrap">
+              Let's Ink!
+            </span>
+          )}
+        </a>
+
+        {/* Portfolio Button */}
         <a
           href="#gallery"
           onClick={handleBtnClick}
-          className={`inline-flex items-center gap-3 px-8 sm:px-12 py-3.5 sm:py-4 rounded-xl text-white font-semibold text-lg transition-all duration-300 shadow-xl backdrop-blur-sm border border-white/20 hover:scale-105 active:scale-95 ${
+          className={`inline-flex items-center justify-center gap-3 px-7 sm:px-9 py-3.5 sm:py-4 rounded-xl text-white font-semibold text-base sm:text-lg transition-all duration-300 shadow-xl backdrop-blur-sm border border-white/20 hover:scale-105 active:scale-95 ${
             isEnjoyActive
               ? "bg-gradient-to-r from-[#ff7b01] to-[#ff4500] ring-4 ring-[#ffbd5b]/50"
-              : "bg-gradient-to-br from-[#ff7b01] via-[#ff7b01]/80 to-black/60 hover:from-[#ff8c1a] hover:to-[#ff7b01]"
+              : "bg-gradient-to-r from-[#ff7b01] via-[#e65c00] to-[#ff7b01] hover:brightness-110 shadow-orange-500/25"
           }`}
         >
           <GalleryIcon
             className={`w-6 h-6 transition-transform ${isEnjoyActive ? "scale-125 rotate-12" : ""}`}
           />
           {!isEnjoyActive ? (
-            <span className="tracking-wide">Portfolio</span>
+            <span className="tracking-wide whitespace-nowrap">Portfolio</span>
           ) : (
-            <span className="animate-tracking-in text-[#ffeedd] font-bold">
+            <span className="animate-tracking-in text-[#ffeedd] font-bold whitespace-nowrap">
               Enjoy
             </span>
           )}

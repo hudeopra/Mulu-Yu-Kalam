@@ -1,16 +1,16 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from 'react';
 import {
   UploadCloud,
   X,
   Image as ImageIcon,
   Loader2,
   Sparkles,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   compressImage,
   formatFileSize,
   type CompressionResult,
-} from "../utils/imageCompressor";
+} from '../utils/imageCompressor';
 
 interface FileUploadProps {
   value?: File | null;
@@ -47,12 +47,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const processFile = async (rawFile: File) => {
     try {
       setIsCompressing(true);
-      const result = await compressImage(rawFile, 500 * 1024); // 500KB cap
+      const result = await compressImage(rawFile, 2 * 1024 * 1024); // 2mdKB cap
       setCompressionMetrics(result);
       setPreviewUrl(result.previewUrl);
       onChange(result.file);
     } catch (err) {
-      console.error("Image compression failed, using original file:", err);
+      console.error('Image compression failed, using original file:', err);
       onChange(rawFile);
     } finally {
       setIsCompressing(false);
@@ -91,7 +91,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     setCompressionMetrics(null);
     onChange(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
@@ -102,7 +102,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           Tattoo Reference / Design (Optional)
         </label>
         <span className="text-xs text-gray-500 font-medium">
-          Max 500KB (Auto-optimized)
+          Max 2MB (Auto-optimized)
         </span>
       </div>
 
@@ -132,10 +132,10 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-white/70 hover:bg-white ${
             error
-              ? "border-red-500 bg-red-50/50"
+              ? 'border-red-500 bg-red-50/50'
               : isDragging
-                ? "border-[#ff7b01] bg-[#ffecd0]/50 scale-[0.99]"
-                : "border-[#ffbd5b] hover:border-[#ff7b01]"
+                ? 'border-[#ff7b01] bg-[#ffecd0]/50 scale-[0.99]'
+                : 'border-[#ffbd5b] hover:border-[#ff7b01]'
           }`}
         >
           <div className="p-3 bg-[#ffecd0] text-[#ff7b01] rounded-full shadow-sm">
@@ -144,7 +144,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           <p className="text-sm font-medium text-gray-700">
             <span className="text-[#ff7b01] font-semibold underline">
               Click to upload
-            </span>{" "}
+            </span>{' '}
             or drag and drop
           </p>
           <p className="text-xs text-gray-400">
@@ -175,7 +175,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                   <Sparkles className="w-3 h-3 text-emerald-600" />
-                  {formatFileSize(compressionMetrics.originalSize)} →{" "}
+                  {formatFileSize(compressionMetrics.originalSize)} →{' '}
                   {formatFileSize(compressionMetrics.compressedSize)} (-
                   {compressionMetrics.reductionPercent}%)
                 </span>

@@ -33,7 +33,8 @@ create table if not exists public.appointments (
   phone text not null,
   appointment_date date not null,
   appointment_time text not null,
-  reference_image_url text,
+  reference_image_url text,            -- Primary reference image URL
+  reference_image_urls text[],          -- Array of multiple reference image URLs
   notes text,                           -- Client's notes submitted during booking
   internal_notes text,                  -- Staff private notes & studio remarks
   estimated_price numeric(10,2),        -- Optional price quote

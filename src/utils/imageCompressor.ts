@@ -9,15 +9,19 @@ export interface CompressionResult {
 /**
  * In-browser image compressor using native HTML5 Canvas.
  * Resizes dimensions (max 1600px) and iteratively adjusts WebP quality
- * to guarantee the resulting file is strictly <= maxSizeBytes (default 500KB).
+ * to guarantee the resulting file is strictly <= maxSizeBytes (default 2MB).
  */
 export async function compressImage(
   file: File,
-  maxSizeBytes: number = 500 * 1024,
+  maxSizeBytes: number = 2 * 1024 * 1024,
   maxDimension: number = 1600,
 ): Promise<CompressionResult> {
   // If not an image file, pass through
-  if (!file.type.startsWith("image/")) {
+  const isImage =
+    file.type.startsWith('image/') ||
+    /\.(webp|jpe?g|png)$/i.test(file.name);
+
+  if (!isImage) {
     return {
       file,
       previewUrl: URL.createObjectURL(file),
@@ -70,13 +74,13 @@ export async function compressImage(
 
         let blob: Blob | null = await toBlobAsync(quality);
 
-        // Iteratively dial back quality if still > 500KB
+        // Iteratively dial back quality if still > maxSizeBytes
         while (blob && blob.size > maxSizeBytes && quality > 0.4) {
           quality -= 0.1;
           blob = await toBlobAsync(quality);
         }
 
-        // Secondary fallback: if still exceeding 500KB, downscale canvas dimensions
+        // Secondary fallback: if still exceeding maxSizeBytes, downscale canvas dimensions
         if (blob && blob.size > maxSizeBytes) {
           canvas.width = Math.round(width * 0.7);
           canvas.height = Math.round(height * 0.7);
@@ -90,8 +94,10 @@ export async function compressImage(
         }
 
         const baseName = file.name.replace(/\.[^/.]+$/, "");
-        const compressedFile = new File([blob], `${baseName}.webp`, {
-          type: "image/webp",
+        const mimeType = blob.type || "image/webp";
+        const extension = mimeType === "image/png" ? "png" : "webp";
+        const compressedFile = new File([blob], `${baseName}.${extension}`, {
+          type: mimeType,
           lastModified: Date.now(),
         });
 

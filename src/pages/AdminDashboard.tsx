@@ -24,6 +24,7 @@ import {
   supabase,
   type Appointment,
   type AppointmentStatus,
+  getAppointmentReferenceUrls,
 } from "../lib/supabase";
 import { AppointmentDetailModal } from "../components/admin/AppointmentDetailModal";
 
@@ -597,19 +598,34 @@ export const AdminDashboard: React.FC = () => {
 
                       {/* Reference Artwork Thumbnail */}
                       <td className="py-4 px-4">
-                        {app.reference_image_url ? (
-                          <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-2xs">
-                            <img
-                              src={app.reference_image_url}
-                              alt="Tattoo reference preview"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-12 h-12 rounded-xl bg-gray-100 border border-dashed border-gray-200 flex items-center justify-center text-gray-400">
-                            <ImageIcon className="w-4 h-4" />
-                          </div>
-                        )}
+                        {(() => {
+                          const refUrls = getAppointmentReferenceUrls(app);
+                          return refUrls.length > 0 ? (
+                            <div
+                              onClick={() => {
+                                setSelectedAppointment(app);
+                                setIsModalOpen(true);
+                              }}
+                              className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-2xs group cursor-pointer hover:border-[#ff7b01] transition-colors"
+                              title={`View ${refUrls.length} reference ${refUrls.length === 1 ? "artwork" : "artworks"}`}
+                            >
+                              <img
+                                src={refUrls[0]}
+                                alt="Tattoo reference preview"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              />
+                              {refUrls.length > 1 && (
+                                <span className="absolute bottom-0 right-0 bg-[#2e0249] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-tl-md shadow-xs">
+                                  +{refUrls.length - 1}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-gray-100 border border-dashed border-gray-200 flex items-center justify-center text-gray-400">
+                              <ImageIcon className="w-4 h-4" />
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Status Pill with dropdown quick toggles */}

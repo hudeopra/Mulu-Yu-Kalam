@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Send,
   CheckCircle2,
@@ -13,25 +13,29 @@ import {
   Loader2,
   Sparkles,
   ShieldAlert,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   appointmentSchema,
   type AppointmentFormData,
   tattooLocations,
-} from "../schemas/appointmentSchema";
-import { FileUpload } from "./FileUpload";
-import { supabase, type Appointment } from "../lib/supabase";
+} from '../schemas/appointmentSchema';
+import { FileUpload } from './FileUpload';
+import {
+  supabase,
+  type Appointment,
+  getAppointmentReferenceUrls,
+} from '../lib/supabase';
 import {
   checkRateLimit,
   recordSubmission,
   type RateLimitStatus,
-} from "../utils/rateLimiter";
+} from '../utils/rateLimiter';
 
 export const AppointmentForm: React.FC = () => {
   const [createdAppointment, setCreatedAppointment] =
     useState<Appointment | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string>("");
+  const [statusMessage, setStatusMessage] = useState<string>('');
   const [rateLimit, setRateLimit] = useState<RateLimitStatus>(checkRateLimit());
 
   useEffect(() => {
@@ -48,22 +52,22 @@ export const AppointmentForm: React.FC = () => {
   } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      tattooLocation: "Arm",
-      name: "",
-      email: "",
-      number: "",
-      appointmentTime: "",
-      appointmentDate: "",
-      referenceFile: null,
-      notes: "",
+      tattooLocation: 'Arm',
+      name: '',
+      email: '',
+      number: '',
+      appointmentTime: '',
+      appointmentDate: '',
+      referenceFiles: [],
+      notes: '',
     },
-    mode: "onTouched",
+    mode: 'onTouched',
   });
 
   const onSubmit = async (data: AppointmentFormData) => {
     setSubmissionError(null);
 
-    // 1. Guard against abuse: check 3 submissions in 24 hours limit
+    // 1. Validate data & rate limits
     const currentLimit = checkRateLimit();
     if (!currentLimit.isAllowed) {
       setRateLimit(currentLimit);
@@ -73,43 +77,75 @@ export const AppointmentForm: React.FC = () => {
       return;
     }
 
+    // Keep track of uploaded storage paths for atomic rollback
+    const uploadedStoragePaths: string[] = [];
+    const uploadedImageUrls: string[] = [];
+
     try {
-      let referenceImageUrl: string | null = null;
+      // 2. Upload images on submit, then retrieve public URLs
+      const filesToUpload = data.referenceFiles || [];
 
-      // 2. Upload compressed reference image to Supabase Storage if present
-      if (data.referenceFile) {
-        setStatusMessage("Uploading reference artwork to Supabase...");
-        const cleanName = data.referenceFile.name.replace(
-          /[^a-zA-Z0-9._-]/g,
-          "_",
+      if (filesToUpload.length > 0) {
+        setStatusMessage(
+          `Uploading ${filesToUpload.length} reference ${
+            filesToUpload.length === 1 ? 'design' : 'designs'
+          } to studio storage...`,
         );
-        const filePath = `${Date.now()}-${cleanName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("tattoo-references")
-          .upload(filePath, data.referenceFile, {
-            contentType: data.referenceFile.type,
-            upsert: false,
-          });
+        for (let i = 0; i < filesToUpload.length; i++) {
+          const file = filesToUpload[i];
+          const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const filePath = `${Date.now()}-${i}-${cleanName}`;
 
-        if (uploadError) {
-          throw new Error(
-            `Failed to upload reference artwork: ${uploadError.message}`,
-          );
+          const mimeType =
+            file.type ||
+            (/\.webp$/i.test(file.name)
+              ? 'image/webp'
+              : /\.png$/i.test(file.name)
+                ? 'image/png'
+                : 'image/jpeg');
+
+          const { error: uploadError } = await supabase.storage
+            .from('tattoo-references')
+            .upload(filePath, file, {
+              contentType: mimeType,
+              upsert: false,
+            });
+
+          if (uploadError) {
+            const isSizeError = uploadError.message
+              .toLowerCase()
+              .includes('exceeded the maximum allowed size');
+
+            if (isSizeError) {
+              throw new Error(
+                `Failed to upload reference artwork "${file.name}": The file exceeded the Supabase Storage bucket size limit. Please ensure the "tattoo-references" bucket size limit is updated to 2MB in your Supabase Dashboard or SQL editor.`,
+              );
+            }
+
+            throw new Error(
+              `Failed to upload reference artwork "${file.name}": ${uploadError.message}`,
+            );
+          }
+
+          // Track path for atomic rollback
+          uploadedStoragePaths.push(filePath);
+
+          const { data: urlData } = supabase.storage
+            .from('tattoo-references')
+            .getPublicUrl(filePath);
+
+          uploadedImageUrls.push(urlData.publicUrl);
         }
-
-        const { data: urlData } = supabase.storage
-          .from("tattoo-references")
-          .getPublicUrl(filePath);
-
-        referenceImageUrl = urlData.publicUrl;
       }
 
-      // 3. Insert record into Supabase public.appointments
-      setStatusMessage("Booking your session in studio database...");
+      // 3. Add table row with input information and image URLs
+      setStatusMessage('Booking your session in studio database...');
+
+      const primaryImageUrl = uploadedImageUrls[0] || null;
 
       const { data: record, error: insertError } = await supabase
-        .from("appointments")
+        .from('appointments')
         .insert({
           tattoo_location: data.tattooLocation,
           name: data.name,
@@ -117,9 +153,11 @@ export const AppointmentForm: React.FC = () => {
           phone: data.number,
           appointment_date: data.appointmentDate,
           appointment_time: data.appointmentTime,
-          reference_image_url: referenceImageUrl,
+          reference_image_url: primaryImageUrl,
+          reference_image_urls:
+            uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
           notes: data.notes || null,
-          status: "pending",
+          status: 'pending',
         })
         .select()
         .single();
@@ -128,19 +166,31 @@ export const AppointmentForm: React.FC = () => {
         throw new Error(`Failed to record appointment: ${insertError.message}`);
       }
 
-      // 4. Record submission in local rate limiter
+      // 4. Success: Record submission in rate limiter & present confirmation view
       recordSubmission();
       setRateLimit(checkRateLimit());
       setCreatedAppointment(record as Appointment);
     } catch (err: unknown) {
-      console.error("Submission error:", err);
+      console.error('Submission error:', err);
+
+      // ATOMIC ROLLBACK: If ANY upload failed or DB insertion failed, delete all uploaded files
+      if (uploadedStoragePaths.length > 0) {
+        try {
+          await supabase.storage
+            .from('tattoo-references')
+            .remove(uploadedStoragePaths);
+        } catch (cleanupErr) {
+          console.warn('Storage rollback cleanup error:', cleanupErr);
+        }
+      }
+
       const message =
         err instanceof Error
           ? err.message
-          : "An unexpected error occurred. Please try again.";
+          : 'An unexpected error occurred. Please try again.';
       setSubmissionError(message);
     } finally {
-      setStatusMessage("");
+      setStatusMessage('');
     }
   };
 
@@ -167,7 +217,7 @@ export const AppointmentForm: React.FC = () => {
               Appointment Confirmed!
             </h3>
             <p className="text-gray-600 mt-2 text-sm sm:text-base">
-              Thank you,{" "}
+              Thank you,{' '}
               <span className="font-semibold text-[#ff7b01]">
                 {createdAppointment.name}
               </span>
@@ -194,7 +244,7 @@ export const AppointmentForm: React.FC = () => {
             <div className="flex justify-between border-b pb-2">
               <span className="text-gray-500">Date & Time:</span>
               <span className="font-bold text-[#2e0249]">
-                {createdAppointment.appointment_date} at{" "}
+                {createdAppointment.appointment_date} at{' '}
                 {createdAppointment.appointment_time}
               </span>
             </div>
@@ -204,18 +254,39 @@ export const AppointmentForm: React.FC = () => {
                 {createdAppointment.phone} ({createdAppointment.email})
               </span>
             </div>
-            {createdAppointment.reference_image_url && (
-              <div className="pt-2">
-                <span className="text-gray-500 block mb-2">
-                  Uploaded Reference:
-                </span>
-                <img
-                  src={createdAppointment.reference_image_url}
-                  alt="Tattoo reference"
-                  className="w-20 h-20 object-cover rounded-xl border border-gray-200 shadow-sm"
-                />
-              </div>
-            )}
+            {(() => {
+              const refUrls = getAppointmentReferenceUrls(createdAppointment);
+              return (
+                refUrls.length > 0 && (
+                  <div className="pt-2">
+                    <span className="text-gray-500 block mb-2 font-medium">
+                      Uploaded Reference{' '}
+                      {refUrls.length === 1
+                        ? 'Artwork:'
+                        : `Artworks (${refUrls.length}):`}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {refUrls.map((url, idx) => (
+                        <a
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative block"
+                          title={`View reference artwork ${idx + 1}`}
+                        >
+                          <img
+                            src={url}
+                            alt={`Tattoo reference ${idx + 1}`}
+                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-transform"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )
+              );
+            })()}
           </div>
 
           <button
@@ -240,7 +311,7 @@ export const AppointmentForm: React.FC = () => {
                 <p className="font-bold">Daily Booking Limit Reached</p>
                 <p className="text-xs text-amber-800 mt-1 leading-relaxed">
                   You have reached the maximum of 3 bookings in 24 hours from
-                  this device. Your next booking slot unlocks in{" "}
+                  this device. Your next booking slot unlocks in{' '}
                   <strong className="text-amber-950 font-bold">
                     {rateLimit.formattedResetTime}
                   </strong>
@@ -280,8 +351,8 @@ export const AppointmentForm: React.FC = () => {
                         onClick={() => field.onChange(location)}
                         className={`px-6 py-2.5 rounded-xl border text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer ${
                           isSelected
-                            ? "bg-[#ff7b01] text-white border-[#ff7b01] shadow-md shadow-[#ff7b01]/30 scale-105"
-                            : "bg-transparent text-[#ff7b01] border-[#ff7b01] hover:bg-[#ffecd0]"
+                            ? 'bg-[#ff7b01] text-white border-[#ff7b01] shadow-md shadow-[#ff7b01]/30 scale-105'
+                            : 'bg-transparent text-[#ff7b01] border-[#ff7b01] hover:bg-[#ffecd0]'
                         }`}
                       >
                         {location}
@@ -308,11 +379,11 @@ export const AppointmentForm: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Your Name"
-                  {...register("name")}
+                  {...register('name')}
                   className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
                     errors.name
-                      ? "border-red-500 focus:border-red-600"
-                      : "border-[#ffbd5b] focus:border-[#ff7b01]"
+                      ? 'border-red-500 focus:border-red-600'
+                      : 'border-[#ffbd5b] focus:border-[#ff7b01]'
                   }`}
                 />
               </div>
@@ -332,11 +403,11 @@ export const AppointmentForm: React.FC = () => {
                   <input
                     type="email"
                     placeholder="Your Email"
-                    {...register("email")}
+                    {...register('email')}
                     className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
                       errors.email
-                        ? "border-red-500 focus:border-red-600"
-                        : "border-[#ffbd5b] focus:border-[#ff7b01]"
+                        ? 'border-red-500 focus:border-red-600'
+                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
                     }`}
                   />
                 </div>
@@ -354,11 +425,11 @@ export const AppointmentForm: React.FC = () => {
                   <input
                     type="tel"
                     placeholder="Your Phone No."
-                    {...register("number")}
+                    {...register('number')}
                     className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
                       errors.number
-                        ? "border-red-500 focus:border-red-600"
-                        : "border-[#ffbd5b] focus:border-[#ff7b01]"
+                        ? 'border-red-500 focus:border-red-600'
+                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
                     }`}
                   />
                 </div>
@@ -379,11 +450,11 @@ export const AppointmentForm: React.FC = () => {
                   <input
                     type="time"
                     placeholder="Appointment Time"
-                    {...register("appointmentTime")}
+                    {...register('appointmentTime')}
                     className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none ${
                       errors.appointmentTime
-                        ? "border-red-500 focus:border-red-600"
-                        : "border-[#ffbd5b] focus:border-[#ff7b01]"
+                        ? 'border-red-500 focus:border-red-600'
+                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
                     }`}
                   />
                 </div>
@@ -401,11 +472,11 @@ export const AppointmentForm: React.FC = () => {
                   <input
                     type="date"
                     placeholder="Appointment Date"
-                    {...register("appointmentDate")}
+                    {...register('appointmentDate')}
                     className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none ${
                       errors.appointmentDate
-                        ? "border-red-500 focus:border-red-600"
-                        : "border-[#ffbd5b] focus:border-[#ff7b01]"
+                        ? 'border-red-500 focus:border-red-600'
+                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
                     }`}
                   />
                 </div>
@@ -418,15 +489,16 @@ export const AppointmentForm: React.FC = () => {
               </div>
             </div>
 
-            {/* Reference Image Upload Section */}
+            {/* Reference Images Upload Section */}
             <Controller
-              name="referenceFile"
+              name="referenceFiles"
               control={control}
               render={({ field }) => (
                 <FileUpload
                   value={field.value}
                   onChange={field.onChange}
-                  error={errors.referenceFile?.message}
+                  error={errors.referenceFiles?.message}
+                  maxFiles={5}
                 />
               )}
             />

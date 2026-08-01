@@ -18,12 +18,18 @@ import {
   Loader2,
   MessageCircle,
   ZoomIn,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   supabase,
   type Appointment,
   type AppointmentStatus,
   type DepositStatus,
+  getAppointmentReferenceUrls,
+  deleteAppointmentStorageImages,
+  extractStoragePath,
 } from "../../lib/supabase";
 
 interface AppointmentDetailModalProps {
@@ -52,12 +58,14 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
   // Interaction / Loading states
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
   const [showImageLightbox, setShowImageLightbox] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // Sync form state whenever selected appointment changes
   useEffect(() => {
@@ -76,10 +84,15 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
       setShowDeleteConfirm(false);
       setFeedbackMessage(null);
       setShowImageLightbox(false);
+      setSelectedImageIndex(0);
     }
   }, [appointment]);
 
   if (!isOpen || !appointment) return null;
+
+  const referenceUrls = getAppointmentReferenceUrls(appointment);
+  const activeImageUrl =
+    referenceUrls[selectedImageIndex] || referenceUrls[0] || null;
 
   // Clean phone number for WhatsApp wa.me link
   const phoneDigits = appointment.phone.replace(/[^0-9]/g, "");
@@ -141,6 +154,10 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     setFeedbackMessage(null);
 
     try {
+      // 1. Delete associated reference images from Supabase Storage bucket
+      await deleteAppointmentStorageImages(appointment);
+
+      // 2. Delete database record
       const { error } = await supabase
         .from("appointments")
         .delete()
@@ -157,6 +174,63 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         err instanceof Error ? err.message : "Failed to delete appointment.";
       setFeedbackMessage({ type: "error", text: errorMsg });
       setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteActiveImage = async () => {
+    if (!activeImageUrl || !appointment) return;
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this reference image from storage?",
+    );
+    if (!confirmDelete) return;
+
+    setIsDeletingImage(true);
+    try {
+      // 1. Remove file from Supabase Storage
+      const storagePath = extractStoragePath(activeImageUrl);
+      if (storagePath) {
+        await supabase.storage.from("tattoo-references").remove([storagePath]);
+      }
+
+      // 2. Update remaining URLs in PostgreSQL
+      const remainingUrls = referenceUrls.filter(
+        (url) => url !== activeImageUrl,
+      );
+      const primaryUrl = remainingUrls[0] || null;
+
+      const { data, error } = await supabase
+        .from("appointments")
+        .update({
+          reference_image_url: primaryUrl,
+          reference_image_urls:
+            remainingUrls.length > 0 ? remainingUrls : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", appointment.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        onAppointmentUpdated(data as Appointment);
+        setSelectedImageIndex((prev) =>
+          prev >= remainingUrls.length
+            ? Math.max(0, remainingUrls.length - 1)
+            : prev,
+        );
+        setFeedbackMessage({
+          type: "success",
+          text: "Reference image removed from storage and database.",
+        });
+        setTimeout(() => setFeedbackMessage(null), 3000);
+      }
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to remove image.";
+      setFeedbackMessage({ type: "error", text: msg });
+    } finally {
+      setIsDeletingImage(false);
     }
   };
 
@@ -505,33 +579,68 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                   <div>
                     <h3 className="font-bold text-[#2e0249] text-sm mb-3 flex items-center justify-between">
                       <span>Artwork Reference</span>
-                      {appointment.reference_image_url && (
-                        <span className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      {referenceUrls.length > 0 && (
+                        <span className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
+                          {referenceUrls.length}{" "}
+                          {referenceUrls.length === 1 ? "Image" : "Images"}{" "}
                           Uploaded
                         </span>
                       )}
                     </h3>
 
-                    {appointment.reference_image_url ? (
+                    {activeImageUrl ? (
                       <div className="space-y-3">
                         <div
                           onClick={() => setShowImageLightbox(true)}
                           className="group relative aspect-square w-full rounded-2xl overflow-hidden bg-black/5 border border-gray-200 cursor-zoom-in shadow-xs"
                         >
                           <img
-                            src={appointment.reference_image_url}
-                            alt="Tattoo Reference"
+                            src={activeImageUrl}
+                            alt={`Tattoo Reference ${selectedImageIndex + 1}`}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1.5 text-xs font-medium">
                             <ZoomIn className="w-4 h-4" />
                             <span>Click to Zoom</span>
                           </div>
+                          {referenceUrls.length > 1 && (
+                            <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md backdrop-blur-xs">
+                              {selectedImageIndex + 1} of {referenceUrls.length}
+                            </span>
+                          )}
                         </div>
+
+                        {/* Thumbnail selector strip if multiple images */}
+                        {referenceUrls.length > 1 && (
+                          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1">
+                            {referenceUrls.map((url, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setSelectedImageIndex(idx)}
+                                className={`relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                                  selectedImageIndex === idx
+                                    ? "border-[#ff7b01] shadow-md ring-2 ring-[#ff7b01]/20 scale-105"
+                                    : "border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100"
+                                }`}
+                                title={`View image ${idx + 1}`}
+                              >
+                                <img
+                                  src={url}
+                                  alt={`Thumb ${idx + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                <span className="absolute bottom-0.5 right-0.5 bg-black/75 text-white text-[9px] font-bold px-1 rounded-sm">
+                                  {idx + 1}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
 
                         <div className="flex items-center gap-2">
                           <a
-                            href={appointment.reference_image_url}
+                            href={activeImageUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-[#2e0249] text-xs font-semibold shadow-2xs transition-colors"
@@ -541,18 +650,32 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                           </a>
 
                           <a
-                            href={appointment.reference_image_url}
-                            download={`mulu_tattoo_ref_${appointment.id}`}
+                            href={activeImageUrl}
+                            download={`mulu_tattoo_ref_${appointment.id}_${selectedImageIndex + 1}`}
                             className="p-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-[#2e0249] shadow-2xs transition-colors"
                             title="Download reference image"
                           >
                             <Download className="w-4 h-4" />
                           </a>
+
+                          <button
+                            type="button"
+                            onClick={handleDeleteActiveImage}
+                            disabled={isDeletingImage}
+                            className="p-2 rounded-xl bg-white border border-gray-200 hover:bg-red-50 hover:border-red-200 text-gray-500 hover:text-red-600 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+                            title="Delete this reference image from storage"
+                          >
+                            {isDeletingImage ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     ) : (
                       <div className="aspect-square w-full rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 p-6 text-center">
-                        <MapPin className="w-8 h-8 text-gray-300 mb-2" />
+                        <ImageIcon className="w-8 h-8 text-gray-300 mb-2" />
                         <p className="text-xs font-semibold text-gray-600">
                           No Reference Artwork
                         </p>
@@ -642,7 +765,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
       </div>
 
       {/* Lightbox Modal for High-Res Artwork Zoom */}
-      {showImageLightbox && appointment.reference_image_url && (
+      {showImageLightbox && activeImageUrl && (
         <div
           className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setShowImageLightbox(false)}
@@ -651,17 +774,56 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
             <button
               type="button"
               onClick={() => setShowImageLightbox(false)}
-              className="absolute -top-12 right-0 text-white/80 hover:text-white p-2"
+              className="absolute -top-12 right-0 text-white/80 hover:text-white p-2 cursor-pointer"
               aria-label="Close lightbox"
             >
               <X className="w-6 h-6" />
             </button>
+
+            {/* Navigation buttons if multiple images */}
+            {referenceUrls.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImageIndex((prev) =>
+                      prev === 0 ? referenceUrls.length - 1 : prev - 1,
+                    );
+                  }}
+                  className="absolute -left-12 sm:-left-16 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/20 hover:bg-white/40 text-white cursor-pointer transition-colors shadow-lg"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImageIndex((prev) =>
+                      prev === referenceUrls.length - 1 ? 0 : prev + 1,
+                    );
+                  }}
+                  className="absolute -right-12 sm:-right-16 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/20 hover:bg-white/40 text-white cursor-pointer transition-colors shadow-lg"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+
             <img
-              src={appointment.reference_image_url}
-              alt="Reference High-Res"
+              src={activeImageUrl}
+              alt={`Reference High-Res ${selectedImageIndex + 1}`}
               className="max-h-[85vh] max-w-full object-contain rounded-xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
+
+            {referenceUrls.length > 1 && (
+              <span className="mt-3 text-white/80 text-xs font-semibold">
+                Image {selectedImageIndex + 1} of {referenceUrls.length}
+              </span>
+            )}
           </div>
         </div>
       )}

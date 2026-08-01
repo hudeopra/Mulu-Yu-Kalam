@@ -446,12 +446,16 @@ export const AppointmentForm: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <div className="relative">
-                  <Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
+                  <Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
                   <input
                     type="time"
-                    placeholder="Appointment Time"
                     {...register('appointmentTime')}
-                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none ${
+                    onClick={(e) => {
+                      try {
+                        e.currentTarget.showPicker?.();
+                      } catch {}
+                    }}
+                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
                       errors.appointmentTime
                         ? 'border-red-500 focus:border-red-600'
                         : 'border-[#ffbd5b] focus:border-[#ff7b01]'
@@ -468,12 +472,17 @@ export const AppointmentForm: React.FC = () => {
 
               <div>
                 <div className="relative">
-                  <Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
+                  <Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
                   <input
                     type="date"
-                    placeholder="Appointment Date"
+                    min={new Date().toISOString().split('T')[0]}
                     {...register('appointmentDate')}
-                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none ${
+                    onClick={(e) => {
+                      try {
+                        e.currentTarget.showPicker?.();
+                      } catch {}
+                    }}
+                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
                       errors.appointmentDate
                         ? 'border-red-500 focus:border-red-600'
                         : 'border-[#ffbd5b] focus:border-[#ff7b01]'

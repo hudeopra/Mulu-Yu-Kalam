@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { MessageCircle, Camera, Share2, Video, MapPin } from "lucide-react";
+import React, { useEffect, useState, useRef } from 'react';
+import { MessageCircle, Camera, Share2, Video, MapPin } from 'lucide-react';
 
 interface CounterProps {
   target: number;
@@ -144,7 +144,7 @@ export const AboutSection: React.FC = () => {
       </div>
 
       {/* Main About content container with background vector */}
-      <div className="relative min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 lg:py-48 bg-[url('/assets/img/bg-img.svg')] bg-no-repeat bg-contain bg-size-[70%]  bg-[center_115%]">
+      <div className="relative  max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 lg:pt-48 lg:pb-76 bg-none lg:bg-[url('/assets/img/bg-img.svg')] bg-no-repeat bg-contain bg-size-[70%]  bg-[center_112%]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 justify-between items-center">
           {/* Text content column */}
           <div className="lg:col-span-6 space-y-6">
@@ -168,7 +168,7 @@ export const AboutSection: React.FC = () => {
           </div>
 
           {/* Counters Column */}
-          <div className="lg:col-span-5 lg:col-start-8">
+          <div className="lg:col-span-5 lg:col-start-9">
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-6">
               <AnimatedCounter
                 target={7}

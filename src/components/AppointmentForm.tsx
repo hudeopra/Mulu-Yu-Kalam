@@ -11,7 +11,6 @@ import {
   Mail,
   Phone,
   Loader2,
-  Sparkles,
   ShieldAlert,
 } from 'lucide-react';
 import {
@@ -205,61 +204,47 @@ export const AppointmentForm: React.FC = () => {
     <div className="bg-[#f2f2f2] rounded-3xl p-6 sm:p-10 shadow-xl border border-black/5">
       {createdAppointment ? (
         <div className="text-center py-6 space-y-6 animate-in fade-in zoom-in-95 duration-300">
-          <div className="w-16 h-16 bg-[#ffecd0] text-[#ff7b01] rounded-full flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 className="w-10 h-10" />
-          </div>
-
           <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#ff7b01] bg-[#ffecd0] px-3 py-1 rounded-full mb-2">
-              <Sparkles className="w-3.5 h-3.5" /> Booking Recorded
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-bold text-[#2e0249]">
-              Appointment Confirmed!
-            </h3>
-            <p className="text-gray-600 mt-2 text-sm sm:text-base">
-              Thank you,{' '}
-              <span className="font-semibold text-[#ff7b01]">
+            <div className="flex justify-center gap-4 items-center">
+              <div className=" text-brand-primary rounded-full flex items-center justify-center mx-left shadow-inner">
+                <CheckCircle2 className="w-10 h-10" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-bold text-[#2e0249]">
+                Booking Request Received!
+              </h3>
+            </div>
+            <p className="text-gray-600 mt-3 text-base sm:text-lg leading-relaxed">
+              Thanks,{' '}
+              <span className="font-semibold text-brand-primary">
                 {createdAppointment.name}
               </span>
-              ! Your session request is saved in the studio system.
+              ! We’ve got your request down for a tattoo on your{' '}
+              <span className="font-semibold text-brand-primary">
+                {createdAppointment.tattoo_location}
+              </span>{' '}
+              on{' '}
+              <span className="font-semibold text-brand-primary">
+                {createdAppointment.appointment_date}
+              </span>{' '}
+              at{' '}
+              <span className="font-semibold text-brand-primary">
+                {createdAppointment.appointment_time}
+              </span>
+              . Our team will reach out to{' '}
+              <span className="font-semibold text-brand-primary">
+                {createdAppointment.phone}
+              </span>{' '}
+              shortly to finalize the details and lock in your spot.
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-5 text-left max-w-md mx-auto space-y-3 shadow-sm border border-orange-100 text-sm">
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-500">Booking ID:</span>
-              <span
-                className="font-mono text-xs text-gray-700 truncate max-w-[200px]"
-                title={createdAppointment.id}
-              >
-                {createdAppointment.id.slice(0, 8)}...
-              </span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-500">Placement:</span>
-              <span className="font-bold text-[#2e0249]">
-                {createdAppointment.tattoo_location}
-              </span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-500">Date & Time:</span>
-              <span className="font-bold text-[#2e0249]">
-                {createdAppointment.appointment_date} at{' '}
-                {createdAppointment.appointment_time}
-              </span>
-            </div>
-            <div className="flex justify-between border-b pb-2">
-              <span className="text-gray-500">Contact:</span>
-              <span className="font-bold text-[#2e0249]">
-                {createdAppointment.phone} ({createdAppointment.email})
-              </span>
-            </div>
+          <div className="  mx-auto space-y-3 flex justify-center text-sm">
             {(() => {
               const refUrls = getAppointmentReferenceUrls(createdAppointment);
               return (
                 refUrls.length > 0 && (
                   <div className="pt-2">
-                    <span className="text-gray-500 block mb-2 font-medium">
+                    <span className="text-neutral-900 text-base block mb-2 font-medium">
                       Uploaded Reference{' '}
                       {refUrls.length === 1
                         ? 'Artwork:'
@@ -278,7 +263,7 @@ export const AppointmentForm: React.FC = () => {
                           <img
                             src={url}
                             alt={`Tattoo reference ${idx + 1}`}
-                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-transform"
+                            className="w-24 h-24  object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-transform"
                           />
                         </a>
                       ))}
@@ -289,13 +274,13 @@ export const AppointmentForm: React.FC = () => {
             })()}
           </div>
 
-          <button
+          {/* <button
             type="button"
             onClick={handleBookAnother}
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#ff7b01] text-white font-semibold shadow-lg hover:bg-[#e06c00] transition-colors"
           >
             Book Another Session
-          </button>
+          </button> */}
         </div>
       ) : (
         <form
@@ -352,7 +337,7 @@ export const AppointmentForm: React.FC = () => {
                         className={`px-6 py-2.5 rounded-xl border text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer ${
                           isSelected
                             ? 'bg-[#ff7b01] text-white border-[#ff7b01] shadow-md shadow-[#ff7b01]/30 scale-105'
-                            : 'bg-transparent text-[#ff7b01] border-[#ff7b01] hover:bg-[#ffecd0]'
+                            : 'bg-transparent text-brand-primary border-[#ff7b01] hover:bg-[#ffecd0]'
                         }`}
                       >
                         {location}
@@ -534,7 +519,7 @@ export const AppointmentForm: React.FC = () => {
             </button>
 
             {isSubmitting && statusMessage && (
-              <span className="text-xs sm:text-sm font-semibold text-[#ff7b01] animate-pulse">
+              <span className="text-xs sm:text-sm font-semibold text-brand-primary animate-pulse">
                 {statusMessage}
               </span>
             )}

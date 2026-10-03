@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export const Header: React.FC = () => {
   return (
@@ -8,7 +8,7 @@ export const Header: React.FC = () => {
           <img
             src="/assets/img/Mulu-Yu-Kalam.svg"
             alt="Mulu Yu Kalam Logo"
-            className="w-[200px] md:w-[350px] h-auto drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+            className="w-[300px] md:w-[450px] h-auto drop-shadow-md transition-transform duration-300 group-hover:scale-105"
           />
         </a>
       </div>

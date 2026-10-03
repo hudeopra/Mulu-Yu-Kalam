@@ -1,34 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  Send,
-  CheckCircle2,
-  AlertCircle,
-  Calendar,
-  Clock,
-  User,
-  Mail,
-  Phone,
-  Loader2,
-  ShieldAlert,
-} from 'lucide-react';
 import {
   appointmentSchema,
   type AppointmentFormData,
-  tattooLocations,
 } from '../schemas/appointmentSchema';
-import { FileUpload } from './FileUpload';
-import {
-  supabase,
-  type Appointment,
-  getAppointmentReferenceUrls,
-} from '../lib/supabase';
+import { supabase, type Appointment } from '../lib/supabase';
 import {
   checkRateLimit,
   recordSubmission,
   type RateLimitStatus,
 } from '../utils/rateLimiter';
+import { FormResponse } from './FormResponse';
+import { AppointmentFormFields } from './AppointmentFormFields';
+
+export { FormResponse } from './FormResponse';
+export { AppointmentFormFields } from './AppointmentFormFields';
 
 export const AppointmentForm: React.FC = () => {
   const [createdAppointment, setCreatedAppointment] =
@@ -203,328 +190,21 @@ export const AppointmentForm: React.FC = () => {
   return (
     <div className="bg-[#f2f2f2] rounded-3xl p-6 sm:p-10 shadow-xl border border-black/5">
       {createdAppointment ? (
-        <div className="text-center py-6 space-y-6 animate-in fade-in zoom-in-95 duration-300">
-          <div>
-            <div className="flex justify-center gap-4 items-center">
-              <div className=" text-brand-primary rounded-full flex items-center justify-center mx-left shadow-inner">
-                <CheckCircle2 className="w-10 h-10" />
-              </div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-[#2e0249]">
-                Booking Request Received!
-              </h3>
-            </div>
-            <p className="text-gray-600 mt-3 text-base sm:text-lg leading-relaxed">
-              Thanks,{' '}
-              <span className="font-semibold text-brand-primary">
-                {createdAppointment.name}
-              </span>
-              ! We’ve got your request down for a tattoo on your{' '}
-              <span className="font-semibold text-brand-primary">
-                {createdAppointment.tattoo_location}
-              </span>{' '}
-              on{' '}
-              <span className="font-semibold text-brand-primary">
-                {createdAppointment.appointment_date}
-              </span>{' '}
-              at{' '}
-              <span className="font-semibold text-brand-primary">
-                {createdAppointment.appointment_time}
-              </span>
-              . Our team will reach out to{' '}
-              <span className="font-semibold text-brand-primary">
-                {createdAppointment.phone}
-              </span>{' '}
-              shortly to finalize the details and lock in your spot.
-            </p>
-          </div>
-
-          <div className="  mx-auto space-y-3 flex justify-center text-sm">
-            {(() => {
-              const refUrls = getAppointmentReferenceUrls(createdAppointment);
-              return (
-                refUrls.length > 0 && (
-                  <div className="pt-2">
-                    <span className="text-neutral-900 text-base block mb-2 font-medium">
-                      Uploaded Reference{' '}
-                      {refUrls.length === 1
-                        ? 'Artwork:'
-                        : `Artworks (${refUrls.length}):`}
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {refUrls.map((url, idx) => (
-                        <a
-                          key={idx}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group relative block"
-                          title={`View reference artwork ${idx + 1}`}
-                        >
-                          <img
-                            src={url}
-                            alt={`Tattoo reference ${idx + 1}`}
-                            className="w-24 h-24  object-cover rounded-xl border border-gray-200 shadow-sm group-hover:scale-105 transition-transform"
-                          />
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )
-              );
-            })()}
-          </div>
-
-          {/* <button
-            type="button"
-            onClick={handleBookAnother}
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#ff7b01] text-white font-semibold shadow-lg hover:bg-[#e06c00] transition-colors"
-          >
-            Book Another Session
-          </button> */}
-        </div>
+        <FormResponse
+          appointment={createdAppointment}
+          onBookAnother={handleBookAnother}
+        />
       ) : (
-        <form
+        <AppointmentFormFields
+          register={register}
+          control={control}
+          errors={errors}
+          isSubmitting={isSubmitting}
+          rateLimit={rateLimit}
+          submissionError={submissionError}
+          statusMessage={statusMessage}
           onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="space-y-8"
-        >
-          {/* Rate limit warning banner if reached */}
-          {!rateLimit.isAllowed && (
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-sm flex items-start gap-3 shadow-sm">
-              <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">Daily Booking Limit Reached</p>
-                <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                  You have reached the maximum of 3 bookings in 24 hours from
-                  this device. Your next booking slot unlocks in{' '}
-                  <strong className="text-amber-950 font-bold">
-                    {rateLimit.formattedResetTime}
-                  </strong>
-                  . For urgent inquiries, please contact us directly via
-                  WhatsApp or Phone.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {submissionError && (
-            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Unable to complete appointment</p>
-                <p className="text-xs text-red-600 mt-0.5">{submissionError}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Tattoo Location Radio Selector */}
-          <div className="space-y-3">
-            <label className="block text-base font-semibold text-gray-800">
-              I wanna have tattoo in...
-            </label>
-            <Controller
-              name="tattooLocation"
-              control={control}
-              render={({ field }) => (
-                <div className="flex flex-wrap gap-2 sm:gap-3">
-                  {tattooLocations.map((location) => {
-                    const isSelected = field.value === location;
-                    return (
-                      <button
-                        key={location}
-                        type="button"
-                        onClick={() => field.onChange(location)}
-                        className={`px-6 py-2.5 rounded-xl border text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#ff7b01] text-white border-[#ff7b01] shadow-md shadow-[#ff7b01]/30 scale-105'
-                            : 'bg-transparent text-brand-primary border-[#ff7b01] hover:bg-[#ffecd0]'
-                        }`}
-                      >
-                        {location}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            />
-            {errors.tattooLocation && (
-              <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1">
-                <AlertCircle className="w-3.5 h-3.5" />
-                {errors.tattooLocation.message}
-              </p>
-            )}
-          </div>
-
-          {/* Inputs Section */}
-          <div className="space-y-6">
-            {/* Name Input */}
-            <div>
-              <div className="relative">
-                <User className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  {...register('name')}
-                  className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
-                    errors.name
-                      ? 'border-red-500 focus:border-red-600'
-                      : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-                  }`}
-                />
-              </div>
-              {errors.name && (
-                <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  {errors.name.message}
-                </p>
-              )}
-            </div>
-
-            {/* Email & Phone */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <div className="relative">
-                  <Mail className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-                  <input
-                    type="email"
-                    placeholder="Your Email"
-                    {...register('email')}
-                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
-                      errors.email
-                        ? 'border-red-500 focus:border-red-600'
-                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-                    }`}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <div className="relative">
-                  <Phone className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-                  <input
-                    type="tel"
-                    placeholder="Your Phone No."
-                    {...register('number')}
-                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
-                      errors.number
-                        ? 'border-red-500 focus:border-red-600'
-                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-                    }`}
-                  />
-                </div>
-                {errors.number && (
-                  <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {errors.number.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Time & Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <div className="relative">
-                  <Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
-                  <input
-                    type="time"
-                    {...register('appointmentTime')}
-                    onClick={(e) => {
-                      try {
-                        e.currentTarget.showPicker?.();
-                      } catch {}
-                    }}
-                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
-                      errors.appointmentTime
-                        ? 'border-red-500 focus:border-red-600'
-                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-                    }`}
-                  />
-                </div>
-                {errors.appointmentTime && (
-                  <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {errors.appointmentTime.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <div className="relative">
-                  <Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
-                  <input
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    {...register('appointmentDate')}
-                    onClick={(e) => {
-                      try {
-                        e.currentTarget.showPicker?.();
-                      } catch {}
-                    }}
-                    className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
-                      errors.appointmentDate
-                        ? 'border-red-500 focus:border-red-600'
-                        : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-                    }`}
-                  />
-                </div>
-                {errors.appointmentDate && (
-                  <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {errors.appointmentDate.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Reference Images Upload Section */}
-            <Controller
-              name="referenceFiles"
-              control={control}
-              render={({ field }) => (
-                <FileUpload
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.referenceFiles?.message}
-                  maxFiles={5}
-                />
-              )}
-            />
-          </div>
-
-          {/* Submit Button & Live Status */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <button
-              type="submit"
-              disabled={isSubmitting || !rateLimit.isAllowed}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-10 py-4 rounded-2xl bg-[#ff7b01] text-white font-bold text-base shadow-lg shadow-[#ff7b01]/30 hover:bg-[#e66f00] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Processing...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  <span>Book Appointment</span>
-                </>
-              )}
-            </button>
-
-            {isSubmitting && statusMessage && (
-              <span className="text-xs sm:text-sm font-semibold text-brand-primary animate-pulse">
-                {statusMessage}
-              </span>
-            )}
-          </div>
-        </form>
+        />
       )}
     </div>
   );

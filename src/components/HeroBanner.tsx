@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Image as GalleryIcon, Calendar } from "lucide-react";
+import React, { useState } from 'react';
+import { Image as GalleryIcon, Calendar } from 'lucide-react';
 
 export const HeroBanner: React.FC = () => {
   const [isEnjoyActive, setIsEnjoyActive] = useState(false);
@@ -9,10 +9,10 @@ export const HeroBanner: React.FC = () => {
     e.preventDefault();
     setIsBookingActive(true);
     setIsEnjoyActive(false);
-    const contactElement = document.getElementById("contact");
+    const contactElement = document.getElementById('contact');
     if (contactElement) {
       setTimeout(() => {
-        contactElement.scrollIntoView({ behavior: "smooth" });
+        contactElement.scrollIntoView({ behavior: 'smooth' });
       }, 500);
     }
   };
@@ -22,10 +22,10 @@ export const HeroBanner: React.FC = () => {
     setIsEnjoyActive(true);
     setIsBookingActive(false);
     // Smooth scroll down to gallery
-    const galleryElement = document.getElementById("gallery");
+    const galleryElement = document.getElementById('gallery');
     if (galleryElement) {
       setTimeout(() => {
-        galleryElement.scrollIntoView({ behavior: "smooth" });
+        galleryElement.scrollIntoView({ behavior: 'smooth' });
       }, 500);
     }
   };
@@ -34,32 +34,25 @@ export const HeroBanner: React.FC = () => {
     <section className="relative min-h-screen pt-32 lg:pt-48 bg-[url('/assets/img/banner-bg.jpg')] bg-cover bg-center bg-no-repeat overflow-hidden flex flex-col justify-between">
       {/* Background Title layer */}
       <div className="absolute top-28 sm:top-36 lg:top-44 left-1/2 -translate-x-1/2 w-11/12 max-w-7xl text-center pointer-events-none select-none z-0">
-        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[110px] xl:text-[130px] font-extrabold uppercase tracking-tight text-[#ff7b01]/90 leading-none">
-          Ink Your Story
-        </h1>
-      </div>
-
-      {/* Foreground glowing outline title */}
-      <div className="absolute top-28 sm:top-36 lg:top-44 left-1/2 -translate-x-1/2 w-11/12 max-w-7xl text-center pointer-events-none select-none z-10">
-        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[110px] xl:text-[130px] font-extrabold uppercase tracking-tight text-transparent leading-none text-outline-glow">
+        <h1 className="text-5xl sm:text-7xl md:text-8xl md:mt-16 lg:text-[108px] xl:text-[130px] font-extrabold uppercase tracking-tight text-[#fc012f]/90 leading-none">
           Ink Your Story
         </h1>
       </div>
 
       {/* Interactive CTA Action Buttons */}
-      <div className="absolute top-[48%] sm:top-[50%] lg:top-[55%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+      <div className="h-[80vh] relative top-0 lg:top-44 z-99 lg:h-auto w-full px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
         {/* Book an Appointment Button */}
         <a
           href="#contact"
           onClick={handleBookClick}
           className={`inline-flex items-center justify-center gap-3 px-7 sm:px-9 py-3.5 sm:py-4 rounded-xl text-white font-semibold text-base sm:text-lg transition-all duration-300 shadow-xl backdrop-blur-sm border border-white/20 hover:scale-105 active:scale-95 ${
             isBookingActive
-              ? "bg-gradient-to-r from-[#ff7b01] to-[#ff4500] ring-4 ring-[#ffbd5b]/50"
-              : "bg-gradient-to-r from-[#ff7b01] via-[#e65c00] to-[#ff7b01] hover:brightness-110 shadow-orange-500/25"
+              ? 'bg-gradient-to-r from-[#ff7b01] to-[##fc0101] ring-4 ring-[#ffbd5b]/50'
+              : 'bg-gradient-to-r from-[#ff7b01] via-[#e65c00] to-[#ff7b01] hover:brightness-110 shadow-orange-500/25'
           }`}
         >
           <Calendar
-            className={`w-6 h-6 transition-transform ${isBookingActive ? "scale-125 rotate-12" : ""}`}
+            className={`w-6 h-6 transition-transform ${isBookingActive ? 'scale-125 rotate-12' : ''}`}
           />
           {!isBookingActive ? (
             <span className="tracking-wide whitespace-nowrap">
@@ -78,12 +71,12 @@ export const HeroBanner: React.FC = () => {
           onClick={handleBtnClick}
           className={`inline-flex items-center justify-center gap-3 px-7 sm:px-9 py-3.5 sm:py-4 rounded-xl text-white font-semibold text-base sm:text-lg transition-all duration-300 shadow-xl backdrop-blur-sm border border-white/20 hover:scale-105 active:scale-95 ${
             isEnjoyActive
-              ? "bg-gradient-to-r from-[#ff7b01] to-[#ff4500] ring-4 ring-[#ffbd5b]/50"
-              : "bg-gradient-to-r from-[#ff7b01] via-[#e65c00] to-[#ff7b01] hover:brightness-110 shadow-orange-500/25"
+              ? 'bg-gradient-to-r from-[#ff7b01] to-[#ff4500] ring-4 ring-[#ffbd5b]/50'
+              : 'bg-gradient-to-r from-[#ff7b01] via-[#e65c00] to-[#ff7b01] hover:brightness-110 shadow-orange-500/25'
           }`}
         >
           <GalleryIcon
-            className={`w-6 h-6 transition-transform ${isEnjoyActive ? "scale-125 rotate-12" : ""}`}
+            className={`w-6 h-6 transition-transform ${isEnjoyActive ? 'scale-125 rotate-12' : ''}`}
           />
           {!isEnjoyActive ? (
             <span className="tracking-wide whitespace-nowrap">Portfolio</span>
@@ -103,14 +96,14 @@ export const HeroBanner: React.FC = () => {
             <div
               className="grid gap-2.5 p-2 rounded-2xl"
               style={{
-                gridTemplateColumns: "1.618fr 1fr 1.618fr 1fr 1.618fr",
-                gridAutoRows: "95px",
+                gridTemplateColumns: '1.618fr 1fr 1.618fr 1fr 1.618fr',
+                gridAutoRows: '95px',
               }}
             >
               {/* Item 1 */}
               <div
                 className="overflow-hidden rounded-xl shadow-lg group relative"
-                style={{ gridArea: "4 / 1 / 6 / 3" }}
+                style={{ gridArea: '4 / 1 / 6 / 3' }}
               >
                 <img
                   src="/assets/img/tattoo-1.webp"
@@ -122,7 +115,7 @@ export const HeroBanner: React.FC = () => {
               {/* Item 2 */}
               <div
                 className="overflow-hidden rounded-xl shadow-lg group relative"
-                style={{ gridArea: "2 / 1 / 4 / 3" }}
+                style={{ gridArea: '2 / 1 / 4 / 3' }}
               >
                 <img
                   src="/assets/img/tattoo-2.webp"
@@ -134,7 +127,7 @@ export const HeroBanner: React.FC = () => {
               {/* Item 3 */}
               <div
                 className="overflow-hidden rounded-xl shadow-lg group relative"
-                style={{ gridArea: "4 / 3 / 6 / 5" }}
+                style={{ gridArea: '4 / 3 / 6 / 5' }}
               >
                 <img
                   src="/assets/img/tattoo-3.webp"
@@ -146,7 +139,7 @@ export const HeroBanner: React.FC = () => {
               {/* Item 4 */}
               <div
                 className="overflow-hidden rounded-xl shadow-lg group relative"
-                style={{ gridArea: "1 / 1 / 2 / 2" }}
+                style={{ gridArea: '1 / 1 / 2 / 2' }}
               >
                 <img
                   src="/assets/img/tattoo-4.webp"
@@ -158,7 +151,7 @@ export const HeroBanner: React.FC = () => {
               {/* Item 5 */}
               <div
                 className="overflow-hidden rounded-xl shadow-lg group relative"
-                style={{ gridArea: "3 / 3 / 4 / 4" }}
+                style={{ gridArea: '3 / 3 / 4 / 4' }}
               >
                 <img
                   src="/assets/img/tattoo-5.webp"
@@ -170,7 +163,7 @@ export const HeroBanner: React.FC = () => {
               {/* Item 6 */}
               <div
                 className="overflow-hidden rounded-xl shadow-lg group relative"
-                style={{ gridArea: "5 / 5 / 6 / 6" }}
+                style={{ gridArea: '5 / 5 / 6 / 6' }}
               >
                 <img
                   src="/assets/img/tattoo-6.webp"

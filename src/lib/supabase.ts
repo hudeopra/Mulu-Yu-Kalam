@@ -8,18 +8,28 @@ const supabaseAnonKey =
   process.env.VITE_SUPABASE_ANON_KEY ||
   '';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables. Please check your .env.local file.',
+export const isSupabaseConfigured = Boolean(
+  supabaseUrl &&
+    supabaseAnonKey &&
+    supabaseUrl !== 'https://placeholder.supabase.co',
+);
+
+if (!isSupabaseConfigured && typeof window !== 'undefined') {
+  console.warn(
+    'Notice: Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) are not set. Database features will run in offline mode.',
   );
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
   },
-});
+);
 
 export type AppointmentStatus =
   | 'pending'

@@ -7,7 +7,7 @@ import {
   appointmentSchema,
   type AppointmentFormData,
 } from '@/schemas/appointmentSchema';
-import { supabase, type Appointment } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, type Appointment } from '@/lib/supabase';
 import {
   checkRateLimit,
   recordSubmission,
@@ -54,6 +54,13 @@ export function AppointmentForm() {
 
   const onSubmit = async (data: AppointmentFormData) => {
     setSubmissionError(null);
+
+    if (!isSupabaseConfigured) {
+      setSubmissionError(
+        'Studio booking system is currently running in offline preview mode. Please contact us directly via Phone or WhatsApp to confirm your appointment.',
+      );
+      return;
+    }
 
     // 1. Validate data & rate limits
     const currentLimit = checkRateLimit();

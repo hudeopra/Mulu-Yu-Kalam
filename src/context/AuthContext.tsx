@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { User, Session, AuthError } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +27,11 @@ export function AuthProvider({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setIsLoading(false);
+      return;
+    }
+
     // 1. Check active session on initial load
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -49,6 +54,16 @@ export function AuthProvider({
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return {
+        error: {
+          name: "AuthApiError",
+          message: "Supabase credentials are not configured on this deployment.",
+          status: 500,
+        } as AuthError,
+      };
+    }
+
     setIsLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -63,6 +78,12 @@ export function AuthProvider({
   };
 
   const signOut = async () => {
+    if (!isSupabaseConfigured) {
+      setUser(null);
+      setSession(null);
+      return;
+    }
+
     setIsLoading(true);
     await supabase.auth.signOut();
     setUser(null);
@@ -75,7 +96,7 @@ export function AuthProvider({
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);

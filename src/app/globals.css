@@ -2,7 +2,7 @@
 @import "./custom-cursor.css";
 
 @theme {
-  --font-sans: "Josefin Sans", sans-serif;
+  --font-sans: var(--font-sans, "Josefin Sans", sans-serif);
   --color-brand-primary: #ff7b01;
   --color-brand-accent: #ffbd5b;
   --color-brand-bg-cream: #ffdca9;
@@ -11,7 +11,7 @@
 
 @layer base {
   body {
-    font-family: "Josefin Sans", sans-serif;
+    font-family: var(--font-sans, "Josefin Sans", sans-serif);
     line-height: 1.7;
     color: #333333;
   }

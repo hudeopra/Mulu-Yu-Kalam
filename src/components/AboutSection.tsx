@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState, useRef } from 'react';
 import { MessageCircle, Camera, Share2, Video, MapPin } from 'lucide-react';
 

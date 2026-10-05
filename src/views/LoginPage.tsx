@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import {
   Lock,
@@ -14,7 +17,7 @@ import {
 
 export const LoginPage: React.FC = () => {
   const { user, signIn } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,9 +28,9 @@ export const LoginPage: React.FC = () => {
   // If already logged in, redirect immediately to /admin
   useEffect(() => {
     if (user) {
-      navigate("/admin", { replace: true });
+      router.replace("/admin");
     }
-  }, [user, navigate]);
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +53,7 @@ export const LoginPage: React.FC = () => {
       }
 
       // Success: redirect to admin dashboard
-      navigate("/admin", { replace: true });
+      router.replace("/admin");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -68,7 +71,7 @@ export const LoginPage: React.FC = () => {
       {/* Back to website button */}
       <div className="absolute top-6 left-6 z-10">
         <Link
-          to="/"
+          href="/"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/80 backdrop-blur-sm border border-black/5 text-gray-700 text-sm font-semibold hover:bg-white hover:text-[#ff7b01] transition-all shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -79,7 +82,7 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md relative z-10">
         {/* Studio Branding */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-block group">
+          <Link href="/" className="inline-block group">
             <img
               src="/assets/img/Mulu-Yu-Kalam.svg"
               alt="Mulu Yu Kalam"

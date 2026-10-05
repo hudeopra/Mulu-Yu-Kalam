@@ -13,6 +13,7 @@ export interface RateLimitStatus {
  * Clean expired timestamps older than 24 hours and return active timestamps.
  */
 function getActiveTimestamps(): number[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
@@ -82,6 +83,7 @@ export function checkRateLimit(): RateLimitStatus {
  * Record a successful appointment submission timestamp on this device.
  */
 export function recordSubmission(): void {
+  if (typeof window === "undefined") return;
   try {
     const timestamps = getActiveTimestamps();
     timestamps.push(Date.now());

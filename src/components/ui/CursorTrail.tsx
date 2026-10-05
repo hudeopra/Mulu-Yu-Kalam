@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 export interface CursorTrailProps {
   /**
@@ -40,14 +40,14 @@ interface Point {
   dy: number;
 }
 
-export const CursorTrail: React.FC<CursorTrailProps> = ({
+export function CursorTrail({
   color = "#ff7b01",
   pointsCount = 40,
   widthFactor = 0.3,
   spring = 0.4,
   friction = 0.5,
   enableIdleMotion = true,
-}) => {
+}: CursorTrailProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -56,6 +56,12 @@ export const CursorTrail: React.FC<CursorTrailProps> = ({
       "(prefers-reduced-motion: reduce)",
     ).matches;
     if (prefersReducedMotion) return;
+
+    // Do not run cursor trail animation on touch devices without a hover pointer
+    const isTouchOnly = window.matchMedia(
+      "(hover: none) and (pointer: coarse)",
+    ).matches;
+    if (isTouchOnly) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;

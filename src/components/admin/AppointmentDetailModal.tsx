@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
+import Image from "next/image";
 import {
   X,
   Calendar,
@@ -32,7 +33,7 @@ import {
   getAppointmentReferenceUrls,
   deleteAppointmentStorageImages,
   extractStoragePath,
-} from "../../lib/supabase";
+} from "@/lib/supabase";
 
 interface AppointmentDetailModalProps {
   appointment: Appointment | null;
@@ -42,13 +43,13 @@ interface AppointmentDetailModalProps {
   onAppointmentDeleted: (id: string) => void;
 }
 
-export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
+export function AppointmentDetailModal({
   appointment,
   isOpen,
   onClose,
   onAppointmentUpdated,
   onAppointmentDeleted,
-}) => {
+}: AppointmentDetailModalProps) {
   // Form edit states
   const [status, setStatus] = useState<AppointmentStatus>("pending");
   const [depositStatus, setDepositStatus] = useState<DepositStatus>("unpaid");
@@ -104,7 +105,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
       ? `977${phoneDigits}`
       : phoneDigits;
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setFeedbackMessage(null);
@@ -596,10 +597,13 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                           onClick={() => setShowImageLightbox(true)}
                           className="group relative aspect-square w-full rounded-2xl overflow-hidden bg-black/5 border border-gray-200 cursor-zoom-in shadow-xs"
                         >
-                          <img
+                          <Image
                             src={activeImageUrl}
                             alt={`Tattoo Reference ${selectedImageIndex + 1}`}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            fill
+                            unoptimized
+                            sizes="(max-width: 768px) 100vw, 500px"
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1.5 text-xs font-medium">
                             <ZoomIn className="w-4 h-4" />
@@ -627,10 +631,13 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                                 }`}
                                 title={`View image ${idx + 1}`}
                               >
-                                <img
+                                <Image
                                   src={url}
                                   alt={`Thumb ${idx + 1}`}
-                                  className="w-full h-full object-cover"
+                                  fill
+                                  unoptimized
+                                  sizes="56px"
+                                  className="object-cover"
                                 />
                                 <span className="absolute bottom-0.5 right-0.5 bg-black/75 text-white text-[9px] font-bold px-1 rounded-sm">
                                   {idx + 1}
@@ -814,10 +821,13 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
               </>
             )}
 
-            <img
+            <Image
               src={activeImageUrl}
               alt={`Reference High-Res ${selectedImageIndex + 1}`}
-              className="max-h-[85vh] max-w-full object-contain rounded-xl shadow-2xl"
+              width={1200}
+              height={1200}
+              unoptimized
+              className="max-h-[85vh] max-w-full w-auto h-auto object-contain rounded-xl shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
 

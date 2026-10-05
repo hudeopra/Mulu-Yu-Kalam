@@ -38,7 +38,12 @@ export const appointmentSchema = z.object({
   referenceFiles: z
     .array(
       z
-        .custom<File>((val) => val instanceof File, 'Invalid file')
+        .custom<File>(
+          (val) =>
+            (typeof File !== 'undefined' && val instanceof File) ||
+            (typeof Blob !== 'undefined' && val instanceof Blob),
+          'Invalid file',
+        )
         .refine(
           (file) => file.size <= MAX_FILE_SIZE,
           'Each file must be 2MB or less.',

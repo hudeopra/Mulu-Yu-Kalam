@@ -1,14 +1,15 @@
-import { Header } from "@/components/Header";
-import { HeroBanner } from "@/components/HeroBanner";
-import { AboutSection } from "@/components/AboutSection";
-import { GallerySection } from "@/components/GallerySection";
-import { ContactSection } from "@/components/ContactSection";
-import { Footer } from "@/components/Footer";
-import { PublicLandingClient } from "@/components/PublicLandingClient";
+import { Header } from '@/components/landing/Header';
+import { HeroBanner } from '@/components/landing/HeroBanner';
+import { AboutSection } from '@/components/landing/AboutSection';
+import { GallerySection } from '@/components/landing/GallerySection';
+import { ContactSection } from '@/components/landing/ContactSection';
+import { Footer } from '@/components/landing/Footer';
+import { PublicLandingClient } from '@/components/ui/PublicLandingClient';
 
 export default function HomePage() {
   return (
-    <PublicLandingClient>
+    <div className="custom-cursor-page min-h-screen flex flex-col bg-white text-gray-900 selection:bg-[#ff7b01] selection:text-white font-sans antialiased">
+      <PublicLandingClient />
       <Header />
       <main className="flex-1">
         <HeroBanner />
@@ -17,6 +18,6 @@ export default function HomePage() {
         <ContactSection />
       </main>
       <Footer />
-    </PublicLandingClient>
+    </div>
   );
 }

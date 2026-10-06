@@ -64,21 +64,18 @@ export async function POST(req: Request) {
     const clientEmail = generateBookingConfirmationEmail(emailData);
 
     // Senders:
-    // Uses verified Resend domain for sending envelope (or environment override)
-    // replyTo is set so studio can directly reply to the client, and client can directly reply to contact@muluyukalam.com.np
     const studioSender =
       process.env.RESEND_STUDIO_FROM ||
       'Support Team <support@maharjanprabin.com.np>';
     const clientEmailSender =
       process.env.RESEND_CLIENT_FROM ||
-      'Mulu Yu Kalam Studio <support@maharjanprabin.com.np>';
+      'Mulu Yu Kalam Studio <contact@muluyukalam.com.np>';
 
     // Send both emails concurrently
     const [studioResult, clientResult] = await Promise.allSettled([
       transporter.sendMail({
         from: studioSender,
         to: 'contact@muluyukalam.com.np',
-        replyTo: `${name} <${email}>`,
         subject: studioEmail.subject,
         text: studioEmail.text,
         html: studioEmail.html,
@@ -86,7 +83,6 @@ export async function POST(req: Request) {
       transporter.sendMail({
         from: clientEmailSender,
         to: email,
-        replyTo: 'contact@muluyukalam.com.np',
         subject: clientEmail.subject,
         text: clientEmail.text,
         html: clientEmail.html,
@@ -96,14 +92,28 @@ export async function POST(req: Request) {
     const studioSuccess = studioResult.status === 'fulfilled';
     const clientSuccess = clientResult.status === 'fulfilled';
 
+    const studioError =
+      studioResult.status === 'rejected'
+        ? (studioResult.reason instanceof Error
+            ? studioResult.reason.message
+            : String(studioResult.reason))
+        : null;
+
+    const clientError =
+      clientResult.status === 'rejected'
+        ? (clientResult.reason instanceof Error
+            ? clientResult.reason.message
+            : String(clientResult.reason))
+        : null;
+
     if (!studioSuccess) {
-      console.error('[Email Route] Studio notification email error:', studioResult.reason);
+      console.error('[Email Route] Studio notification email error:', studioError);
     } else {
       console.log('[Email Route] Studio notification sent. Message ID:', studioResult.value.messageId);
     }
 
     if (!clientSuccess) {
-      console.error('[Email Route] Client confirmation email error:', clientResult.reason);
+      console.error('[Email Route] Client confirmation email error:', clientError);
     } else {
       console.log('[Email Route] Client confirmation sent. Message ID:', clientResult.value.messageId);
     }
@@ -112,13 +122,16 @@ export async function POST(req: Request) {
       success: studioSuccess || clientSuccess,
       studioSent: studioSuccess,
       clientSent: clientSuccess,
+      studioError,
+      clientError,
     });
   } catch (error) {
-    console.error('[Email Route] Unexpected error during mail dispatch:', error);
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error sending email';
+    console.error('[Email Route] Unexpected error during mail dispatch:', errorMsg);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error sending email',
+        error: errorMsg,
       },
       { status: 500 }
     );

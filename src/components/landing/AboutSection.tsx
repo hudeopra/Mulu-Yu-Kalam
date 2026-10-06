@@ -76,10 +76,24 @@ export function AboutSection() {
               About Us
             </h2>
             <p className="text-gray-700 leading-relaxed text-base sm:text-lg">
-              Welcome to <span className="font-semibold text-[#2e0249]">Mulu Yu Kalam</span>—Lalitpur&apos;s dedicated custom tattoo studio located in Harisiddhi, Nepal. Born from a passion for authentic body art and visual storytelling, our artists specialize in bespoke tattooing across delicate fine-line, realism, illustrative styles, and meaningful custom concepts. Every tattoo is treated as a permanent work of art crafted specifically for you.
+              Welcome to{' '}
+              <span className="font-semibold text-[#2e0249]">
+                Mulu Yu Kalam
+              </span>
+              —Lalitpur&apos;s dedicated custom tattoo studio located in
+              Harisiddhi, Nepal. Born from a passion for authentic body art and
+              visual storytelling, our artists specialize in bespoke tattooing
+              across delicate fine-line, realism, illustrative styles, and
+              meaningful custom concepts. Every tattoo is treated as a permanent
+              work of art crafted specifically for you.
             </p>
             <p className="text-gray-700 leading-relaxed text-base sm:text-lg lg:w-4/5">
-              We uphold uncompromising hygiene standards with hospital-grade sanitization, 100% single-use disposable needle cartridges, and premium certified skin-safe inks. Whether you are stepping in for your very first piece or crafting a comprehensive sleeve, we guide you from initial consultation through expert aftercare to make your tattoo journey exceptional.
+              We uphold uncompromising hygiene standards with hospital-grade
+              sanitization, 100% single-use disposable needle cartridges, and
+              premium certified skin-safe inks. Whether you are stepping in for
+              your very first piece or crafting a comprehensive sleeve, we guide
+              you from initial consultation through expert aftercare to make
+              your tattoo journey exceptional.
             </p>
           </div>
 

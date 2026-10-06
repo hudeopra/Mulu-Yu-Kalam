@@ -1,40 +1,20 @@
+import type { ComponentProps, ReactNode, Ref } from 'react';
 import type { FieldError, UseFormRegisterReturn } from 'react-hook-form';
+import { AlertCircle } from 'lucide-react';
 
-export interface InputFieldProps extends Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  'onKeyDown'
-> {
+export interface InputFieldProps extends ComponentProps<'input'> {
   register?: Partial<UseFormRegisterReturn>;
-  name?: string;
   label?: string;
-  error?: FieldError;
-  type?:
-    | 'text'
-    | 'email'
-    | 'password'
-    | 'date'
-    | 'time'
-    | 'url'
-    | 'tel'
-    | 'search'
-    | 'number'
-    | 'checkbox';
-  placeholder?: string;
-  className?: string;
+  error?: FieldError | { message?: string };
   containerClassName?: string;
   labelClassName?: string;
   errorClassName?: string;
-  icon?: React.ReactNode;
-  rightElement?: React.ReactNode;
-  disabled?: boolean;
-  onKeyDown?: (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index?: number,
-  ) => void;
-  index?: number;
+  icon?: ReactNode;
+  rightElement?: ReactNode;
+  ref?: Ref<HTMLInputElement>;
 }
 
-const InputField = ({
+export function InputField({
   register,
   name,
   label,
@@ -42,65 +22,63 @@ const InputField = ({
   type = 'text',
   placeholder = 'Type Here...',
   className = '',
-  containerClassName = 'form__item',
-  labelClassName,
-  errorClassName,
+  containerClassName = '',
+  labelClassName = 'block text-sm font-semibold text-gray-800 mb-2',
+  errorClassName = 'text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5',
   icon,
   rightElement,
   disabled = false,
-  onKeyDown,
-  index,
   id,
+  ref,
   ...rest
-}: InputFieldProps) => {
-  const inputId = id || name;
+}: InputFieldProps) {
+  const inputId = id || name || register?.name;
+  const combinedRef = ref || register?.ref;
 
   return (
     <div className={containerClassName}>
-      {label && (
+      {label ? (
         <label htmlFor={inputId} className={labelClassName}>
           {label}
         </label>
-      )}
+      ) : null}
 
       {icon || rightElement ? (
         <div className="relative">
-          {icon}
+          {icon ? icon : null}
           <input
+            ref={combinedRef}
             {...register}
             id={inputId}
             type={type}
             placeholder={placeholder}
-            className={`${className}`}
+            className={className}
             disabled={disabled}
-            onKeyDown={(e) => onKeyDown?.(e, index as number)}
             {...rest}
           />
-          {rightElement}
+          {rightElement ? rightElement : null}
         </div>
       ) : (
         <input
+          ref={combinedRef}
           {...register}
           id={inputId}
           type={type}
           placeholder={placeholder}
-          className={`${className}`}
+          className={className}
           disabled={disabled}
-          onKeyDown={(e) => onKeyDown?.(e, index as number)}
           {...rest}
         />
       )}
 
-      {error && (
-        <p
-          className={errorClassName}
-          style={errorClassName ? undefined : { color: 'red' }}
-        >
-          {error?.message}
+      {error?.message ? (
+        <p className={errorClassName}>
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>{error.message}</span>
         </p>
-      )}
+      ) : null}
     </div>
   );
-};
+}
 
 export default InputField;

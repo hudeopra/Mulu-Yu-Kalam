@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   ShieldCheck,
 } from 'lucide-react';
+import { InputField } from '@/components/ui';
 
 export default function LoginPage() {
   const { user, signIn } = useAuth();
@@ -106,7 +107,7 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-black/5">
-          {errorMessage && (
+          {errorMessage ? (
             <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3 animate-in fade-in duration-200">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <div>
@@ -114,47 +115,36 @@ export default function LoginPage() {
                 <p className="text-xs text-red-600 mt-0.5">{errorMessage}</p>
               </div>
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             {/* Email Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Staff Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@muluyukalam.com"
-                  required
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-3 text-[#2e0249] text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
-                />
-              </div>
-            </div>
+            <InputField
+              type="email"
+              label="Staff Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@muluyukalam.com"
+              required
+              icon={<Mail className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />}
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-3 text-[#2e0249] text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
+            />
 
             {/* Password Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your staff password"
-                  required
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-12 py-3 text-[#2e0249] text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
-                />
+            <InputField
+              type={showPassword ? 'text' : 'password'}
+              label="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your staff password"
+              required
+              icon={<Lock className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />}
+              rightElement={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -162,8 +152,9 @@ export default function LoginPage() {
                     <Eye className="w-4 h-4" />
                   )}
                 </button>
-              </div>
-            </div>
+              }
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-12 py-3 text-[#2e0249] text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
+            />
 
             {/* Submit Button */}
             <button

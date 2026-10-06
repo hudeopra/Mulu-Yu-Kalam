@@ -23,6 +23,7 @@ import {
   tattooLocations,
 } from '@/schemas/appointmentSchema';
 import { FileUpload } from './FileUpload';
+import { InputField, TextareaField } from '@/components/ui';
 import type { RateLimitStatus } from '@/utils/rateLimiter';
 
 export interface AppointmentFormFieldsProps {
@@ -86,33 +87,33 @@ export function TattooLocationSelector({
         name="tattooLocation"
         control={control}
         render={({ field }) => (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            {tattooLocations.map((loc) => {
-              const isSelected = field.value === loc;
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {tattooLocations.map((location) => {
+              const isSelected = field.value === location;
               return (
                 <button
+                  key={location}
                   type="button"
-                  key={loc}
-                  onClick={() => field.onChange(loc)}
-                  className={`py-3 px-4 rounded-xl text-xs sm:text-sm font-bold capitalize transition-all duration-200 cursor-pointer border text-center ${
+                  onClick={() => field.onChange(location)}
+                  className={`px-6 py-2.5 rounded-xl border text-sm sm:text-base font-semibold transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? 'bg-[#2e0249] text-[#ffbd5b] border-[#2e0249] shadow-md scale-[1.02]'
-                      : 'bg-white/80 text-gray-700 border-[#ffbd5b]/40 hover:border-[#ff7b01] hover:bg-white'
+                      ? 'bg-[#ff7b01] text-white border-[#ff7b01] shadow-md shadow-[#ff7b01]/30 scale-105'
+                      : 'bg-transparent text-brand-primary border-[#ff7b01] hover:bg-[#ffecd0]'
                   }`}
                 >
-                  {loc}
+                  {location}
                 </button>
               );
             })}
           </div>
         )}
       />
-      {error && (
+      {error ? (
         <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
           <AlertCircle className="w-3.5 h-3.5" />
           {error}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -127,73 +128,46 @@ export function CustomerInfoFields({
   return (
     <>
       {/* Name Input */}
-      <div>
-        <div className="relative">
-          <User className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-          <input
-            type="text"
-            placeholder="Your Name"
-            {...register('name')}
-            className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
-              errors.name
-                ? 'border-red-500 focus:border-red-600'
-                : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-            }`}
-          />
-        </div>
-        {errors.name && (
-          <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-            <AlertCircle className="w-3.5 h-3.5" />
-            {errors.name.message}
-          </p>
-        )}
-      </div>
+      <InputField
+        type="text"
+        placeholder="Your Name"
+        register={register('name')}
+        icon={<User className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+        className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
+          errors.name
+            ? 'border-red-500 focus:border-red-600'
+            : 'border-[#ffbd5b] focus:border-[#ff7b01]'
+        }`}
+        error={errors.name}
+      />
 
       {/* Email & Phone */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <div className="relative">
-            <Mail className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-            <input
-              type="email"
-              placeholder="Your Email"
-              {...register('email')}
-              className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
-                errors.email
-                  ? 'border-red-500 focus:border-red-600'
-                  : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-              }`}
-            />
-          </div>
-          {errors.email && (
-            <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-              <AlertCircle className="w-3.5 h-3.5" />
-              {errors.email.message}
-            </p>
-          )}
-        </div>
+        <InputField
+          type="email"
+          placeholder="Your Email"
+          register={register('email')}
+          icon={<Mail className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+          className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
+            errors.email
+              ? 'border-red-500 focus:border-red-600'
+              : 'border-[#ffbd5b] focus:border-[#ff7b01]'
+          }`}
+          error={errors.email}
+        />
 
-        <div>
-          <div className="relative">
-            <Phone className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-            <input
-              type="tel"
-              placeholder="Your Phone No."
-              {...register('number')}
-              className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
-                errors.number
-                  ? 'border-red-500 focus:border-red-600'
-                  : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-              }`}
-            />
-          </div>
-          {errors.number && (
-            <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-              <AlertCircle className="w-3.5 h-3.5" />
-              {errors.number.message}
-            </p>
-          )}
-        </div>
+        <InputField
+          type="tel"
+          placeholder="Your Phone No."
+          register={register('number')}
+          icon={<Phone className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+          className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
+            errors.number
+              ? 'border-red-500 focus:border-red-600'
+              : 'border-[#ffbd5b] focus:border-[#ff7b01]'
+          }`}
+          error={errors.number}
+        />
       </div>
     </>
   );
@@ -208,48 +182,40 @@ export function AppointmentDateTimeFields({
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <div>
-        <div className="relative">
-          <Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-          <input
-            type="time"
-            {...register('appointmentTime')}
-            className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
-              errors.appointmentTime
-                ? 'border-red-500 focus:border-red-600'
-                : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-            }`}
-          />
-        </div>
-        {errors.appointmentTime && (
-          <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-            <AlertCircle className="w-3.5 h-3.5" />
-            {errors.appointmentTime.message}
-          </p>
-        )}
-      </div>
+      <InputField
+        type="time"
+        register={register('appointmentTime')}
+        onClick={(e) => {
+          try {
+            e.currentTarget.showPicker?.();
+          } catch {}
+        }}
+        icon={<Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+        className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
+          errors.appointmentTime
+            ? 'border-red-500 focus:border-red-600'
+            : 'border-[#ffbd5b] focus:border-[#ff7b01]'
+        }`}
+        error={errors.appointmentTime}
+      />
 
-      <div>
-        <div className="relative">
-          <Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b]" />
-          <input
-            type="date"
-            min={new Date().toISOString().split('T')[0]}
-            {...register('appointmentDate')}
-            className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
-              errors.appointmentDate
-                ? 'border-red-500 focus:border-red-600'
-                : 'border-[#ffbd5b] focus:border-[#ff7b01]'
-            }`}
-          />
-        </div>
-        {errors.appointmentDate && (
-          <p className="text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5">
-            <AlertCircle className="w-3.5 h-3.5" />
-            {errors.appointmentDate.message}
-          </p>
-        )}
-      </div>
+      <InputField
+        type="date"
+        min={new Date().toISOString().split('T')[0]}
+        register={register('appointmentDate')}
+        onClick={(e) => {
+          try {
+            e.currentTarget.showPicker?.();
+          } catch {}
+        }}
+        icon={<Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+        className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
+          errors.appointmentDate
+            ? 'border-red-500 focus:border-red-600'
+            : 'border-[#ffbd5b] focus:border-[#ff7b01]'
+        }`}
+        error={errors.appointmentDate}
+      />
     </div>
   );
 }
@@ -283,11 +249,11 @@ export function FormSubmitButton({
         )}
       </button>
 
-      {isSubmitting && statusMessage && (
+      {isSubmitting && statusMessage ? (
         <span className="text-xs sm:text-sm font-semibold text-brand-primary animate-pulse">
           {statusMessage}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -309,12 +275,13 @@ export function AppointmentFormFields({
         e.stopPropagation();
         void onSubmit(e);
       }}
-      action="#"
       noValidate
       className="space-y-8"
     >
       <RateLimitBanner rateLimit={rateLimit} />
-      {submissionError && <SubmissionErrorBanner message={submissionError} />}
+      {submissionError ? (
+        <SubmissionErrorBanner message={submissionError} />
+      ) : null}
 
       <TattooLocationSelector
         control={control}
@@ -336,6 +303,14 @@ export function AppointmentFormFields({
               maxFiles={5}
             />
           )}
+        />
+
+        <TextareaField
+          register={register('notes')}
+          placeholder="Any extra details, design ideas, or size preferences (optional)..."
+          rows={3}
+          className="w-full bg-white/70 border-2 border-[#ffbd5b] rounded-2xl p-4 text-[#2e0249] placeholder-[#ffbd5b] focus:outline-none focus:border-[#ff7b01] transition-colors resize-none text-sm"
+          error={errors.notes}
         />
       </div>
 

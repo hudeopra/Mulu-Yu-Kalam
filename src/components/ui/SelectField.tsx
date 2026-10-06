@@ -1,27 +1,26 @@
+import type { ComponentProps, ReactNode, Ref } from 'react';
 import type { FieldError, UseFormRegisterReturn } from 'react-hook-form';
+import { AlertCircle } from 'lucide-react';
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectFieldProps extends ComponentProps<'select'> {
   register?: Partial<UseFormRegisterReturn>;
-  name?: string;
   label?: string;
-  error?: FieldError;
+  error?: FieldError | { message?: string };
   options?: SelectOption[];
   placeholder?: string;
-  className?: string;
   containerClassName?: string;
   labelClassName?: string;
   errorClassName?: string;
-  icon?: React.ReactNode;
-  disabled?: boolean;
-  children?: React.ReactNode;
+  icon?: ReactNode;
+  ref?: Ref<HTMLSelectElement>;
 }
 
-const SelectField = ({
+export function SelectField({
   register,
   name,
   label,
@@ -29,78 +28,64 @@ const SelectField = ({
   options,
   placeholder,
   className = '',
-  containerClassName,
-  labelClassName,
-  errorClassName,
+  containerClassName = '',
+  labelClassName = 'block text-sm font-semibold text-gray-800 mb-2',
+  errorClassName = 'text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5',
   icon,
   disabled = false,
   children,
   id,
+  ref,
   ...rest
-}: SelectFieldProps) => {
-  const selectId = id || name;
+}: SelectFieldProps) {
+  const selectId = id || name || register?.name;
+  const combinedRef = ref || register?.ref;
 
-  const content = (
-    <>
-      {label && (
+  const selectNode = (
+    <select
+      ref={combinedRef}
+      {...register}
+      id={selectId}
+      className={className}
+      disabled={disabled}
+      {...rest}
+    >
+      {placeholder ? <option value="">{placeholder}</option> : null}
+      {options
+        ? options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))
+        : children}
+    </select>
+  );
+
+  return (
+    <div className={containerClassName}>
+      {label ? (
         <label htmlFor={selectId} className={labelClassName}>
           {label}
         </label>
-      )}
+      ) : null}
+
       {icon ? (
         <div className="relative">
           {icon}
-          <select
-            {...register}
-            id={selectId}
-            className={`${className}`}
-            disabled={disabled}
-            {...rest}
-          >
-            {placeholder && <option value="">{placeholder}</option>}
-            {options
-              ? options.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))
-              : children}
-          </select>
+          {selectNode}
         </div>
       ) : (
-        <select
-          {...register}
-          id={selectId}
-          className={`${className}`}
-          disabled={disabled}
-          {...rest}
-        >
-          {placeholder && <option value="">{placeholder}</option>}
-          {options
-            ? options.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))
-            : children}
-        </select>
+        selectNode
       )}
-      {error && (
-        <p
-          className={errorClassName}
-          style={errorClassName ? undefined : { color: 'red' }}
-        >
-          {error?.message}
-        </p>
-      )}
-    </>
-  );
 
-  return containerClassName ? (
-    <div className={containerClassName}>{content}</div>
-  ) : (
-    content
+      {error?.message ? (
+        <p className={errorClassName}>
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>{error.message}</span>
+        </p>
+      ) : null}
+    </div>
   );
-};
+}
 
 export default SelectField;

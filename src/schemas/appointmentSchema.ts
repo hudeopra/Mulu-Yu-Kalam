@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const MAX_FILE_SIZE = 2.5 * 1024 * 1024; // 2MB strict limit
+const MAX_FILE_SIZE = 2.5 * 1024 * 1024; // 2.5MB limit
 const ACCEPTED_IMAGE_TYPES = [
   'image/jpeg',
   'image/jpg',
@@ -46,7 +46,7 @@ export const appointmentSchema = z.object({
         )
         .refine(
           (file) => file.size <= MAX_FILE_SIZE,
-          'Each file must be 2MB or less.',
+          'Each file must be 2.5MB or less.',
         )
         .refine(
           (file) =>

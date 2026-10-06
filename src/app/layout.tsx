@@ -122,7 +122,7 @@ const jsonLd = [
       "Premier custom tattoo & body art studio located in Harisiddhi, Lalitpur, Nepal. Specializing in bespoke tattoo designs, fine line, realism, illustrative, and sterile hygienic tattoo procedures. Serving clients across Lalitpur, Kathmandu, and Bhaktapur.",
     url: 'https://muluyukalam.com.np',
     telephone: '+9779861341995',
-    email: 'contact@muluyakalam.com.np',
+    email: 'contact@muluyukalam.com.np',
     priceRange: '$$',
     currenciesAccepted: 'NPR',
     paymentAccepted: 'Cash, Fonepay, Mobile Banking',

@@ -1,65 +1,59 @@
+import type { ComponentProps, Ref } from 'react';
 import type { FieldError, UseFormRegisterReturn } from 'react-hook-form';
+import { AlertCircle } from 'lucide-react';
 
-export interface TextareaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaFieldProps extends ComponentProps<'textarea'> {
   register?: Partial<UseFormRegisterReturn>;
-  name?: string;
   label?: string;
-  error?: FieldError;
-  placeholder?: string;
-  className?: string;
+  error?: FieldError | { message?: string };
   containerClassName?: string;
   labelClassName?: string;
   errorClassName?: string;
-  disabled?: boolean;
+  ref?: Ref<HTMLTextAreaElement>;
 }
 
-const TextareaField = ({
+export function TextareaField({
   register,
   name,
   label,
   error,
   placeholder = 'Type Here...',
   className = '',
-  containerClassName,
-  labelClassName,
-  errorClassName,
+  containerClassName = '',
+  labelClassName = 'block text-sm font-semibold text-gray-800 mb-2',
+  errorClassName = 'text-xs font-semibold text-red-500 flex items-center gap-1 mt-1.5',
   disabled = false,
   id,
+  ref,
   ...rest
-}: TextareaFieldProps) => {
-  const textareaId = id || name;
+}: TextareaFieldProps) {
+  const textareaId = id || name || register?.name;
+  const combinedRef = ref || register?.ref;
 
-  const content = (
-    <>
-      {label && (
+  return (
+    <div className={containerClassName}>
+      {label ? (
         <label htmlFor={textareaId} className={labelClassName}>
           {label}
         </label>
-      )}
+      ) : null}
       <textarea
+        ref={combinedRef}
         {...register}
         id={textareaId}
         placeholder={placeholder}
-        className={`${className}`}
+        className={className}
         disabled={disabled}
         {...rest}
       />
-      {error && (
-        <p
-          className={errorClassName}
-          style={errorClassName ? undefined : { color: 'red' }}
-        >
-          {error?.message}
+      {error?.message ? (
+        <p className={errorClassName}>
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>{error.message}</span>
         </p>
-      )}
-    </>
+      ) : null}
+    </div>
   );
-
-  return containerClassName ? (
-    <div className={containerClassName}>{content}</div>
-  ) : (
-    content
-  );
-};
+}
 
 export default TextareaField;

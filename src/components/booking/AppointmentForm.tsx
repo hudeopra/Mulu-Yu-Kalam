@@ -114,7 +114,7 @@ export function AppointmentForm() {
 
             if (isSizeError) {
               throw new Error(
-                `Failed to upload reference artwork "${file.name}": The file exceeded the Supabase Storage bucket size limit. Please ensure the "tattoo-references" bucket size limit is updated to 2MB in your Supabase Dashboard or SQL editor.`,
+                `Failed to upload reference artwork "${file.name}": The file exceeded the Supabase Storage bucket size limit. Please ensure the "tattoo-references" bucket size limit is updated to 2.5MB in your Supabase Dashboard or SQL editor.`,
               );
             }
 

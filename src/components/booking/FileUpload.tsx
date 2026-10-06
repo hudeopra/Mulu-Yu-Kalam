@@ -203,21 +203,20 @@ export function FileUpload({
         <span className="text-xs text-gray-500 font-medium">
           {items.length > 0
             ? `${items.length} of ${maxFiles} selected`
-            : `Max ${maxFiles} images (2MB each)`}
+            : `Max ${maxFiles} images (2.5MB each)`}
         </span>
       </div>
 
       <input
-        id="tattoo-reference-upload"
         ref={fileInputRef}
         type="file"
-        accept="image/*"
-        className="sr-only"
+        accept="image/jpeg,image/png,image/webp,image/jpg,.webp,.jpg,.jpeg,.png"
+        className="hidden"
         onChange={handleFileChange}
         multiple
       />
 
-      {isCompressing && (
+      {isCompressing ? (
         <div className="border-2 border-dashed border-[#ff7b01] bg-[#ffecd0]/40 rounded-2xl p-6 text-center flex flex-col items-center justify-center gap-3 mb-3">
           <Loader2 className="w-8 h-8 text-[#ff7b01] animate-spin" />
           <p className="text-sm font-semibold text-[#2e0249]">
@@ -226,14 +225,22 @@ export function FileUpload({
               : 'Optimizing & compressing reference artwork...'}
           </p>
           <p className="text-xs text-gray-500">
-            Scaling to 1600px & encoding to WebP under 2MB
+            Scaling to 1600px & encoding to WebP under 2.5MB
           </p>
         </div>
-      )}
+      ) : null}
 
       {items.length === 0 ? (
-        <label
-          htmlFor="tattoo-reference-upload"
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => fileInputRef.current?.click()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -255,10 +262,9 @@ export function FileUpload({
             or drag and drop
           </p>
           <p className="text-xs text-gray-400 pointer-events-none">
-            PNG, JPG, or WEBP &bull; Upload up to {maxFiles} images (Max 2MB
-            each)
+            PNG, JPG, or WEBP &bull; Upload up to {maxFiles} images (Max 2.5MB each)
           </p>
-        </label>
+        </div>
       ) : (
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -316,9 +322,17 @@ export function FileUpload({
             ))}
           </div>
 
-          {items.length < maxFiles && !isCompressing && (
-            <label
-              htmlFor="tattoo-reference-upload"
+          {items.length < maxFiles && !isCompressing ? (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -333,17 +347,17 @@ export function FileUpload({
                 Add more images ({maxFiles - items.length} slot
                 {maxFiles - items.length === 1 ? '' : 's'} remaining)
               </span>
-            </label>
-          )}
+            </div>
+          ) : null}
         </div>
       )}
 
-      {(error || localError) && (
+      {error || localError ? (
         <p className="mt-1.5 text-xs font-semibold text-red-500 flex items-center gap-1">
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>{error || localError}</span>
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

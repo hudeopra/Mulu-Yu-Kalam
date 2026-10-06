@@ -342,11 +342,11 @@ export function AdminDashboard() {
                 <p className="text-2xl font-extrabold text-amber-600">
                   {stats.pending}
                 </p>
-                {stats.pending > 0 && (
+                {stats.pending > 0 ? (
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 animate-pulse">
                     Action Needed
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           </div>
@@ -393,7 +393,7 @@ export function AdminDashboard() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
               />
-              {searchQuery && (
+              {searchQuery ? (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
@@ -401,7 +401,7 @@ export function AdminDashboard() {
                 >
                   Clear
                 </button>
-              )}
+              ) : null}
             </div>
 
             {/* Sort Dropdown & Refresh Button */}
@@ -479,7 +479,7 @@ export function AdminDashboard() {
         </div>
 
         {/* Error Alert Banner */}
-        {errorMessage && (
+        {errorMessage ? (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 text-red-800 text-xs font-semibold">
             <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
             <span className="flex-1">{errorMessage}</span>
@@ -491,7 +491,7 @@ export function AdminDashboard() {
               Retry
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* Appointments Table / Cards View */}
         <div className="bg-white rounded-3xl border border-black/5 shadow-xs overflow-hidden">
@@ -519,7 +519,7 @@ export function AdminDashboard() {
                     ? `There are currently no appointments in the "${statusFilter}" category.`
                     : "New client bookings submitted from the landing page will automatically stream here in real time."}
               </p>
-              {searchQuery && (
+              {searchQuery ? (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
@@ -527,7 +527,7 @@ export function AdminDashboard() {
                 >
                   Clear search filters
                 </button>
-              )}
+              ) : null}
             </div>
           ) : (
             /* Table for Large Screens */
@@ -623,11 +623,11 @@ export function AdminDashboard() {
                                 unoptimized
                                 className="object-cover group-hover:scale-105 transition-transform"
                               />
-                              {refUrls.length > 1 && (
+                              {refUrls.length > 1 ? (
                                 <span className="absolute bottom-0 right-0 bg-[#2e0249] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-tl-md shadow-xs">
                                   +{refUrls.length - 1}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                           ) : (
                             <div className="w-12 h-12 rounded-xl bg-gray-100 border border-dashed border-gray-200 flex items-center justify-center text-gray-400">
@@ -675,7 +675,7 @@ export function AdminDashboard() {
                       <td className="py-4 px-4 sm:px-6 text-right">
                         <div className="inline-flex items-center gap-1">
                           {/* Quick confirm button for pending */}
-                          {app.status === "pending" && (
+                          {app.status === "pending" ? (
                             <button
                               type="button"
                               onClick={(e) =>
@@ -686,10 +686,10 @@ export function AdminDashboard() {
                             >
                               <CheckCircle2 className="w-4 h-4" />
                             </button>
-                          )}
+                          ) : null}
 
                           {/* Quick complete button for confirmed */}
-                          {app.status === "confirmed" && (
+                          {app.status === "confirmed" ? (
                             <button
                               type="button"
                               onClick={(e) =>
@@ -700,7 +700,7 @@ export function AdminDashboard() {
                             >
                               <CheckCircle2 className="w-4 h-4" />
                             </button>
-                          )}
+                          ) : null}
 
                           {/* View Inspector Modal */}
                           <button
@@ -739,4 +739,4 @@ export function AdminDashboard() {
       />
     </div>
   );
-};
+}

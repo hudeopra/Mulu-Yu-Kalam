@@ -63,19 +63,23 @@ export async function POST(req: Request) {
     // 2. Generate Client Booking Confirmation Email (subject, text, html)
     const clientEmail = generateBookingConfirmationEmail(emailData);
 
-    // Senders:
+    // Senders & Recipients:
     const studioSender =
       process.env.RESEND_STUDIO_FROM ||
       'Support Team <support@maharjanprabin.com.np>';
     const clientEmailSender =
       process.env.RESEND_CLIENT_FROM ||
       'Mulu Yu Kalam Studio <contact@muluyukalam.com.np>';
+    const studioRecipient =
+      process.env.STUDIO_NOTIFICATION_EMAIL ||
+      process.env.RESEND_STUDIO_TO ||
+      'contact@muluyukalam.com.np';
 
     // Send both emails concurrently
     const [studioResult, clientResult] = await Promise.allSettled([
       transporter.sendMail({
         from: studioSender,
-        to: 'contact@muluyukalam.com.np',
+        to: studioRecipient,
         subject: studioEmail.subject,
         text: studioEmail.text,
         html: studioEmail.html,

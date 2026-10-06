@@ -18,15 +18,15 @@ export function ContactInformation({
       <ul className="space-y-4">
         <li>
           <a
-            href="mailto:contact@muluyakalam.com.np"
-            title="contact@muluyakalam.com.np"
+            href="mailto:contact@muluyukalam.com.np"
+            title="contact@muluyukalam.com.np"
             className="flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-[#ff7b01] hover:bg-[#ffbd5b]/40 transition-all duration-200 group bg-white/40 min-w-0"
           >
             <div className="w-12 h-12 rounded-xl bg-[#ffecd0] text-[#ff7b01] flex items-center justify-center transition-transform group-hover:scale-110 shrink-0">
               <Mail className="w-6 h-6" />
             </div>
             <span className="text-[#2e0249] font-bold text-base sm:text-lg truncate">
-              contact@muluyakalam.com.np
+              contact@muluyukalam.com.np
             </span>
           </a>
         </li>

@@ -34,6 +34,7 @@ import {
   deleteAppointmentStorageImages,
   extractStoragePath,
 } from "@/lib/supabase";
+import { InputField, SelectField, TextareaField } from "@/components/ui";
 
 interface AppointmentDetailModalProps {
   appointment: Appointment | null;
@@ -308,7 +309,7 @@ export function AppointmentDetailModal({
           </div>
 
           {/* Feedback alert banner */}
-          {feedbackMessage && (
+          {feedbackMessage ? (
             <div
               className={`px-6 py-3 text-xs font-semibold flex items-center gap-2 ${
                 feedbackMessage.type === "success"
@@ -323,7 +324,7 @@ export function AppointmentDetailModal({
               )}
               <span>{feedbackMessage.text}</span>
             </div>
-          )}
+          ) : null}
 
           {/* Modal Body - Scrollable */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -349,7 +350,7 @@ export function AppointmentDetailModal({
 
                     {/* Quick Communication Actions */}
                     <div className="flex items-center gap-1.5">
-                      {whatsappNumber && (
+                      {whatsappNumber ? (
                         <a
                           href={`https://wa.me/${whatsappNumber}`}
                           target="_blank"
@@ -360,7 +361,7 @@ export function AppointmentDetailModal({
                           <MessageCircle className="w-3.5 h-3.5" />
                           <span className="hidden sm:inline">WhatsApp</span>
                         </a>
-                      )}
+                      ) : null}
                       <a
                         href={`tel:${appointment.phone}`}
                         className="p-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
@@ -428,7 +429,7 @@ export function AppointmentDetailModal({
                     </div>
                   </div>
 
-                  {appointment.notes && (
+                  {appointment.notes ? (
                     <div className="pt-2 border-t border-gray-200">
                       <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] mb-1">
                         Client Concept & Instructions:
@@ -437,7 +438,7 @@ export function AppointmentDetailModal({
                         &ldquo;{appointment.notes}&rdquo;
                       </p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Edit Form */}
@@ -488,91 +489,76 @@ export function AppointmentDetailModal({
 
                   {/* Rescheduling: Date & Time */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-gray-700">
-                        Appointment Date
-                      </label>
-                      <div className="relative">
-                        <Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                        <input
-                          type="date"
-                          value={appointmentDate}
-                          onChange={(e) => setAppointmentDate(e.target.value)}
-                          required
-                          className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                        />
-                      </div>
-                    </div>
+                    <InputField
+                      type="date"
+                      label="Appointment Date"
+                      labelClassName="block text-xs font-semibold text-gray-700"
+                      containerClassName="space-y-1.5"
+                      value={appointmentDate}
+                      onChange={(e) => setAppointmentDate(e.target.value)}
+                      required
+                      icon={<Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                      className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                    />
 
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-gray-700">
-                        Appointment Time
-                      </label>
-                      <div className="relative">
-                        <Clock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                        <input
-                          type="text"
-                          value={appointmentTime}
-                          onChange={(e) => setAppointmentTime(e.target.value)}
-                          placeholder="e.g. 11:00 AM"
-                          required
-                          className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                        />
-                      </div>
-                    </div>
+                    <InputField
+                      type="text"
+                      label="Appointment Time"
+                      labelClassName="block text-xs font-semibold text-gray-700"
+                      containerClassName="space-y-1.5"
+                      value={appointmentTime}
+                      onChange={(e) => setAppointmentTime(e.target.value)}
+                      placeholder="e.g. 11:00 AM"
+                      required
+                      icon={<Clock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                      className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                    />
                   </div>
 
                   {/* Financials: Estimated Price & Deposit Status */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-gray-700">
-                        Estimated Price (NPR / USD)
-                      </label>
-                      <div className="relative">
-                        <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={estimatedPrice}
-                          onChange={(e) => setEstimatedPrice(e.target.value)}
-                          placeholder="e.g. 5000"
-                          className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                        />
-                      </div>
-                    </div>
+                    <InputField
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      label="Estimated Price (NPR / USD)"
+                      labelClassName="block text-xs font-semibold text-gray-700"
+                      containerClassName="space-y-1.5"
+                      value={estimatedPrice}
+                      onChange={(e) => setEstimatedPrice(e.target.value)}
+                      placeholder="e.g. 5000"
+                      icon={<DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                      className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                    />
 
-                    <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-gray-700">
-                        Deposit Status
-                      </label>
-                      <select
-                        value={depositStatus}
-                        onChange={(e) =>
-                          setDepositStatus(e.target.value as DepositStatus)
-                        }
-                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                      >
-                        <option value="unpaid">Unpaid</option>
-                        <option value="partial">Partial Deposit</option>
-                        <option value="paid">Fully Paid</option>
-                      </select>
-                    </div>
+                    <SelectField
+                      label="Deposit Status"
+                      labelClassName="block text-xs font-semibold text-gray-700"
+                      containerClassName="space-y-1.5"
+                      value={depositStatus}
+                      onChange={(e) =>
+                        setDepositStatus(e.target.value as DepositStatus)
+                      }
+                      options={[
+                        { value: 'unpaid', label: 'Unpaid' },
+                        { value: 'partial', label: 'Partial Deposit' },
+                        { value: 'paid', label: 'Fully Paid' },
+                      ]}
+                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                    />
                   </div>
 
                   {/* Internal Staff Notes */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold text-gray-700">
-                      Private Internal Notes (Staff only)
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={internalNotes}
-                      onChange={(e) => setInternalNotes(e.target.value)}
-                      placeholder="e.g. Requires stencil resizing; custom color ink prepared; client has low pain tolerance..."
-                      className="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] resize-none"
-                    />
-                  </div>
+                  <TextareaField
+                    rows={3}
+                    label="Private Internal Notes (Staff only)"
+                    labelClassName="block text-xs font-semibold text-gray-700"
+                    containerClassName="space-y-1.5"
+                    value={internalNotes}
+                    onChange={(e) => setInternalNotes(e.target.value)}
+                    placeholder="e.g. Requires stencil resizing; custom color ink prepared; client has low pain tolerance..."
+                    className="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] resize-none"
+                  />
                 </form>
               </div>
 
@@ -582,13 +568,13 @@ export function AppointmentDetailModal({
                   <div>
                     <h3 className="font-bold text-[#2e0249] text-sm mb-3 flex items-center justify-between">
                       <span>Artwork Reference</span>
-                      {referenceUrls.length > 0 && (
+                      {referenceUrls.length > 0 ? (
                         <span className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
                           {referenceUrls.length}{" "}
                           {referenceUrls.length === 1 ? "Image" : "Images"}{" "}
                           Uploaded
                         </span>
-                      )}
+                      ) : null}
                     </h3>
 
                     {activeImageUrl ? (
@@ -609,15 +595,15 @@ export function AppointmentDetailModal({
                             <ZoomIn className="w-4 h-4" />
                             <span>Click to Zoom</span>
                           </div>
-                          {referenceUrls.length > 1 && (
+                          {referenceUrls.length > 1 ? (
                             <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[10px] font-semibold px-2 py-0.5 rounded-md backdrop-blur-xs">
                               {selectedImageIndex + 1} of {referenceUrls.length}
                             </span>
-                          )}
+                          ) : null}
                         </div>
 
                         {/* Thumbnail selector strip if multiple images */}
-                        {referenceUrls.length > 1 && (
+                        {referenceUrls.length > 1 ? (
                           <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1">
                             {referenceUrls.map((url, idx) => (
                               <button
@@ -645,7 +631,7 @@ export function AppointmentDetailModal({
                               </button>
                             ))}
                           </div>
-                        )}
+                        ) : null}
 
                         <div className="flex items-center gap-2">
                           <a
@@ -774,7 +760,7 @@ export function AppointmentDetailModal({
       </div>
 
       {/* Lightbox Modal for High-Res Artwork Zoom */}
-      {showImageLightbox && activeImageUrl && (
+      {showImageLightbox && activeImageUrl ? (
         <div
           className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setShowImageLightbox(false)}
@@ -790,7 +776,7 @@ export function AppointmentDetailModal({
             </button>
 
             {/* Navigation buttons if multiple images */}
-            {referenceUrls.length > 1 && (
+            {referenceUrls.length > 1 ? (
               <>
                 <button
                   type="button"
@@ -819,7 +805,7 @@ export function AppointmentDetailModal({
                   <ChevronRight className="w-6 h-6" />
                 </button>
               </>
-            )}
+            ) : null}
 
             <Image
               src={activeImageUrl}
@@ -831,14 +817,14 @@ export function AppointmentDetailModal({
               onClick={(e) => e.stopPropagation()}
             />
 
-            {referenceUrls.length > 1 && (
+            {referenceUrls.length > 1 ? (
               <span className="mt-3 text-white/80 text-xs font-semibold">
                 Image {selectedImageIndex + 1} of {referenceUrls.length}
               </span>
-            )}
+            ) : null}
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 };

@@ -89,7 +89,7 @@ export function FormResponse({
         <ReferenceArtworkPreview urls={refUrls} />
       </div>
 
-      {onBookAnother && (
+      {onBookAnother ? (
         <button
           type="button"
           onClick={onBookAnother}
@@ -97,7 +97,7 @@ export function FormResponse({
         >
           Book Another Session
         </button>
-      )}
+      ) : null}
     </div>
   );
 }

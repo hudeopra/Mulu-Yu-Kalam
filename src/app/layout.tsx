@@ -26,19 +26,66 @@ export const metadata: Metadata = {
     template: '%s | Mulu Yu Kalam Tattoo Studio',
   },
   description:
-    "Mulu Yu Kalam is Lalitpur's premier custom tattoo studio in Harisiddhi, Nepal. Specializing in bespoke fine-line, realism, illustrative, and hygienic custom body art. Book your consultation today.",
+    "Mulu Yu Kalam is Lalitpur's (Yala) premier custom tattoo studio located in Harisiddhi (Jala), Nepal. Specializing in bespoke fine-line, realism, illustrative, and hygienic custom body art. Book your consultation today.",
   keywords: [
     'Mulu Yu Kalam',
-    'Tattoo Studio Nepal',
-    'Tattoo Artist Lalitpur',
-    'Best Tattoo Kathmandu',
+    'Mulu Yu Kalam Tattoo Studio',
+
+    // Town: Harisiddhi (Jala)
     'Harisiddhi Tattoo',
+    'Harisiddhi Tattoo Studio',
+    'Harisiddhi Tattoo House',
+    'Tattoo in Harisiddhi',
+    'Tattoo Shop Harisiddhi',
+    'Tattoo Parlor Harisiddhi',
+    'Harisiddhi Ink',
+    'Jala Tattoo',
+    'Jala Tattoo Studio',
+    'Jala Tattoo House',
+    'Tattoo in Jala',
+    'Jala Harisiddhi Tattoo',
+
+    // Town (Jala) in City (Yala) Combinations
+    'Jala Yala Tattoo',
+    'Jala Yalla Tattoo Studio',
+    'Tattoo Studio Jala Yala',
+    'Jala Yala Tattoo Studio',
+
+    // City: Lalitpur (Yala)
+    'Yala Tattoo',
+    'Yala Tattoo Studio',
+    'Yala Tattoo House',
+    'Tattoo in Yala',
+    'Yalla Tattoo Studio',
+    'Tattoo Studio Yala',
+    'Tattoo Studio Yala Lalitpur',
+    'Tattoo Studio Lalitpur',
+    'Tattoo Artist Lalitpur',
+    'Tattoo Shop Lalitpur',
+
+    // "Near Me" Searches & Common Misspellings
+    'Tattoo Studio Near Me',
+    'Tattoo Shop Near Me',
+    'Tattoo Parlor Near Me',
+    'Tattoo Artist Near Me',
+    'Best Tattoo Near Me',
+    'Tattoo Studeo Near Me',
+
+    // Valley & National Searches
+    'Tattoo Studio Nepal',
+    'Best Tattoo Kathmandu',
     'Custom Tattoo Designs',
     'Fine Line Tattoo Nepal',
     'Realism Tattoo Nepal',
     'Mandala Tattoo Kathmandu',
     'Sterile Tattoo Shop Nepal',
     'Tattoo Booking Nepal',
+    'Tattoo Coverup Nepal',
+    'Tattoo Coverup Lalitpur',
+    'Tattoo Completion',
+    'Free Tattoo Consultation',
+    'Walk In Tattoo Studio',
+    'Open Studio Visit',
     'Ink Your Story',
     'Tattoo Price Nepal',
     'Piercing Studio Lalitpur',
@@ -117,12 +164,18 @@ const jsonLd = [
       'Mulu Yu Kalam Tattoo Studio',
       'Mulu Yu Kalam Harisiddhi',
       'Mulu Yu Kalam Body Art',
+      'Harisiddhi Tattoo Studio',
+      'Harisiddhi Tattoo House',
+      'Jala Tattoo Studio',
+      'Jala Tattoo House',
+      'Yala Tattoo Studio',
+      'Yala Tattoo House',
     ],
     description:
-      "Premier custom tattoo & body art studio located in Harisiddhi, Lalitpur, Nepal. Specializing in bespoke tattoo designs, fine line, realism, illustrative, and sterile hygienic tattoo procedures. Serving clients across Lalitpur, Kathmandu, and Bhaktapur.",
+      "Premier custom tattoo & body art studio located in Harisiddhi (Jala), Lalitpur (Yala), Nepal. Specializing in bespoke tattoo designs, fine line, realism, illustrative, and sterile hygienic tattoo procedures. Serving clients across Lalitpur, Kathmandu, and Bhaktapur.",
     url: 'https://muluyukalam.com.np',
     telephone: '+9779861341995',
-    email: 'contact@muluyukalam.com.np',
+    email: 'contact@muluyakalam.com.np',
     priceRange: '$$',
     currenciesAccepted: 'NPR',
     paymentAccepted: 'Cash, Fonepay, Mobile Banking',
@@ -131,8 +184,8 @@ const jsonLd = [
     hasMap: 'https://maps.app.goo.gl/HW5GvBYDiaNLx4rK6',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Harisiddhi, LMC-29',
-      addressLocality: 'Lalitpur',
+      streetAddress: 'Harisiddhi (Jala), LMC-29',
+      addressLocality: 'Lalitpur (Yala)',
       addressRegion: 'Bagmati',
       postalCode: '44700',
       addressCountry: 'NP',
@@ -161,7 +214,7 @@ const jsonLd = [
     areaServed: [
       {
         '@type': 'City',
-        name: 'Lalitpur',
+        name: 'Lalitpur (Yala)',
       },
       {
         '@type': 'City',
@@ -170,6 +223,10 @@ const jsonLd = [
       {
         '@type': 'City',
         name: 'Bhaktapur',
+      },
+      {
+        '@type': 'AdministrativeArea',
+        name: 'Harisiddhi (Jala)',
       },
     ],
     hasOfferCatalog: {
@@ -222,7 +279,30 @@ const jsonLd = [
           '@type': 'Offer',
           itemOffered: {
             '@type': 'Service',
-            name: 'Tattoo Cover-Up & Restoration',
+            name: 'Tattoo Coverup & Restoration',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Tattoo Completion & Finishing',
+          },
+        },
+        {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'NPR',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Free Consultation & Design Discussion',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Open Studio Visit & Walk-In Inquiry',
           },
         },
       ],

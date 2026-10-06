@@ -53,11 +53,12 @@ export function CursorTrail({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    // Respect accessibility preference for reduced motion
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (prefersReducedMotion) return;
+    // Respect accessibility preference for reduced motion (gracefully disable auto drift instead of killing component)
+    const prefersReducedMotion =
+      typeof window !== "undefined" && window.matchMedia
+        ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        : false;
+    const canRunIdleMotion = enableIdleMotion && !prefersReducedMotion;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -66,7 +67,9 @@ export function CursorTrail({
     if (!ctx) return;
 
     let animFrameId: number;
-    let mouseMoved = false;
+    let isAutopilotActive = true;
+    let hasMobileInteracted = false;
+    let lastUserActionTime = 0;
 
     const pointer = {
       x: 0.5 * window.innerWidth,
@@ -85,36 +88,83 @@ export function CursorTrail({
       const rect = canvas.getBoundingClientRect();
       pointer.x = clientX - rect.left;
       pointer.y = clientY - rect.top;
+      isAutopilotActive = false;
+      lastUserActionTime = performance.now();
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseMoved = true;
+      if (hasMobileInteracted) return;
       updateMousePosition(e.clientX, e.clientY);
     };
 
     const handleClick = (e: MouseEvent) => {
+      if (hasMobileInteracted) return;
       updateMousePosition(e.clientX, e.clientY);
     };
 
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        hasMobileInteracted = true;
+        isAutopilotActive = false;
+      }
+      updateMousePosition(e.clientX, e.clientY);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        hasMobileInteracted = true;
+        isAutopilotActive = false;
+        updateMousePosition(e.clientX, e.clientY);
+      } else if (e.pointerType === 'mouse') {
+        if (!hasMobileInteracted) {
+          updateMousePosition(e.clientX, e.clientY);
+        }
+      }
+    };
+
     const handleTouchStart = (e: TouchEvent) => {
+      hasMobileInteracted = true;
+      isAutopilotActive = false;
       const touch = e.touches[0] || e.targetTouches[0];
       if (touch) {
-        mouseMoved = true;
         updateMousePosition(touch.clientX, touch.clientY);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
+      hasMobileInteracted = true;
+      isAutopilotActive = false;
       const touch = e.touches[0] || e.targetTouches[0];
       if (touch) {
-        mouseMoved = true;
         updateMousePosition(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      // Desktop: re-activate wandering autopilot when cursor leaves the screen
+      if (!hasMobileInteracted) {
+        isAutopilotActive = true;
+      }
+    };
+
+    const handleMouseOut = (e: MouseEvent) => {
+      // Desktop: window boundary exit check
+      if (!hasMobileInteracted && !e.relatedTarget && !(e as unknown as { toElement?: Element }).toElement) {
+        isAutopilotActive = true;
+      }
+    };
+
+    const handleBlur = () => {
+      // Desktop: re-activate when window loses focus
+      if (!hasMobileInteracted) {
+        isAutopilotActive = true;
       }
     };
 
     const setupCanvas = () => {
       if (!canvas) return;
-      const dpr = Math.max(window.devicePixelRatio || 1, 1);
+      // Cap DPR to 2 to maintain 60fps on high-density mobile screens
+      const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
       const width = window.innerWidth;
       const height = window.innerHeight;
 
@@ -127,17 +177,29 @@ export function CursorTrail({
     setupCanvas();
 
     const render = (t: number) => {
-      // Lissajous autonomous drift before user interacts
-      if (!mouseMoved && enableIdleMotion) {
-        pointer.x =
-          (0.5 + 0.3 * Math.cos(0.002 * t) * Math.sin(0.005 * t)) *
-          window.innerWidth;
-        pointer.y =
-          (0.5 + 0.2 * Math.cos(0.005 * t) + 0.1 * Math.cos(0.01 * t)) *
-          window.innerHeight;
+      const now = performance.now();
+
+      // Desktop: Re-activate autopilot after 2.5s of mouse inactivity
+      if (!hasMobileInteracted && !isAutopilotActive && lastUserActionTime > 0 && now - lastUserActionTime > 2500) {
+        isAutopilotActive = true;
       }
 
-      const dpr = Math.max(window.devicePixelRatio || 1, 1);
+      // Autopilot wandering motion:
+      // Active initially (1-time on mobile until first touch; repeatable on desktop during idle / out-of-screen)
+      if (isAutopilotActive && canRunIdleMotion && !hasMobileInteracted) {
+        const targetX =
+          (0.5 + 0.3 * Math.cos(0.002 * t) * Math.sin(0.005 * t)) *
+          window.innerWidth;
+        const targetY =
+          (0.5 + 0.2 * Math.cos(0.005 * t) + 0.1 * Math.cos(0.01 * t)) *
+          window.innerHeight;
+
+        // Smooth easing toward the Lissajous trajectory to avoid abrupt jumping
+        pointer.x += (targetX - pointer.x) * 0.08;
+        pointer.y += (targetY - pointer.y) * 0.08;
+      }
+
+      const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
@@ -202,8 +264,14 @@ export function CursorTrail({
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("click", handleClick, { passive: true });
+    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeave, { passive: true });
+    document.documentElement.addEventListener("mouseleave", handleMouseLeave, { passive: true });
+    window.addEventListener("mouseout", handleMouseOut, { passive: true });
+    window.addEventListener("blur", handleBlur);
     window.addEventListener("resize", handleResize, { passive: true });
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
@@ -211,8 +279,14 @@ export function CursorTrail({
       window.cancelAnimationFrame(animFrameId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("click", handleClick);
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mouseout", handleMouseOut);
+      window.removeEventListener("blur", handleBlur);
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
@@ -221,7 +295,7 @@ export function CursorTrail({
   return (
     <canvas
       ref={canvasRef}
-      className="pointer-events-none fixed inset-0 z-50 h-full w-full"
+      className="pointer-events-none fixed inset-0 z-[9999] h-full w-full"
       aria-hidden="true"
     />
   );

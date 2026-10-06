@@ -13,13 +13,12 @@ export interface CompressionResult {
  */
 export async function compressImage(
   file: File,
-  maxSizeBytes: number = 2 * 1024 * 1024,
+  maxSizeBytes: number = 2.5 * 1024 * 1024,
   maxDimension: number = 1600,
 ): Promise<CompressionResult> {
   // If not an image file, pass through
   const isImage =
-    file.type.startsWith('image/') ||
-    /\.(webp|jpe?g|png)$/i.test(file.name);
+    file.type.startsWith('image/') || /\.(webp|jpe?g|png)$/i.test(file.name);
 
   if (!isImage) {
     return {
@@ -53,19 +52,19 @@ export async function compressImage(
           }
         }
 
-        const canvas = document.createElement("canvas");
+        const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext('2d');
 
         if (!ctx) {
-          reject(new Error("Failed to create canvas rendering context."));
+          reject(new Error('Failed to create canvas rendering context.'));
           return;
         }
 
         ctx.drawImage(img, 0, 0, width, height);
 
-        const format = "image/webp";
+        const format = 'image/webp';
         let quality = 0.85;
 
         const toBlobAsync = (q: number): Promise<Blob | null> => {
@@ -89,13 +88,13 @@ export async function compressImage(
         }
 
         if (!blob) {
-          reject(new Error("Canvas image compression failed."));
+          reject(new Error('Canvas image compression failed.'));
           return;
         }
 
-        const baseName = file.name.replace(/\.[^/.]+$/, "");
-        const mimeType = blob.type || "image/webp";
-        const extension = mimeType === "image/png" ? "png" : "webp";
+        const baseName = file.name.replace(/\.[^/.]+$/, '');
+        const mimeType = blob.type || 'image/webp';
+        const extension = mimeType === 'image/png' ? 'png' : 'webp';
         const compressedFile = new File([blob], `${baseName}.${extension}`, {
           type: mimeType,
           lastModified: Date.now(),
@@ -117,10 +116,10 @@ export async function compressImage(
       };
 
       img.onerror = () =>
-        reject(new Error("Failed to load image for compression."));
+        reject(new Error('Failed to load image for compression.'));
     };
 
-    reader.onerror = () => reject(new Error("Failed to read image file."));
+    reader.onerror = () => reject(new Error('Failed to read image file.'));
   });
 }
 
@@ -128,9 +127,9 @@ export async function compressImage(
  * Format bytes into readable string (e.g. 185 KB or 2.4 MB)
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 B";
+  if (bytes === 0) return '0 B';
   const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }

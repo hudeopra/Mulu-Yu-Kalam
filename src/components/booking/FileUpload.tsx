@@ -88,7 +88,9 @@ export function FileUpload({
     );
 
     if (validFiles.length === 0) {
-      setLocalError('Please upload valid image files (.jpg, .jpeg, .png, .webp).');
+      setLocalError(
+        'Please upload valid image files (.jpg, .jpeg, .png, .webp).',
+      );
       return;
     }
 
@@ -118,7 +120,7 @@ export function FileUpload({
 
         try {
           // Compress to guaranteed <= 2MB WebP
-          const result = await compressImage(file, 2 * 1024 * 1024);
+          const result = await compressImage(file, 2.5 * 1024 * 1024);
           newItems.push({
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
             file: result.file,
@@ -253,7 +255,8 @@ export function FileUpload({
             or drag and drop
           </p>
           <p className="text-xs text-gray-400 pointer-events-none">
-            PNG, JPG, or WEBP &bull; Upload up to {maxFiles} images (Max 2MB each)
+            PNG, JPG, or WEBP &bull; Upload up to {maxFiles} images (Max 2MB
+            each)
           </p>
         </label>
       ) : (

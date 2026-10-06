@@ -55,6 +55,7 @@ export function generateBookingConfirmationEmail(data: EmailTemplateData) {
     tattooLocation,
     appointmentDate,
     appointmentTime,
+    notes,
     referenceImageUrls = [],
   } = data;
 
@@ -70,7 +71,7 @@ Placement Area: ${tattooLocation}
 Preferred Date: ${appointmentDate}
 Preferred Time: ${appointmentTime}
 Phone Number: ${number}
-
+${notes ? `Design Notes: ${notes}\n` : ''}
 UPLOADED REFERENCE ARTWORK
 --------------------------
 ${renderImagesPlainText(referenceImageUrls)}
@@ -109,6 +110,7 @@ contact@muluyukalam.com.np
         <p style="margin: 6px 0; font-size: 14px;"><strong>Preferred Date:</strong> ${appointmentDate}</p>
         <p style="margin: 6px 0; font-size: 14px;"><strong>Preferred Time:</strong> ${appointmentTime}</p>
         <p style="margin: 6px 0; font-size: 14px;"><strong>Contact Phone:</strong> ${number}</p>
+        ${notes ? `<p style="margin: 6px 0; font-size: 14px;"><strong>Design Notes:</strong> ${notes}</p>` : ''}
       </div>
 
       <div style="margin-bottom: 24px;">

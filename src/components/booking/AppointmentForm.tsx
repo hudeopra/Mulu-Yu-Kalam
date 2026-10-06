@@ -172,6 +172,7 @@ export function AppointmentForm() {
         headers: {
           'Content-Type': 'application/json',
         },
+        keepalive: true,
         body: JSON.stringify({
           name: data.name,
           email: data.email,

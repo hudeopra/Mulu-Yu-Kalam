@@ -9,7 +9,7 @@ export interface CompressionResult {
 /**
  * In-browser image compressor using native HTML5 Canvas.
  * Resizes dimensions (max 1600px) and iteratively adjusts WebP quality
- * to guarantee the resulting file is strictly <= maxSizeBytes (default 2MB).
+ * to guarantee the resulting file is strictly <= maxSizeBytes (default 2.5MB).
  */
 export async function compressImage(
   file: File,

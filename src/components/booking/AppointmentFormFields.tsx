@@ -295,14 +295,26 @@ export function AppointmentFormFields({
         <Controller
           name="referenceFiles"
           control={control}
-          render={({ field }) => (
-            <FileUpload
-              value={field.value}
-              onChange={field.onChange}
-              error={errors.referenceFiles?.message}
-              maxFiles={5}
-            />
-          )}
+          render={({ field }) => {
+            const fileError =
+              errors.referenceFiles?.message ||
+              (Array.isArray(errors.referenceFiles)
+                ? (
+                    errors.referenceFiles as Array<
+                      { message?: string } | undefined
+                    >
+                  ).find((e) => e?.message)?.message
+                : undefined);
+
+            return (
+              <FileUpload
+                value={field.value}
+                onChange={field.onChange}
+                error={fileError}
+                maxFiles={5}
+              />
+            );
+          }}
         />
 
         <TextareaField

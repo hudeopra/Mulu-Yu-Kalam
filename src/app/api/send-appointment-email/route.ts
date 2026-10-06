@@ -18,7 +18,20 @@ export async function POST(req: Request) {
       appointmentTime,
       notes,
       referenceImageUrls = [],
-    } = body;
+    } = body || {};
+
+    if (!name?.trim() || !email?.trim() || !appointmentDate || !appointmentTime) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            'Missing required appointment fields (name, email, appointmentDate, appointmentTime).',
+        },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = email.trim();
 
     const resendApiKey = process.env.RESEND_API_KEY;
 
@@ -86,7 +99,7 @@ export async function POST(req: Request) {
       }),
       transporter.sendMail({
         from: clientEmailSender,
-        to: email,
+        to: cleanEmail,
         subject: clientEmail.subject,
         text: clientEmail.text,
         html: clientEmail.html,

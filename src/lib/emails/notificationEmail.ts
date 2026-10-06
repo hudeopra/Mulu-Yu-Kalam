@@ -75,7 +75,6 @@ export function generateNotificationEmail(data: EmailTemplateData) {
     }),
   } = data;
 
-  const safeNotes = notes && notes.trim().length > 0 ? notes.trim() : 'None provided';
   const subject = `Tattoo appointment book by ${name}`;
 
   const text = `Dear Team,
@@ -90,7 +89,6 @@ Phone Number: ${number}
 Tattoo Placement Area: ${tattooLocation}
 Preferred Date: ${appointmentDate}
 Preferred Time: ${appointmentTime}
-Notes / Ideas: ${safeNotes}
 
 REFERENCE ARTWORK
 -----------------
@@ -127,7 +125,6 @@ Mulu Yu Kalam Booking System
         <p style="margin: 6px 0; font-size: 14px;"><strong>Placement:</strong> ${tattooLocation}</p>
         <p style="margin: 6px 0; font-size: 14px;"><strong>Preferred Date:</strong> ${appointmentDate}</p>
         <p style="margin: 6px 0; font-size: 14px;"><strong>Preferred Time:</strong> ${appointmentTime}</p>
-        <p style="margin: 6px 0; font-size: 14px;"><strong>Notes / Ideas:</strong> ${safeNotes}</p>
       </div>
 
       <div style="margin-bottom: 24px;">

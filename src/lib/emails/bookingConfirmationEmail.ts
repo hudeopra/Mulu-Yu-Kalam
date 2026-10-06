@@ -55,11 +55,9 @@ export function generateBookingConfirmationEmail(data: EmailTemplateData) {
     tattooLocation,
     appointmentDate,
     appointmentTime,
-    notes,
     referenceImageUrls = [],
   } = data;
 
-  const safeNotes = notes && notes.trim().length > 0 ? notes.trim() : 'None provided';
   const subject = 'Appointment Booking Confirmation - Mulu Yu Kalam Studio';
 
   const text = `Dear ${name},
@@ -72,7 +70,6 @@ Placement Area: ${tattooLocation}
 Preferred Date: ${appointmentDate}
 Preferred Time: ${appointmentTime}
 Phone Number: ${number}
-Notes / Ideas: ${safeNotes}
 
 UPLOADED REFERENCE ARTWORK
 --------------------------
@@ -112,7 +109,6 @@ contact@muluyukalam.com.np
         <p style="margin: 6px 0; font-size: 14px;"><strong>Preferred Date:</strong> ${appointmentDate}</p>
         <p style="margin: 6px 0; font-size: 14px;"><strong>Preferred Time:</strong> ${appointmentTime}</p>
         <p style="margin: 6px 0; font-size: 14px;"><strong>Contact Phone:</strong> ${number}</p>
-        <p style="margin: 6px 0; font-size: 14px;"><strong>Notes / Ideas:</strong> ${safeNotes}</p>
       </div>
 
       <div style="margin-bottom: 24px;">

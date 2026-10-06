@@ -132,7 +132,9 @@ export function CustomerInfoFields({
         type="text"
         placeholder="Your Name"
         register={register('name')}
-        icon={<User className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+        icon={
+          <User className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
+        }
         className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
           errors.name
             ? 'border-red-500 focus:border-red-600'
@@ -147,7 +149,9 @@ export function CustomerInfoFields({
           type="email"
           placeholder="Your Email"
           register={register('email')}
-          icon={<Mail className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+          icon={
+            <Mail className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
+          }
           className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
             errors.email
               ? 'border-red-500 focus:border-red-600'
@@ -160,7 +164,9 @@ export function CustomerInfoFields({
           type="tel"
           placeholder="Your Phone No."
           register={register('number')}
-          icon={<Phone className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+          icon={
+            <Phone className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
+          }
           className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] placeholder-[#ffbd5b] transition-colors focus:outline-none ${
             errors.number
               ? 'border-red-500 focus:border-red-600'
@@ -184,13 +190,16 @@ export function AppointmentDateTimeFields({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <InputField
         type="time"
+        // label="Preferred Time"
         register={register('appointmentTime')}
         onClick={(e) => {
           try {
             e.currentTarget.showPicker?.();
           } catch {}
         }}
-        icon={<Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+        icon={
+          <Clock className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
+        }
         className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
           errors.appointmentTime
             ? 'border-red-500 focus:border-red-600'
@@ -202,13 +211,16 @@ export function AppointmentDateTimeFields({
       <InputField
         type="date"
         min={new Date().toISOString().split('T')[0]}
+        // label="Preferred Date"
         register={register('appointmentDate')}
         onClick={(e) => {
           try {
             e.currentTarget.showPicker?.();
           } catch {}
         }}
-        icon={<Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />}
+        icon={
+          <Calendar className="absolute left-0 top-3 w-5 h-5 text-[#ffbd5b] pointer-events-none" />
+        }
         className={`w-full bg-transparent pl-8 pr-3 py-2.5 border-b-2 text-[#2e0249] transition-colors focus:outline-none cursor-pointer [color-scheme:light] ${
           errors.appointmentDate
             ? 'border-red-500 focus:border-red-600'
@@ -319,6 +331,7 @@ export function AppointmentFormFields({
 
         <TextareaField
           register={register('notes')}
+          label="Additional Information (if any)"
           placeholder="Any extra details, design ideas, or size preferences (optional)..."
           rows={3}
           className="w-full bg-white/70 border-2 border-[#ffbd5b] rounded-2xl p-4 text-[#2e0249] placeholder-[#ffbd5b] focus:outline-none focus:border-[#ff7b01] transition-colors resize-none text-sm"

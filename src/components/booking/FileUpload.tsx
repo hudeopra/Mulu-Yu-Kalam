@@ -198,13 +198,13 @@ export function FileUpload({
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
         <label className="block text-sm font-semibold text-gray-800">
-          Tattoo References / Designs (Optional)
+          Tattoo References / Designs (if any)
         </label>
-        <span className="text-xs text-gray-500 font-medium">
+        {/* <span className="text-xs text-gray-500 font-medium">
           {items.length > 0
             ? `${items.length} of ${maxFiles} selected`
             : `Max ${maxFiles} images (2.5MB each)`}
-        </span>
+        </span> */}
       </div>
 
       <input
@@ -262,7 +262,8 @@ export function FileUpload({
             or drag and drop
           </p>
           <p className="text-xs text-gray-400 pointer-events-none">
-            PNG, JPG, or WEBP &bull; Upload up to {maxFiles} images (Max 2.5MB each)
+            PNG, JPG, or WEBP &bull; Upload up to {maxFiles} images (Max 2.5MB
+            each)
           </p>
         </div>
       ) : (

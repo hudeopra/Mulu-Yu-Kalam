@@ -63,12 +63,12 @@ export function ContactInformation({
       </ul>
 
       {/* Unalome spiritual symbol decoration */}
-      <div className="pt-4 flex items-center">
+      <div className="pt-4 w-[80%] min-w-70 flex items-center">
         <div className="p-4 inline-block ">
           <Image
             src="/assets/img/Mulu-Yu-Kalam.svg"
             alt="Unalome Symbol"
-            width={180}
+            width={500}
             height={60}
             className="object-contain"
           />

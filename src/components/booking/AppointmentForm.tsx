@@ -161,37 +161,35 @@ export function AppointmentForm() {
         throw new Error(`Failed to record appointment: ${insertError.message}`);
       }
 
-      // 4. Send email notification (non-blocking: failures won't invalidate confirmed DB booking)
-      setStatusMessage('Sending appointment confirmation emails...');
-      try {
-        console.log('[AppointmentForm] Triggering /api/send-appointment-email...');
-        const emailRes = await fetch('/api/send-appointment-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: data.name,
-            email: data.email,
-            number: data.number,
-            tattooLocation: data.tattooLocation,
-            appointmentDate: data.appointmentDate,
-            appointmentTime: data.appointmentTime,
-            notes: data.notes || '',
-            referenceImageUrls: uploadedImageUrls,
-          }),
-        });
-
-        const emailResult = await emailRes.json().catch(() => ({}));
-        console.log('[AppointmentForm] Email API response:', emailResult);
-      } catch (emailErr) {
-        console.warn('[AppointmentForm] Failed to call email notification endpoint:', emailErr);
-      }
-
-      // 5. Success: Record submission in rate limiter & present confirmation view
+      // 4. Success: Record submission in rate limiter & present confirmation view immediately!
       recordSubmission();
       setRateLimit(checkRateLimit());
       setCreatedAppointment(record as Appointment);
+
+      // 5. Fire-and-forget email dispatch in background (won't hold up UX or button loading state)
+      fetch('/api/send-appointment-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          number: data.number,
+          tattooLocation: data.tattooLocation,
+          appointmentDate: data.appointmentDate,
+          appointmentTime: data.appointmentTime,
+          notes: data.notes || '',
+          referenceImageUrls: uploadedImageUrls,
+        }),
+      })
+        .then((res) => res.json().catch(() => ({})))
+        .then((result) => {
+          console.log('[AppointmentForm] Background email dispatch finished:', result);
+        })
+        .catch((emailErr) => {
+          console.warn('[AppointmentForm] Background email dispatch error:', emailErr);
+        });
     } catch (err: unknown) {
       console.error('Submission error:', err);
 

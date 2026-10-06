@@ -10,7 +10,7 @@ export function AboutSection() {
           <ul className="flex items-center gap-5 sm:gap-6 bg-[#ff7b01] text-white py-4 sm:py-5 px-8 sm:px-12 rounded-b-2xl shadow-xl">
             <li>
               <a
-                href="https://wa.me/"
+                href="https://wa.me/9779861341995/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="WhatsApp"
@@ -21,7 +21,7 @@ export function AboutSection() {
             </li>
             <li>
               <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/mulu_yu_kalam/"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -32,7 +32,7 @@ export function AboutSection() {
             </li>
             <li>
               <a
-                href="https://facebook.com"
+                href="https://www.facebook.com/MuluYuKalam"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -43,7 +43,7 @@ export function AboutSection() {
             </li>
             <li>
               <a
-                href="https://tiktok.com"
+                href="https://www.tiktok.com/@mulu_yu_kalam"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
@@ -76,18 +76,10 @@ export function AboutSection() {
               About Us
             </h2>
             <p className="text-gray-700 leading-relaxed text-base sm:text-lg">
-              Our highly qualified team of tattooists is always ready to help
-              you make even the wildest ideas come true. The level of our
-              artists’ creativity & skills allows them to work on the most
-              stunning artworks. Our team ensures that you will get what you
-              want for your body to look exceptional.
+              Welcome to <span className="font-semibold text-[#2e0249]">Mulu Yu Kalam</span>—Lalitpur&apos;s dedicated custom tattoo studio located in Harisiddhi, Nepal. Born from a passion for authentic body art and visual storytelling, our artists specialize in bespoke tattooing across delicate fine-line, realism, illustrative styles, and meaningful custom concepts. Every tattoo is treated as a permanent work of art crafted specifically for you.
             </p>
             <p className="text-gray-700 leading-relaxed text-base sm:text-lg lg:w-4/5">
-              Our highly qualified team of tattooists is always ready to help
-              you make even the wildest ideas come true. The level of our
-              artists’ creativity & skills allows them to work on the most
-              stunning artworks. Our team ensures that you will get what you
-              want for your body to look exceptional.
+              We uphold uncompromising hygiene standards with hospital-grade sanitization, 100% single-use disposable needle cartridges, and premium certified skin-safe inks. Whether you are stepping in for your very first piece or crafting a comprehensive sleeve, we guide you from initial consultation through expert aftercare to make your tattoo journey exceptional.
             </p>
           </div>
 
@@ -118,4 +110,4 @@ export function AboutSection() {
       </div>
     </section>
   );
-};
+}

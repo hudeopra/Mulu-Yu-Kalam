@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef } from "react";
 
 export interface CursorTrailProps {
@@ -57,12 +59,6 @@ export function CursorTrail({
     ).matches;
     if (prefersReducedMotion) return;
 
-    // Do not run cursor trail animation on touch devices without a hover pointer
-    const isTouchOnly = window.matchMedia(
-      "(hover: none) and (pointer: coarse)",
-    ).matches;
-    if (isTouchOnly) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -100,13 +96,19 @@ export function CursorTrail({
       updateMousePosition(e.clientX, e.clientY);
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.targetTouches.length > 0) {
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0] || e.targetTouches[0];
+      if (touch) {
         mouseMoved = true;
-        updateMousePosition(
-          e.targetTouches[0].clientX,
-          e.targetTouches[0].clientY,
-        );
+        updateMousePosition(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0] || e.targetTouches[0];
+      if (touch) {
+        mouseMoved = true;
+        updateMousePosition(touch.clientX, touch.clientY);
       }
     };
 
@@ -200,6 +202,7 @@ export function CursorTrail({
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("click", handleClick, { passive: true });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
     window.addEventListener("resize", handleResize, { passive: true });
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -208,6 +211,7 @@ export function CursorTrail({
       window.cancelAnimationFrame(animFrameId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("click", handleClick);
+      window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("resize", handleResize);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
@@ -221,4 +225,4 @@ export function CursorTrail({
       aria-hidden="true"
     />
   );
-};
+}

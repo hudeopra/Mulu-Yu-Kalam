@@ -1,12 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import dynamic from 'next/dynamic';
-
-const CursorTrail = dynamic(
-  () => import('./CursorTrail').then((m) => m.CursorTrail),
-  { ssr: false },
-);
+import { CursorTrail } from './CursorTrail';
 
 export function PublicLandingClient() {
   useEffect(() => {

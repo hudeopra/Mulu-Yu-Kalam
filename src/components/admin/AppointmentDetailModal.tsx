@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
 import {
   X,
   Calendar,
@@ -35,16 +34,6 @@ import {
   deleteAppointmentStorageImages,
   extractStoragePath,
 } from "@/lib/supabase";
-import { InputField, TextareaField, SelectField } from "@/components/ui";
-
-interface AppointmentEditFormData {
-  status: AppointmentStatus;
-  depositStatus: DepositStatus;
-  appointmentDate: string;
-  appointmentTime: string;
-  estimatedPrice: string;
-  internalNotes: string;
-}
 
 interface AppointmentDetailModalProps {
   appointment: Appointment | null;
@@ -61,26 +50,13 @@ export function AppointmentDetailModal({
   onAppointmentUpdated,
   onAppointmentDeleted,
 }: AppointmentDetailModalProps) {
-  // React Hook Form for appointment editing
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm<AppointmentEditFormData>({
-    defaultValues: {
-      status: "pending",
-      depositStatus: "unpaid",
-      appointmentDate: "",
-      appointmentTime: "",
-      estimatedPrice: "",
-      internalNotes: "",
-    },
-  });
-
-  const status = (watch("status") || "pending") as AppointmentStatus;
+  // Form edit states
+  const [status, setStatus] = useState<AppointmentStatus>("pending");
+  const [depositStatus, setDepositStatus] = useState<DepositStatus>("unpaid");
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [appointmentTime, setAppointmentTime] = useState("");
+  const [estimatedPrice, setEstimatedPrice] = useState<string>("");
+  const [internalNotes, setInternalNotes] = useState<string>("");
 
   // Interaction / Loading states
   const [isSaving, setIsSaving] = useState(false);
@@ -97,24 +73,23 @@ export function AppointmentDetailModal({
   // Sync form state whenever selected appointment changes
   useEffect(() => {
     if (appointment) {
-      reset({
-        status: appointment.status || "pending",
-        depositStatus: appointment.deposit_status || "unpaid",
-        appointmentDate: appointment.appointment_date || "",
-        appointmentTime: appointment.appointment_time || "",
-        estimatedPrice:
-          appointment.estimated_price !== null &&
+      setStatus(appointment.status || "pending");
+      setDepositStatus(appointment.deposit_status || "unpaid");
+      setAppointmentDate(appointment.appointment_date || "");
+      setAppointmentTime(appointment.appointment_time || "");
+      setEstimatedPrice(
+        appointment.estimated_price !== null &&
           appointment.estimated_price !== undefined
-            ? String(appointment.estimated_price)
-            : "",
-        internalNotes: appointment.internal_notes || "",
-      });
+          ? String(appointment.estimated_price)
+          : "",
+      );
+      setInternalNotes(appointment.internal_notes || "");
       setShowDeleteConfirm(false);
       setFeedbackMessage(null);
       setShowImageLightbox(false);
       setSelectedImageIndex(0);
     }
-  }, [appointment, reset]);
+  }, [appointment]);
 
   if (!isOpen || !appointment) return null;
 
@@ -130,28 +105,25 @@ export function AppointmentDetailModal({
       ? `977${phoneDigits}`
       : phoneDigits;
 
-  const handleSave = async (formData: AppointmentEditFormData) => {
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
     setIsSaving(true);
     setFeedbackMessage(null);
 
     const numericPrice =
-      formData.estimatedPrice.trim() === ""
-        ? null
-        : parseFloat(formData.estimatedPrice);
+      estimatedPrice.trim() === "" ? null : parseFloat(estimatedPrice);
 
     try {
       const { data, error } = await supabase
         .from("appointments")
         .update({
-          status: formData.status,
-          deposit_status: formData.depositStatus,
-          appointment_date: formData.appointmentDate,
-          appointment_time: formData.appointmentTime,
+          status,
+          deposit_status: depositStatus,
+          appointment_date: appointmentDate,
+          appointment_time: appointmentTime,
           estimated_price: numericPrice,
           internal_notes:
-            formData.internalNotes.trim() === ""
-              ? null
-              : formData.internalNotes.trim(),
+            internalNotes.trim() === "" ? null : internalNotes.trim(),
           updated_at: new Date().toISOString(),
         })
         .eq("id", appointment.id)
@@ -471,7 +443,7 @@ export function AppointmentDetailModal({
                 {/* Edit Form */}
                 <form
                   id="appointment-edit-form"
-                  onSubmit={handleSubmit(handleSave)}
+                  onSubmit={handleSave}
                   className="space-y-5"
                 >
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">
@@ -495,9 +467,7 @@ export function AppointmentDetailModal({
                         <button
                           key={st}
                           type="button"
-                          onClick={() =>
-                            setValue("status", st, { shouldDirty: true })
-                          }
+                          onClick={() => setStatus(st)}
                           className={`py-2 px-3 rounded-xl text-xs font-bold capitalize transition-all border cursor-pointer ${
                             status === st
                               ? st === "confirmed"
@@ -518,84 +488,91 @@ export function AppointmentDetailModal({
 
                   {/* Rescheduling: Date & Time */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InputField
-                      register={register("appointmentDate", {
-                        required: "Appointment date is required",
-                      })}
-                      name="appointmentDate"
-                      label="Appointment Date"
-                      type="date"
-                      error={errors.appointmentDate}
-                      containerClassName="space-y-1.5"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      icon={<Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />}
-                      className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                      errorClassName="text-[11px] font-semibold text-red-500 mt-1"
-                    />
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">
+                        Appointment Date
+                      </label>
+                      <div className="relative">
+                        <Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                        <input
+                          type="date"
+                          value={appointmentDate}
+                          onChange={(e) => setAppointmentDate(e.target.value)}
+                          required
+                          className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                        />
+                      </div>
+                    </div>
 
-                    <InputField
-                      register={register("appointmentTime", {
-                        required: "Appointment time is required",
-                      })}
-                      name="appointmentTime"
-                      label="Appointment Time"
-                      type="text"
-                      placeholder="e.g. 11:00 AM"
-                      error={errors.appointmentTime}
-                      containerClassName="space-y-1.5"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      icon={<Clock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />}
-                      className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                      errorClassName="text-[11px] font-semibold text-red-500 mt-1"
-                    />
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">
+                        Appointment Time
+                      </label>
+                      <div className="relative">
+                        <Clock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                        <input
+                          type="text"
+                          value={appointmentTime}
+                          onChange={(e) => setAppointmentTime(e.target.value)}
+                          placeholder="e.g. 11:00 AM"
+                          required
+                          className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Financials: Estimated Price & Deposit Status */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <InputField
-                      register={register("estimatedPrice")}
-                      name="estimatedPrice"
-                      label="Estimated Price (NPR / USD)"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="e.g. 5000"
-                      error={errors.estimatedPrice}
-                      containerClassName="space-y-1.5"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      icon={<DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />}
-                      className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                      errorClassName="text-[11px] font-semibold text-red-500 mt-1"
-                    />
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">
+                        Estimated Price (NPR / USD)
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={estimatedPrice}
+                          onChange={(e) => setEstimatedPrice(e.target.value)}
+                          placeholder="e.g. 5000"
+                          className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                        />
+                      </div>
+                    </div>
 
-                    <SelectField
-                      register={register("depositStatus")}
-                      name="depositStatus"
-                      label="Deposit Status"
-                      containerClassName="space-y-1.5"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
-                      options={[
-                        { value: "unpaid", label: "Unpaid" },
-                        { value: "partial", label: "Partial Deposit" },
-                        { value: "paid", label: "Fully Paid" },
-                      ]}
-                    />
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">
+                        Deposit Status
+                      </label>
+                      <select
+                        value={depositStatus}
+                        onChange={(e) =>
+                          setDepositStatus(e.target.value as DepositStatus)
+                        }
+                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                      >
+                        <option value="unpaid">Unpaid</option>
+                        <option value="partial">Partial Deposit</option>
+                        <option value="paid">Fully Paid</option>
+                      </select>
+                    </div>
                   </div>
 
                   {/* Internal Staff Notes */}
-                  <TextareaField
-                    register={register("internalNotes")}
-                    name="internalNotes"
-                    label="Private Internal Notes (Staff only)"
-                    rows={3}
-                    placeholder="e.g. Requires stencil resizing; custom color ink prepared; client has low pain tolerance..."
-                    containerClassName="space-y-1.5"
-                    labelClassName="block text-xs font-semibold text-gray-700"
-                    className="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] resize-none"
-                    error={errors.internalNotes}
-                    errorClassName="text-[11px] font-semibold text-red-500 mt-1"
-                  />
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-gray-700">
+                      Private Internal Notes (Staff only)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={internalNotes}
+                      onChange={(e) => setInternalNotes(e.target.value)}
+                      placeholder="e.g. Requires stencil resizing; custom color ink prepared; client has low pain tolerance..."
+                      className="w-full bg-white border border-gray-200 rounded-xl p-3 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] resize-none"
+                    />
+                  </div>
                 </form>
               </div>
 

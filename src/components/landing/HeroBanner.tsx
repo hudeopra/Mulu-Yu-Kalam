@@ -5,8 +5,8 @@ export function HeroBanner() {
   return (
     <section className="relative min-h-screen pt-32 lg:pt-48 bg-[url('/assets/img/banner-bg.jpg')] bg-cover bg-center bg-no-repeat overflow-hidden flex flex-col justify-between">
       {/* Background Title layer */}
-      <div className="absolute top-28 sm:top-36 lg:top-44 left-1/2 -translate-x-1/2 w-11/12 max-w-7xl text-center pointer-events-none select-none z-0">
-        <h1 className="text-5xl sm:text-7xl md:text-8xl md:mt-16 lg:text-[108px] xl:text-[130px] font-extrabold uppercase tracking-tight text-[#fc012f]/90 leading-none">
+      <div className="absolute top-60 lg:top-44 left-1/2 -translate-x-1/2 w-11/12 max-w-7xl text-center pointer-events-none select-none z-0">
+        <h1 className="text-5xl leading-20 text-7xl md:text-8xl md:mt-16 lg:text-[108px] xl:text-[130px] font-extrabold uppercase tracking-tight text-[#fc6001e6]/90 ">
           Ink Your Story
         </h1>
       </div>

@@ -11,24 +11,28 @@ export function HeroActionButtons() {
     e.preventDefault();
     setIsBookingActive(true);
     setIsEnjoyActive(false);
-    const contactElement = document.getElementById('contact');
-    if (contactElement) {
-      contactElement.scrollIntoView({ behavior: 'smooth' });
-    }
+    setTimeout(() => {
+      const contactElement = document.getElementById('contact');
+      if (contactElement) {
+        contactElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 1000); // one sec delay to scroll
   };
 
   const handleBtnClick = (e: MouseEvent) => {
     e.preventDefault();
     setIsEnjoyActive(true);
     setIsBookingActive(false);
-    const galleryElement = document.getElementById('gallery');
-    if (galleryElement) {
-      galleryElement.scrollIntoView({ behavior: 'smooth' });
-    }
+    setTimeout(() => {
+      const galleryElement = document.getElementById('gallery');
+      if (galleryElement) {
+        galleryElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 1000); // one sec delay to scroll
   };
 
   return (
-    <div className="h-[80vh] relative top-0 lg:top-44 z-[99] lg:h-auto w-full px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+    <div className="h-[80vh] relative top-20 lg:top-44 z-[99] lg:h-auto w-full px-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
       {/* Book an Appointment Button */}
       <a
         href="#contact"

@@ -140,8 +140,8 @@ export const metadata: Metadata = {
         type: 'image/svg+xml',
       },
     ],
-    shortcut: '/assets/img/Mulu-Yu-Kalam.svg',
-    apple: '/assets/img/Mulu-Yu-Kalam.svg',
+    shortcut: '/assets/img/unalome-favicon.png',
+    apple: '/assets/img/unalome-favicon.png',
   },
   robots: {
     index: true,

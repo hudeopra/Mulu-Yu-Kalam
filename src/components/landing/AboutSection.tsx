@@ -72,28 +72,41 @@ export function AboutSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 justify-between items-center">
           {/* Text content column */}
           <div className="lg:col-span-6 space-y-6">
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-[#2e0249] tracking-tight relative pb-3 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-1 after:bg-[#ff7b01] after:rounded-full">
-              About Us
-            </h2>
-            <p className="text-gray-700 leading-relaxed text-base sm:text-lg">
-              Welcome to{' '}
-              <span className="font-semibold text-[#2e0249]">
-                Mulu Yu Kalam
+            <div>
+              <span className="text-[#ff7b01] font-bold text-xs sm:text-sm tracking-widest uppercase block mb-1">
+                Premier Custom Tattoo Studio • Harisiddhi, Lalitpur
               </span>
-              —Lalitpur&apos;s dedicated custom tattoo studio located in
-              Harisiddhi, Nepal. Born from a passion for authentic body art and
-              visual storytelling, our artists specialize in bespoke tattooing
-              across delicate fine-line, realism, illustrative styles, and
-              meaningful custom concepts. Every tattoo is treated as a permanent
-              work of art crafted specifically for you.
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#2e0249] tracking-tight relative pb-3 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-1 after:bg-[#ff7b01] after:rounded-full">
+                About Mulu Yu Kalam Tattoo Art
+              </h2>
+            </div>
+
+            <p className="text-gray-700 leading-relaxed text-base sm:text-lg">
+              Welcome to <span className="font-semibold text-[#2e0249]">Mulu Yu Kalam</span>—Lalitpur&apos;s premier custom tattoo studio nestled in Harisiddhi, Nepal. Driven by a genuine passion for authentic body art, creative ink illustration, and personal storytelling, our studio transforms your thoughts, stories, and heritage into permanent, breathtaking custom tattoo artwork crafted with anatomical precision.
             </p>
-            <p className="text-gray-700 leading-relaxed text-base sm:text-lg lg:w-4/5">
-              We uphold uncompromising hygiene standards with hospital-grade
-              sanitization, 100% single-use disposable needle cartridges, and
-              premium certified skin-safe inks. Whether you are stepping in for
-              your very first piece or crafting a comprehensive sleeve, we guide
-              you from initial consultation through expert aftercare to make
-              your tattoo journey exceptional.
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="bg-[#ffecd0]/50 p-4 rounded-xl border border-[#ffbd5b]/40">
+                <h3 className="font-bold text-[#2e0249] text-base mb-1">
+                  Custom Tattoo Artwork & Design
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Specializing in fine line tattoos, micro-realism, illustrative ink, sacred Nepalese mandala patterns, and complete sleeve compositions tailored to your vision.
+                </p>
+              </div>
+
+              <div className="bg-[#ffecd0]/50 p-4 rounded-xl border border-[#ffbd5b]/40">
+                <h3 className="font-bold text-[#2e0249] text-base mb-1">
+                  Sterile Hygiene & Safety Standards
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Your health and safety come first. We strictly use 100% single-use disposable needle cartridges, medical autoclave sterilization, and premium certified vegan inks.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+              Whether you are looking for your very first tattoo, seeking an intricate custom design, requesting a tattoo coverup, or finishing an existing piece, our experienced tattoo artists in Harisiddhi provide free design consultations, walk-in visits, and comprehensive healing aftercare to make your tattoo experience unforgettable.
             </p>
           </div>
 

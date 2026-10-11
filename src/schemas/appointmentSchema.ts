@@ -13,6 +13,7 @@ export const tattooLocations = [
   'Back',
   'Leg',
   'Chest',
+  'Neck',
   'Other',
 ] as const;
 export type TattooLocation = (typeof tattooLocations)[number];

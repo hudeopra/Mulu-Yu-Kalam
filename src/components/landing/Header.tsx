@@ -8,8 +8,8 @@ export function Header() {
           <Image
             src="/assets/img/Mulu-Yu-Kalam.svg"
             alt="Mulu Yu Kalam Logo"
-            width={450}
-            height={120}
+            width={350}
+            height={74}
             priority
             className="w-[300px] md:w-[450px] h-auto drop-shadow-md transition-transform duration-300 group-hover:scale-105"
           />

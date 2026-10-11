@@ -81,7 +81,7 @@ export function TattooLocationSelector({
   return (
     <div className="space-y-3">
       <label className="block text-base font-semibold text-gray-800">
-        I wanna have tattoo in...
+        I want to have a tattoo on...
       </label>
       <Controller
         name="tattooLocation"

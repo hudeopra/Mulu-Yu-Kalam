@@ -22,14 +22,18 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || 'https://muluyukalam.com.np',
   ),
   title: {
-    default: 'Mulu Yu Kalam | Ink Your Story | Premier Tattoo Studio Lalitpur',
+    default: 'Mulu Yu Kalam | Best Tattoo Studio Harisiddhi Lalitpur',
     template: '%s | Mulu Yu Kalam Tattoo Studio',
   },
   description:
-    "Mulu Yu Kalam is Lalitpur's (Yala) premier custom tattoo studio located in Harisiddhi (Jala), Nepal. Specializing in bespoke fine-line, realism, illustrative, and hygienic custom body art. Book your consultation today.",
+    "Mulu Yu Kalam is Lalitpur's premier custom tattoo studio in Harisiddhi, Nepal. Specializing in bespoke fine line, realism & body artwork. Book your session.",
   keywords: [
     'Mulu Yu Kalam',
     'Mulu Yu Kalam Tattoo Studio',
+    'Mulu Tattoo',
+    'Kalam Tattoo',
+    'Mulu Studio',
+    'Kalam Studio',
 
     // Town: Harisiddhi (Jala)
     'Harisiddhi Tattoo',
@@ -47,7 +51,7 @@ export const metadata: Metadata = {
 
     // Town (Jala) in City (Yala) Combinations
     'Jala Yala Tattoo',
-    'Jala Yalla Tattoo Studio',
+    'Jala Yala Tattoo Studio',
     'Tattoo Studio Jala Yala',
     'Jala Yala Tattoo Studio',
 
@@ -56,7 +60,7 @@ export const metadata: Metadata = {
     'Yala Tattoo Studio',
     'Yala Tattoo House',
     'Tattoo in Yala',
-    'Yalla Tattoo Studio',
+    'Yala Tattoo Studio',
     'Tattoo Studio Yala',
     'Tattoo Studio Yala Lalitpur',
     'Tattoo Studio Lalitpur',
@@ -69,7 +73,7 @@ export const metadata: Metadata = {
     'Tattoo Parlor Near Me',
     'Tattoo Artist Near Me',
     'Best Tattoo Near Me',
-    'Tattoo Studeo Near Me',
+    'Tattoo Studio Near Me',
 
     // Valley & National Searches
     'Tattoo Studio Nepal',
@@ -111,7 +115,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/assets/img/banner-bg.jpg',
+        url: '/assets/img/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Mulu Yu Kalam Tattoo Studio Showcase',
@@ -120,15 +124,19 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mulu Yu Kalam | Ink Your Story',
+    title: 'Mulu Yu Kalam | Custom Tattoo Studio Harisiddhi Lalitpur',
     description:
       'Premier custom tattoo studio in Harisiddhi, Lalitpur, Nepal. Explore curated masterpieces and book an appointment.',
-    images: ['/assets/img/banner-bg.jpg'],
+    images: ['/assets/img/og-image.jpg'],
   },
   icons: {
     icon: [
+      // {
+      //   url: '/assets/img/Mulu-Yu-Kalam.svg',
+      //   type: 'image/svg+xml',
+      // },
       {
-        url: '/assets/img/Mulu-Yu-Kalam.svg',
+        url: '/assets/img/unalome-favicon.png',
         type: 'image/svg+xml',
       },
     ],
@@ -172,7 +180,7 @@ const jsonLd = [
       'Yala Tattoo House',
     ],
     description:
-      "Premier custom tattoo & body art studio located in Harisiddhi (Jala), Lalitpur (Yala), Nepal. Specializing in bespoke tattoo designs, fine line, realism, illustrative, and sterile hygienic tattoo procedures. Serving clients across Lalitpur, Kathmandu, and Bhaktapur.",
+      'Premier custom tattoo & body art studio located in Harisiddhi (Jala), Lalitpur (Yala), Nepal. Specializing in bespoke tattoo designs, fine line, realism, illustrative, and sterile hygienic tattoo procedures. Serving clients across Lalitpur, Kathmandu, and Bhaktapur.',
     url: 'https://muluyukalam.com.np',
     telephone: '+9779861341995',
     email: 'contact@muluyakalam.com.np',
@@ -376,7 +384,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd, null, 2) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body className="font-sans antialiased text-[#2e0249] selection:bg-[#ff7b01] selection:text-white bg-white">

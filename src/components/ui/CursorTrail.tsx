@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 export interface CursorTrailProps {
   /**
@@ -43,7 +43,7 @@ interface Point {
 }
 
 export function CursorTrail({
-  color = "#ff7b01",
+  color = '#ff7b01',
   pointsCount = 40,
   widthFactor = 0.3,
   spring = 0.4,
@@ -55,15 +55,15 @@ export function CursorTrail({
   useEffect(() => {
     // Respect accessibility preference for reduced motion (gracefully disable auto drift instead of killing component)
     const prefersReducedMotion =
-      typeof window !== "undefined" && window.matchMedia
-        ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      typeof window !== 'undefined' && window.matchMedia
+        ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
         : false;
     const canRunIdleMotion = enableIdleMotion && !prefersReducedMotion;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d", { alpha: true });
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
 
     let animFrameId: number;
@@ -149,7 +149,11 @@ export function CursorTrail({
 
     const handleMouseOut = (e: MouseEvent) => {
       // Desktop: window boundary exit check
-      if (!hasMobileInteracted && !e.relatedTarget && !(e as unknown as { toElement?: Element }).toElement) {
+      if (
+        !hasMobileInteracted &&
+        !e.relatedTarget &&
+        !(e as unknown as { toElement?: Element }).toElement
+      ) {
         isAutopilotActive = true;
       }
     };
@@ -180,7 +184,12 @@ export function CursorTrail({
       const now = performance.now();
 
       // Desktop: Re-activate autopilot after 2.5s of mouse inactivity
-      if (!hasMobileInteracted && !isAutopilotActive && lastUserActionTime > 0 && now - lastUserActionTime > 2500) {
+      if (
+        !hasMobileInteracted &&
+        !isAutopilotActive &&
+        lastUserActionTime > 0 &&
+        now - lastUserActionTime > 5500
+      ) {
         isAutopilotActive = true;
       }
 
@@ -219,8 +228,8 @@ export function CursorTrail({
 
       // Smooth Bezier spline rendering with tapering width
       ctx.strokeStyle = color;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
       let prevX = trail[0].x;
       let prevY = trail[0].y;
@@ -255,40 +264,51 @@ export function CursorTrail({
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
+      if (document.visibilityState === 'hidden') {
         window.cancelAnimationFrame(animFrameId);
       } else {
         animFrameId = window.requestAnimationFrame(render);
       }
     };
 
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("click", handleClick, { passive: true });
-    window.addEventListener("pointerdown", handlePointerDown, { passive: true });
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
-    document.addEventListener("mouseleave", handleMouseLeave, { passive: true });
-    document.documentElement.addEventListener("mouseleave", handleMouseLeave, { passive: true });
-    window.addEventListener("mouseout", handleMouseOut, { passive: true });
-    window.addEventListener("blur", handleBlur);
-    window.addEventListener("resize", handleResize, { passive: true });
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('click', handleClick, { passive: true });
+    window.addEventListener('pointerdown', handlePointerDown, {
+      passive: true,
+    });
+    window.addEventListener('pointermove', handlePointerMove, {
+      passive: true,
+    });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('mouseleave', handleMouseLeave, {
+      passive: true,
+    });
+    document.documentElement.addEventListener('mouseleave', handleMouseLeave, {
+      passive: true,
+    });
+    window.addEventListener('mouseout', handleMouseOut, { passive: true });
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('resize', handleResize, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.cancelAnimationFrame(animFrameId);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("click", handleClick);
-      window.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-      document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
-      window.removeEventListener("mouseout", handleMouseOut);
-      window.removeEventListener("blur", handleBlur);
-      window.removeEventListener("resize", handleResize);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('click', handleClick);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.documentElement.removeEventListener(
+        'mouseleave',
+        handleMouseLeave,
+      );
+      window.removeEventListener('mouseout', handleMouseOut);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [color, pointsCount, widthFactor, spring, friction, enableIdleMotion]);
 

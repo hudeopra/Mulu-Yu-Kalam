@@ -55,143 +55,96 @@ export interface Appointment {
 }
 
 /**
- * Extracts all reference image URLs for an appointment from reference_image_urls (text[]).
- * Works uniformly for single or multiple images.
+ * Calculates remaining unpaid amount from estimated price and partial payment amount.
+ * Returns null if estimated price is not set.
  */
-export function getAppointmentReferenceUrls(
-  appointment?: {
-    reference_image_urls?: string[] | null;
-  } | null,
-): string[] {
-  if (!appointment || !Array.isArray(appointment.reference_image_urls)) {
-    return [];
-  }
-
-  return appointment.reference_image_urls.filter(
-    (url): url is string => typeof url === 'string' && url.trim().length > 0,
-  );
+export function calculateRemainingBalance(
+  estimatedPrice: number | null | undefined,
+  partialPaymentAmount: number | null | undefined,
+): number | null {
+  if (estimatedPrice === null || estimatedPrice === undefined) return null;
+  const partial = partialPaymentAmount ?? 0;
+  return Math.max(0, estimatedPrice - partial);
 }
 
 /**
- * Extracts relative storage object path from a Supabase Storage public URL.
- * e.g., 'https://.../tattoo-references/1743673000-0-art.webp' -> '1743673000-0-art.webp'
+ * Structure of active appointment category metrics.
  */
-export function extractStoragePath(
-  url: string,
-  bucketName: string = 'tattoo-references',
-): string | null {
-  if (!url || typeof url !== 'string') return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-
-  const marker = `/${bucketName}/`;
-  const index = trimmed.indexOf(marker);
-  if (index !== -1) {
-    const rawPath = trimmed.slice(index + marker.length).split('?')[0];
-    return decodeURIComponent(rawPath);
-  }
-
-  // Relative path or direct filename
-  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    return decodeURIComponent(trimmed.split('?')[0]);
-  }
-
-  // Fallback to filename in URL
-  const lastSegment = trimmed.split('/').pop()?.split('?')[0];
-  return lastSegment ? decodeURIComponent(lastSegment) : null;
+export interface AppointmentStats {
+  total: number;
+  pending: number;
+  confirmed: number;
+  completed: number;
+  canceled: number;
 }
 
 /**
- * Deletes all reference image files belonging to an appointment from Supabase Storage bucket.
+ * Computes category counts in a single O(N) pass, strictly excluding suspended appointments.
  */
-export async function deleteAppointmentStorageImages(
-  appointment?: {
-    reference_image_urls?: string[] | null;
-  } | null,
-  bucketName: string = 'tattoo-references',
-): Promise<void> {
-  if (!appointment) return;
+export function computeAppointmentStats(
+  appointments: Appointment[],
+): AppointmentStats {
+  const stats: AppointmentStats = {
+    total: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    canceled: 0,
+  };
 
-  const urls = getAppointmentReferenceUrls(appointment);
-  if (urls.length === 0) return;
+  for (let i = 0; i < appointments.length; i++) {
+    const app = appointments[i];
+    if (app.status === 'suspended') continue;
 
-  const paths = urls
-    .map((u) => extractStoragePath(u, bucketName))
-    .filter((p): p is string => Boolean(p && p.length > 0));
-
-  if (paths.length === 0) return;
-
-  try {
-    const { error } = await supabase.storage.from(bucketName).remove(paths);
-    if (error) {
-      console.warn(
-        `[Supabase Storage] Failed to remove images from "${bucketName}":`,
-        error.message,
-      );
+    stats.total++;
+    switch (app.status) {
+      case 'pending':
+        stats.pending++;
+        break;
+      case 'confirmed':
+        stats.confirmed++;
+        break;
+      case 'completed':
+        stats.completed++;
+        break;
+      case 'canceled':
+        stats.canceled++;
+        break;
     }
-  } catch (err) {
-    console.warn('[Supabase Storage] Storage removal exception:', err);
   }
+
+  return stats;
 }
 
 /**
- * Renames all reference image files belonging to an appointment with a "suspended-" prefix in Supabase Storage,
- * and returns the updated array of public URLs.
+ * Returns Tailwind badge styling classes based on appointment status.
  */
-export async function suspendAppointmentStorageImages(
-  appointment?: {
-    reference_image_urls?: string[] | null;
-  } | null,
-  bucketName: string = 'tattoo-references',
-): Promise<string[]> {
-  if (!appointment) return [];
-
-  const urls = getAppointmentReferenceUrls(appointment);
-  if (urls.length === 0) return [];
-
-  const updatedUrls: string[] = [];
-
-  for (const url of urls) {
-    const originalPath = extractStoragePath(url, bucketName);
-    if (!originalPath) {
-      updatedUrls.push(url);
-      continue;
-    }
-
-    const segments = originalPath.split('/');
-    const fileName = segments[segments.length - 1];
-
-    // Avoid double prefixing if already suspended
-    if (fileName.startsWith('suspended-')) {
-      updatedUrls.push(url);
-      continue;
-    }
-
-    segments[segments.length - 1] = `suspended-${fileName}`;
-    const newPath = segments.join('/');
-
-    try {
-      const { error } = await supabase.storage
-        .from(bucketName)
-        .move(originalPath, newPath);
-
-      if (error) {
-        console.warn(
-          `[Supabase Storage] Failed to rename image to "${newPath}":`,
-          error.message,
-        );
-        updatedUrls.push(url);
-      } else {
-        const { data: publicUrlData } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(newPath);
-        updatedUrls.push(publicUrlData.publicUrl);
-      }
-    } catch (err) {
-      console.warn('[Supabase Storage] Exception while renaming image:', err);
-      updatedUrls.push(url);
-    }
+export function getAppointmentStatusBadge(
+  status: AppointmentStatus | string,
+): string {
+  switch (status) {
+    case 'pending':
+      return 'bg-amber-100 text-amber-800 border-amber-200';
+    case 'confirmed':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    case 'completed':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'canceled':
+      return 'bg-rose-100 text-rose-800 border-rose-200';
+    case 'suspended':
+      return 'bg-gray-100 text-gray-500 border-gray-200';
+    default:
+      return 'bg-gray-100 text-gray-700 border-gray-200';
   }
-
-  return updatedUrls;
 }
+
+// Re-export storage service utilities for backwards compatibility
+export {
+  getAppointmentReferenceUrls,
+  extractStoragePath,
+  uploadReferenceFiles,
+  removeStorageFiles,
+  deleteAppointmentStorageImages,
+  suspendAppointmentStorageImages,
+} from '@/services/storage';
+

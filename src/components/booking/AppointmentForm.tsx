@@ -7,7 +7,12 @@ import {
   appointmentSchema,
   type AppointmentFormData,
 } from '@/schemas/appointmentSchema';
-import { supabase, isSupabaseConfigured, type Appointment } from '@/lib/supabase';
+import { isSupabaseConfigured, type Appointment } from '@/lib/supabase';
+import {
+  appointmentsService,
+  uploadReferenceFiles,
+  removeStorageFiles,
+} from '@/services';
 import {
   checkRateLimit,
   recordSubmission,
@@ -73,8 +78,8 @@ export function AppointmentForm() {
     }
 
     // Keep track of uploaded storage paths for atomic rollback
-    const uploadedStoragePaths: string[] = [];
-    const uploadedImageUrls: string[] = [];
+    let uploadedStoragePaths: string[] = [];
+    let uploadedImageUrls: string[] = [];
 
     try {
       // 2. Upload images on submit, then retrieve public URLs
@@ -87,81 +92,29 @@ export function AppointmentForm() {
           } to studio storage...`,
         );
 
-        for (let i = 0; i < filesToUpload.length; i++) {
-          const file = filesToUpload[i];
-          const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-          const filePath = `${Date.now()}-${i}-${cleanName}`;
-
-          const mimeType =
-            file.type ||
-            (/\.webp$/i.test(file.name)
-              ? 'image/webp'
-              : /\.png$/i.test(file.name)
-                ? 'image/png'
-                : 'image/jpeg');
-
-          const { error: uploadError } = await supabase.storage
-            .from('tattoo-references')
-            .upload(filePath, file, {
-              contentType: mimeType,
-              upsert: false,
-            });
-
-          if (uploadError) {
-            const isSizeError = uploadError.message
-              .toLowerCase()
-              .includes('exceeded the maximum allowed size');
-
-            if (isSizeError) {
-              throw new Error(
-                `Failed to upload reference artwork "${file.name}": The file exceeded the Supabase Storage bucket size limit. Please ensure the "tattoo-references" bucket size limit is updated to 2.5MB in your Supabase Dashboard or SQL editor.`,
-              );
-            }
-
-            throw new Error(
-              `Failed to upload reference artwork "${file.name}": ${uploadError.message}`,
-            );
-          }
-
-          // Track path for atomic rollback
-          uploadedStoragePaths.push(filePath);
-
-          const { data: urlData } = supabase.storage
-            .from('tattoo-references')
-            .getPublicUrl(filePath);
-
-          uploadedImageUrls.push(urlData.publicUrl);
-        }
+        const uploadResult = await uploadReferenceFiles(filesToUpload);
+        uploadedStoragePaths = uploadResult.storagePaths;
+        uploadedImageUrls = uploadResult.publicUrls;
       }
 
       // 3. Add table row with input information and image URLs
       setStatusMessage('Booking your session in studio database...');
 
-      const { data: record, error: insertError } = await supabase
-        .from('appointments')
-        .insert({
-          tattoo_location: data.tattooLocation,
-          name: data.name,
-          email: data.email,
-          phone: data.number,
-          appointment_date: data.appointmentDate,
-          appointment_time: data.appointmentTime,
-          reference_image_urls:
-            uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
-          notes: data.notes || null,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (insertError) {
-        throw new Error(`Failed to record appointment: ${insertError.message}`);
-      }
+      const record = await appointmentsService.createAppointment({
+        tattooLocation: data.tattooLocation,
+        name: data.name,
+        email: data.email,
+        phone: data.number,
+        appointmentDate: data.appointmentDate,
+        appointmentTime: data.appointmentTime,
+        referenceImageUrls: uploadedImageUrls,
+        notes: data.notes || null,
+      });
 
       // 4. Success: Record submission in rate limiter & present confirmation view immediately!
       recordSubmission();
       setRateLimit(checkRateLimit());
-      setCreatedAppointment(record as Appointment);
+      setCreatedAppointment(record);
 
       // 5. Fire-and-forget email dispatch in background (won't hold up UX or button loading state)
       fetch('/api/send-appointment-email', {
@@ -193,13 +146,7 @@ export function AppointmentForm() {
 
       // ATOMIC ROLLBACK: If ANY upload failed or DB insertion failed, delete all uploaded files
       if (uploadedStoragePaths.length > 0) {
-        try {
-          await supabase.storage
-            .from('tattoo-references')
-            .remove(uploadedStoragePaths);
-        } catch (cleanupErr) {
-          console.warn('Storage rollback cleanup error:', cleanupErr);
-        }
+        await removeStorageFiles(uploadedStoragePaths);
       }
 
       const message =

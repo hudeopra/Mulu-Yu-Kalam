@@ -1,35 +1,27 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, type MouseEvent } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import {
   LogOut,
   ExternalLink,
   Calendar,
   Users,
-  Clock,
-  ShieldCheck,
-  Search,
-  RefreshCw,
-  SlidersHorizontal,
   CheckCircle2,
   AlertCircle,
   Clock4,
-  Eye,
-  MapPin,
-  Mail,
-  Phone,
-  Image as ImageIcon,
-} from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
+} from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
 import {
   supabase,
   type Appointment,
   type AppointmentStatus,
-  getAppointmentReferenceUrls,
-} from "@/lib/supabase";
-import { AppointmentDetailModal } from "./AppointmentDetailModal";
+  computeAppointmentStats,
+} from '@/lib/supabase';
+import { appointmentsService } from '@/services';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
+import { AppointmentDataTable } from './appointment-table';
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
@@ -39,97 +31,74 @@ export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Search & Filter State
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | AppointmentStatus>(
-    "all",
-  );
-  const [sortBy, setSortBy] = useState<"newest" | "upcoming">("newest");
-
-  // Modal State
+  // Inspector Modal State
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch appointments from Supabase
+  // Fetch appointments from Supabase (excluding soft-deleted / suspended records)
   const fetchAppointments = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("*")
-        .neq("status", "suspended")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      setAppointments((data as Appointment[]) || []);
+      const data = await appointmentsService.getActiveAppointments();
+      setAppointments(data);
     } catch (err: unknown) {
+      console.error('[AdminDashboard] Fetch Error:', err);
       const msg =
-        err instanceof Error ? err.message : "Failed to fetch appointments.";
+        err instanceof Error ? err.message : 'Failed to fetch appointments.';
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initial fetch and Realtime channel subscription
+  // Set up Supabase Realtime Subscription + Auto-refresh on Tab Focus
   useEffect(() => {
     fetchAppointments();
 
     const channel = supabase
-      .channel("appointments-realtime-feed")
+      .channel('admin_appointments_stream')
       .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "appointments" },
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments',
+        },
         (payload) => {
-          if (payload.eventType === "INSERT") {
-            const newRecord = payload.new as Appointment;
-            if (newRecord.status !== "suspended") {
-              setAppointments((prev) => [newRecord, ...prev]);
+          if (payload.eventType === 'INSERT') {
+            const newRow = payload.new as Appointment;
+            if (newRow.status !== 'suspended') {
+              setAppointments((prev) => [newRow, ...prev]);
             }
-          } else if (payload.eventType === "UPDATE") {
-            const updatedRecord = payload.new as Appointment;
-            if (updatedRecord.status === "suspended") {
-              // Suspended / soft-deleted: remove from dashboard view
-              setAppointments((prev) =>
-                prev.filter((app) => app.id !== updatedRecord.id),
-              );
-              setSelectedAppointment((prev) =>
-                prev && prev.id === updatedRecord.id ? null : prev,
-              );
-            } else {
-              setAppointments((prev) =>
-                prev.map((app) =>
-                  app.id === updatedRecord.id ? updatedRecord : app,
-                ),
-              );
-              // If the currently inspected modal is the updated record, update it too
-              setSelectedAppointment((prev) =>
-                prev && prev.id === updatedRecord.id ? updatedRecord : prev,
-              );
-            }
-          } else if (payload.eventType === "DELETE") {
-            const deletedId = (payload.old as { id: string }).id;
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Appointment;
+            setAppointments((prev) => {
+              if (updated.status === 'suspended') {
+                return prev.filter((item) => item.id !== updated.id);
+              }
+              const exists = prev.some((item) => item.id === updated.id);
+              if (exists) {
+                return prev.map((item) =>
+                  item.id === updated.id ? updated : item,
+                );
+              }
+              return [updated, ...prev];
+            });
+          } else if (payload.eventType === 'DELETE') {
+            const deleted = payload.old as { id: string };
             setAppointments((prev) =>
-              prev.filter((app) => app.id !== deletedId),
-            );
-            setSelectedAppointment((prev) =>
-              prev && prev.id === deletedId ? null : prev,
+              prev.filter((item) => item.id !== deleted.id),
             );
           }
         },
       )
-      .subscribe((status) => {
-        // Status transitions: 'SUBSCRIBED' | 'TIMED_OUT' | 'CLOSED' | 'CHANNEL_ERROR'
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          // Gracefully fallback to standard REST queries if realtime replication isn't enabled in Supabase yet
+      .subscribe((subStatus) => {
+        if (subStatus !== 'SUBSCRIBED') {
           console.warn(
-            "[Supabase Realtime] Realtime subscription inactive. Using HTTP polling fallback.",
+            '[Supabase Realtime] Realtime subscription inactive. Using HTTP polling fallback.',
           );
         }
       });
@@ -138,16 +107,16 @@ export function AdminDashboard() {
     const handleFocus = () => {
       fetchAppointments();
     };
-    window.addEventListener("focus", handleFocus);
+    window.addEventListener('focus', handleFocus);
 
-    // Fallback polling every 30s to keep feed fresh even if Realtime is disabled on the database
+    // Fallback polling every 30s to keep feed fresh
     const pollInterval = setInterval(() => {
       fetchAppointments();
     }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
-      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener('focus', handleFocus);
       clearInterval(pollInterval);
     };
   }, [fetchAppointments]);
@@ -166,101 +135,28 @@ export function AdminDashboard() {
     setSelectedAppointment(null);
   };
 
-  // Quick status toggle directly from list/table
+  // Quick status toggle directly from table action
   const handleQuickStatusChange = async (
-    e: MouseEvent,
     id: string,
     newStatus: AppointmentStatus,
   ) => {
-    e.stopPropagation();
     try {
-      const { data, error } = await supabase
-        .from("appointments")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        handleAppointmentUpdated(data as Appointment);
-      }
+      const updated = await appointmentsService.updateAppointmentStatus(
+        id,
+        newStatus,
+      );
+      handleAppointmentUpdated(updated);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Status update failed";
+      const msg = err instanceof Error ? err.message : 'Status update failed';
       alert(`Could not update status: ${msg}`);
     }
   };
 
-  // Filtered & Sorted Appointments
-  const filteredAppointments = useMemo(() => {
-    return appointments
-      .filter((app) => {
-        // Exclude suspended appointments from admin dashboard view
-        if (app.status === "suspended") {
-          return false;
-        }
-
-        // Status filter
-        if (statusFilter !== "all" && app.status !== statusFilter) {
-          return false;
-        }
-
-        // Search query filter (matches name, email, phone, location)
-        if (searchQuery.trim() !== "") {
-          const query = searchQuery.toLowerCase();
-          const matchName = app.name?.toLowerCase().includes(query);
-          const matchEmail = app.email?.toLowerCase().includes(query);
-          const matchPhone = app.phone?.toLowerCase().includes(query);
-          const matchLocation = app.tattoo_location
-            ?.toLowerCase()
-            .includes(query);
-          return matchName || matchEmail || matchPhone || matchLocation;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        if (sortBy === "upcoming") {
-          return (
-            new Date(a.appointment_date).getTime() -
-            new Date(b.appointment_date).getTime()
-          );
-        }
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      });
-  }, [appointments, statusFilter, searchQuery, sortBy]);
-
-  // Statistics metrics (strictly excluding suspended)
-  const stats = useMemo(() => {
-    const active = appointments.filter((a) => a.status !== "suspended");
-    const total = active.length;
-    const pending = active.filter((a) => a.status === "pending").length;
-    const confirmed = active.filter(
-      (a) => a.status === "confirmed",
-    ).length;
-    const completed = active.filter(
-      (a) => a.status === "completed",
-    ).length;
-    const canceled = active.filter(
-      (a) => a.status === "canceled",
-    ).length;
-    return { total, pending, confirmed, completed, canceled };
-  }, [appointments]);
-
-  const getStatusBadge = (s: AppointmentStatus) => {
-    switch (s) {
-      case "confirmed":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "canceled":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-amber-100 text-amber-800 border-amber-200";
-    }
-  };
+  // Statistics metrics (computed in single pass O(N), strictly excluding suspended)
+  const stats = useMemo(
+    () => computeAppointmentStats(appointments),
+    [appointments],
+  );
 
   return (
     <div className="min-h-screen bg-[#faf7f2] flex flex-col font-sans text-gray-900 selection:bg-[#ff7b01] selection:text-white">
@@ -277,9 +173,6 @@ export function AdminDashboard() {
                 priority
                 className="w-40 h-auto drop-shadow-xs"
               />
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-[#ff7b01] bg-[#ffecd0] px-2.5 py-1 rounded-full">
-                <ShieldCheck className="w-3.5 h-3.5" /> Staff
-              </span>
             </Link>
           </div>
 
@@ -318,18 +211,20 @@ export function AdminDashboard() {
       {/* Main Admin Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
         {/* Welcome Hero Banner */}
-        <div className="bg-gradient-to-r from-[#2e0249] to-[#45096b] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#2e0249] via-[#3b075e] to-[#2e0249] rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-[#2e0249]/10">
           <div className="relative z-10 max-w-2xl space-y-2">
-            <span className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#ffbd5b] bg-white/10 px-3 py-1 rounded-full">
-              Studio Portal &bull; Live Appointments
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              Studio Management Dashboard
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-orange-200">
+                Live Studio Appointments Feed
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              Tattoo Appointments & Booking Hub
             </h1>
             <p className="text-xs sm:text-sm text-gray-200 leading-relaxed">
-              Real-time feed of booking requests. Review artwork references,
-              reschedule sessions, update pricing & deposits, and communicate
-              with clients.
+              Review and inspect client tattoo concepts, confirm or reschedule
+              sessions, update pricing & deposits, and communicate with clients.
             </p>
           </div>
 
@@ -402,103 +297,6 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        {/* Filter & Search Toolbar */}
-        <div className="bg-white rounded-2xl p-4 border border-black/5 shadow-xs space-y-4">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-              <input
-                type="text"
-                placeholder="Search by client name, email, phone, or placement..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600"
-                >
-                  Clear
-                </button>
-              ) : null}
-            </div>
-
-            {/* Sort Dropdown & Refresh Button */}
-            <div className="flex items-center gap-2 justify-end">
-              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-gray-500" />
-                <select
-                  value={sortBy}
-                  onChange={(e) =>
-                    setSortBy(e.target.value as "newest" | "upcoming")
-                  }
-                  className="bg-transparent text-xs font-semibold text-[#2e0249] focus:outline-none cursor-pointer"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="upcoming">Upcoming Session Date</option>
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={fetchAppointments}
-                disabled={isLoading}
-                title="Refresh feed"
-                className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={`w-4 h-4 ${isLoading ? "animate-spin text-[#ff7b01]" : ""}`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold scrollbar-none border-t border-gray-100 pt-3">
-            <span className="text-gray-400 mr-2 text-[11px] uppercase tracking-wider font-bold">
-              Filter Status:
-            </span>
-            {(
-              [
-                { id: "all", label: "All", count: stats.total },
-                { id: "pending", label: "Pending", count: stats.pending },
-                { id: "confirmed", label: "Confirmed", count: stats.confirmed },
-                { id: "completed", label: "Completed", count: stats.completed },
-                {
-                  id: "canceled",
-                  label: "Canceled",
-                  count: stats.canceled,
-                },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setStatusFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                  statusFilter === tab.id
-                    ? "bg-[#2e0249] text-white shadow-xs"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    statusFilter === tab.id
-                      ? "bg-white/20 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Error Alert Banner */}
         {errorMessage ? (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center gap-3 text-red-800 text-xs font-semibold">
@@ -507,275 +305,25 @@ export function AdminDashboard() {
             <button
               type="button"
               onClick={fetchAppointments}
-              className="px-3 py-1 bg-red-100 hover:bg-red-200 rounded-lg text-red-900 transition-colors"
+              className="px-3 py-1 bg-red-100 hover:bg-red-200 rounded-lg text-red-900 transition-colors cursor-pointer"
             >
               Retry
             </button>
           </div>
         ) : null}
 
-        {/* Appointments Table / Cards View */}
-        <div className="bg-white rounded-3xl border border-black/5 shadow-xs overflow-hidden">
-          {isLoading && appointments.length === 0 ? (
-            /* Loading State */
-            <div className="py-20 text-center space-y-3">
-              <RefreshCw className="w-8 h-8 text-[#ff7b01] animate-spin mx-auto" />
-              <p className="text-sm font-semibold text-[#2e0249]">
-                Loading appointment bookings...
-              </p>
-            </div>
-          ) : filteredAppointments.length === 0 ? (
-            /* Empty State */
-            <div className="py-16 text-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mx-auto">
-                <Calendar className="w-7 h-7" />
-              </div>
-              <h3 className="text-base font-bold text-[#2e0249]">
-                No appointments found
-              </h3>
-              <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                {searchQuery
-                  ? `No bookings match your search query "${searchQuery}". Try a different keyword.`
-                  : statusFilter !== "all"
-                    ? `There are currently no appointments in the "${statusFilter}" category.`
-                    : "New client bookings submitted from the landing page will automatically stream here in real time."}
-              </p>
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="text-xs font-bold text-[#ff7b01] hover:underline"
-                >
-                  Clear search filters
-                </button>
-              ) : null}
-            </div>
-          ) : (
-            /* Table for Large Screens */
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-50/70 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6">Client</th>
-                    <th className="py-3.5 px-4">Placement</th>
-                    <th className="py-3.5 px-4">Session Date</th>
-                    <th className="py-3.5 px-4">Artwork</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4">Quote / Deposit</th>
-                    <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-xs">
-                  {filteredAppointments.map((app) => (
-                    <tr
-                      key={app.id}
-                      onClick={() => {
-                        setSelectedAppointment(app);
-                        setIsModalOpen(true);
-                      }}
-                      className="hover:bg-orange-50/30 transition-colors cursor-pointer group"
-                    >
-                      {/* Client Info */}
-                      <td className="py-4 px-4 sm:px-6">
-                        <div className="space-y-0.5">
-                          <p className="font-bold text-[#2e0249] group-hover:text-[#ff7b01] transition-colors text-sm">
-                            {app.name}
-                          </p>
-                          <div className="flex flex-col text-[11px] text-gray-500 gap-0.5">
-                            <span className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-gray-400" />{" "}
-                              {app.phone}
-                            </span>
-                            <span className="flex items-center gap-1 truncate max-w-[180px]">
-                              <Mail className="w-3 h-3 text-gray-400" />{" "}
-                              {app.email}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Tattoo Placement */}
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-semibold text-[11px] capitalize border border-purple-100">
-                          <MapPin className="w-3 h-3" />
-                          {app.tattoo_location}
-                        </span>
-                      </td>
-
-                      {/* Date & Time */}
-                      <td className="py-4 px-4">
-                        <div className="space-y-0.5">
-                          <p className="font-semibold text-gray-900">
-                            {new Date(app.appointment_date).toLocaleDateString(
-                              undefined,
-                              {
-                                weekday: "short",
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )}
-                          </p>
-                          <p className="text-[11px] text-gray-500 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-gray-400" />
-                            {app.appointment_time}
-                          </p>
-                        </div>
-                      </td>
-
-                      {/* Reference Artwork Thumbnail */}
-                      <td className="py-4 px-4">
-                        {(() => {
-                          const refUrls = getAppointmentReferenceUrls(app);
-                          return refUrls.length > 0 ? (
-                            <div
-                              onClick={() => {
-                                setSelectedAppointment(app);
-                                setIsModalOpen(true);
-                              }}
-                              className="relative w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-2xs group cursor-pointer hover:border-[#ff7b01] transition-colors"
-                              title={`View ${refUrls.length} reference ${refUrls.length === 1 ? "artwork" : "artworks"}`}
-                            >
-                              <Image
-                                src={refUrls[0]}
-                                alt="Tattoo reference preview"
-                                fill
-                                sizes="48px"
-                                unoptimized
-                                className="object-cover group-hover:scale-105 transition-transform"
-                              />
-                              {refUrls.length > 1 ? (
-                                <span className="absolute bottom-0 right-0 bg-[#2e0249] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-tl-md shadow-xs">
-                                  +{refUrls.length - 1}
-                                </span>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded-xl bg-gray-100 border border-dashed border-gray-200 flex items-center justify-center text-gray-400">
-                              <ImageIcon className="w-4 h-4" />
-                            </div>
-                          );
-                        })()}
-                      </td>
-
-                      {/* Status Pill with dropdown quick toggles */}
-                      <td className="py-4 px-4">
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${getStatusBadge(
-                            app.status,
-                          )}`}
-                        >
-                          {app.status}
-                        </span>
-                      </td>
-
-                      {/* Financials: Quote & Deposit */}
-                      <td className="py-4 px-4">
-                        <div className="space-y-1">
-                          {app.deposit_status === "partial" ? (
-                            <>
-                              <div className="text-[11px] leading-tight">
-                                <span className="text-gray-500">Paid: </span>
-                                <span className="font-bold text-blue-700">
-                                  NPR{" "}
-                                  {(
-                                    app.partial_payment_amount ?? 0
-                                  ).toLocaleString()}
-                                </span>
-                              </div>
-                              <div className="text-[11px] leading-tight">
-                                <span className="text-gray-500">Due: </span>
-                                <span className="font-bold text-amber-600">
-                                  NPR{" "}
-                                  {app.estimated_price !== null &&
-                                  app.estimated_price !== undefined
-                                    ? Math.max(
-                                        0,
-                                        app.estimated_price -
-                                          (app.partial_payment_amount ?? 0),
-                                      ).toLocaleString()
-                                    : "—"}
-                                </span>
-                              </div>
-                              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase bg-blue-100 text-blue-800 border border-blue-200">
-                                Partial Deposit
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <p className="font-bold text-[#2e0249]">
-                                {app.estimated_price !== null &&
-                                app.estimated_price !== undefined
-                                  ? `NPR ${app.estimated_price.toLocaleString()}`
-                                  : "No Quote Yet"}
-                              </p>
-                              <span
-                                className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase border ${
-                                  app.deposit_status === "paid"
-                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                                    : "bg-gray-100 text-gray-600 border-gray-200"
-                                }`}
-                              >
-                                Deposit: {app.deposit_status}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-4 px-4 sm:px-6 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          {/* Quick confirm button for pending */}
-                          {app.status === "pending" ? (
-                            <button
-                              type="button"
-                              onClick={(e) =>
-                                handleQuickStatusChange(e, app.id, "confirmed")
-                              }
-                              title="Quick Confirm"
-                              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </button>
-                          ) : null}
-
-                          {/* Quick complete button for confirmed */}
-                          {app.status === "confirmed" ? (
-                            <button
-                              type="button"
-                              onClick={(e) =>
-                                handleQuickStatusChange(e, app.id, "completed")
-                              }
-                              title="Mark Completed"
-                              className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors"
-                            >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </button>
-                          ) : null}
-
-                          {/* View Inspector Modal */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedAppointment(app);
-                              setIsModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-gray-100 group-hover:bg-[#ff7b01] group-hover:text-white text-[#2e0249] font-bold text-xs transition-colors cursor-pointer"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Details</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {/* TanStack Data Table for Appointments */}
+        <AppointmentDataTable
+          data={appointments}
+          stats={stats}
+          isLoading={isLoading}
+          onRefresh={fetchAppointments}
+          onViewDetails={(app) => {
+            setSelectedAppointment(app);
+            setIsModalOpen(true);
+          }}
+          onQuickStatusChange={handleQuickStatusChange}
+        />
       </main>
 
       {/* Appointment Detail Inspector Modal (Mounted independently per appointment) */}

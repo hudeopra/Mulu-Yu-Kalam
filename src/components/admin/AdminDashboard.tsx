@@ -650,24 +650,55 @@ export function AdminDashboard() {
 
                       {/* Financials: Quote & Deposit */}
                       <td className="py-4 px-4">
-                        <div className="space-y-0.5">
-                          <p className="font-bold text-[#2e0249]">
-                            {app.estimated_price !== null &&
-                            app.estimated_price !== undefined
-                              ? `NPR ${app.estimated_price.toLocaleString()}`
-                              : "No Quote Yet"}
-                          </p>
-                          <span
-                            className={`inline-block text-[10px] font-semibold px-2 py-0.2 rounded-full uppercase ${
-                              app.deposit_status === "paid"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : app.deposit_status === "partial"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            Deposit: {app.deposit_status}
-                          </span>
+                        <div className="space-y-1">
+                          {app.deposit_status === "partial" ? (
+                            <>
+                              <div className="text-[11px] leading-tight">
+                                <span className="text-gray-500">Paid: </span>
+                                <span className="font-bold text-blue-700">
+                                  NPR{" "}
+                                  {(
+                                    app.partial_payment_amount ?? 0
+                                  ).toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="text-[11px] leading-tight">
+                                <span className="text-gray-500">Due: </span>
+                                <span className="font-bold text-amber-600">
+                                  NPR{" "}
+                                  {app.estimated_price !== null &&
+                                  app.estimated_price !== undefined
+                                    ? Math.max(
+                                        0,
+                                        app.estimated_price -
+                                          (app.partial_payment_amount ?? 0),
+                                      ).toLocaleString()
+                                    : "—"}
+                                </span>
+                              </div>
+                              <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase bg-blue-100 text-blue-800 border border-blue-200">
+                                Partial Deposit
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <p className="font-bold text-[#2e0249]">
+                                {app.estimated_price !== null &&
+                                app.estimated_price !== undefined
+                                  ? `NPR ${app.estimated_price.toLocaleString()}`
+                                  : "No Quote Yet"}
+                              </p>
+                              <span
+                                className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase border ${
+                                  app.deposit_status === "paid"
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                    : "bg-gray-100 text-gray-600 border-gray-200"
+                                }`}
+                              >
+                                Deposit: {app.deposit_status}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </td>
 

@@ -57,6 +57,7 @@ export function AppointmentDetailModal({
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
   const [estimatedPrice, setEstimatedPrice] = useState<string>("");
+  const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>("");
   const [internalNotes, setInternalNotes] = useState<string>("");
 
   // Interaction / Loading states
@@ -84,11 +85,19 @@ export function AppointmentDetailModal({
           ? String(appointment.estimated_price)
           : "",
       );
+      setPartialPaymentAmount(
+        appointment.partial_payment_amount !== null &&
+          appointment.partial_payment_amount !== undefined
+          ? String(appointment.partial_payment_amount)
+          : "",
+      );
       setInternalNotes(appointment.internal_notes || "");
       setShowDeleteConfirm(false);
       setFeedbackMessage(null);
       setShowImageLightbox(false);
       setSelectedImageIndex(0);
+      setIsDeleting(false);
+      setIsSaving(false);
     }
   }, [appointment]);
 
@@ -106,6 +115,14 @@ export function AppointmentDetailModal({
       ? `977${phoneDigits}`
       : phoneDigits;
 
+  const estNum =
+    estimatedPrice.trim() === "" ? null : parseFloat(estimatedPrice);
+  const partNum =
+    partialPaymentAmount.trim() === ""
+      ? 0
+      : parseFloat(partialPaymentAmount) || 0;
+  const remainingDue = estNum !== null ? Math.max(0, estNum - partNum) : null;
+
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -113,6 +130,10 @@ export function AppointmentDetailModal({
 
     const numericPrice =
       estimatedPrice.trim() === "" ? null : parseFloat(estimatedPrice);
+    const numericPartial =
+      depositStatus === "partial" && partialPaymentAmount.trim() !== ""
+        ? parseFloat(partialPaymentAmount)
+        : null;
 
     try {
       const { data, error } = await supabase
@@ -123,6 +144,7 @@ export function AppointmentDetailModal({
           appointment_date: appointmentDate,
           appointment_time: appointmentTime,
           estimated_price: numericPrice,
+          partial_payment_amount: numericPartial,
           internal_notes:
             internalNotes.trim() === "" ? null : internalNotes.trim(),
           updated_at: new Date().toISOString(),
@@ -279,11 +301,7 @@ export function AppointmentDetailModal({
                   </span>
                 </div>
                 <p className="text-xs text-gray-400">
-                  ID:{" "}
-                  <span className="font-mono text-gray-600">
-                    {appointment.id}
-                  </span>{" "}
-                  &bull; Booked on{" "}
+                  Booked on{" "}
                   {new Date(appointment.created_at).toLocaleDateString(
                     undefined,
                     {
@@ -425,6 +443,68 @@ export function AppointmentDetailModal({
                         <span>{appointment.appointment_time}</span>
                       </div>
                     </div>
+
+                    <div className="space-y-1 sm:col-span-2 pt-2 border-t border-gray-200">
+                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                        Payment & Deposit
+                      </p>
+                      {appointment.deposit_status === "partial" ? (
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="font-bold text-[#2e0249]">
+                            {appointment.estimated_price !== null &&
+                            appointment.estimated_price !== undefined
+                              ? `NPR ${appointment.estimated_price.toLocaleString()}`
+                              : "No Quote"}
+                          </span>
+                          <span className="text-gray-300">&bull;</span>
+                          <span className="text-gray-600">
+                            Paid:{" "}
+                            <strong className="text-blue-700 font-semibold">
+                              NPR{" "}
+                              {(
+                                appointment.partial_payment_amount ?? 0
+                              ).toLocaleString()}
+                            </strong>
+                          </span>
+                          <span className="text-gray-300">&bull;</span>
+                          <span className="text-gray-600">
+                            Due:{" "}
+                            <strong className="text-amber-600 font-bold">
+                              NPR{" "}
+                              {appointment.estimated_price !== null &&
+                              appointment.estimated_price !== undefined
+                                ? Math.max(
+                                    0,
+                                    appointment.estimated_price -
+                                      (appointment.partial_payment_amount ?? 0),
+                                  ).toLocaleString()
+                                : "—"}
+                            </strong>
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.2 rounded-full uppercase bg-blue-100 text-blue-800 border border-blue-200 ml-auto">
+                            Partial Deposit
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="font-bold text-[#2e0249]">
+                            {appointment.estimated_price !== null &&
+                            appointment.estimated_price !== undefined
+                              ? `NPR ${appointment.estimated_price.toLocaleString()}`
+                              : "No Quote Yet"}
+                          </span>
+                          <span
+                            className={`inline-block text-[10px] font-bold px-2 py-0.2 rounded-full uppercase border ${
+                              appointment.deposit_status === "paid"
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                                : "bg-gray-100 text-gray-600 border-gray-200"
+                            }`}
+                          >
+                            Deposit: {appointment.deposit_status}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {appointment.notes ? (
@@ -488,10 +568,11 @@ export function AppointmentDetailModal({
                   {/* Rescheduling: Date & Time */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputField
+                      floatingLabel={false}
                       type="date"
                       label="Appointment Date"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      containerClassName="space-y-1.5"
+                      labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
+                      containerClassName="space-y-0"
                       value={appointmentDate}
                       onChange={(e) => setAppointmentDate(e.target.value)}
                       required
@@ -500,10 +581,11 @@ export function AppointmentDetailModal({
                     />
 
                     <InputField
+                      floatingLabel={false}
                       type="text"
                       label="Appointment Time"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      containerClassName="space-y-1.5"
+                      labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
+                      containerClassName="space-y-0"
                       value={appointmentTime}
                       onChange={(e) => setAppointmentTime(e.target.value)}
                       placeholder="e.g. 11:00 AM"
@@ -516,12 +598,13 @@ export function AppointmentDetailModal({
                   {/* Financials: Estimated Price & Deposit Status */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <InputField
+                      floatingLabel={false}
                       type="number"
                       step="0.01"
                       min="0"
-                      label="Estimated Price (NPR / USD)"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      containerClassName="space-y-1.5"
+                      label="Estimated Price (NPR)"
+                      labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
+                      containerClassName="space-y-0"
                       value={estimatedPrice}
                       onChange={(e) => setEstimatedPrice(e.target.value)}
                       placeholder="e.g. 5000"
@@ -531,8 +614,8 @@ export function AppointmentDetailModal({
 
                     <SelectField
                       label="Deposit Status"
-                      labelClassName="block text-xs font-semibold text-gray-700"
-                      containerClassName="space-y-1.5"
+                      labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
+                      containerClassName="space-y-0"
                       value={depositStatus}
                       onChange={(e) =>
                         setDepositStatus(e.target.value as DepositStatus)
@@ -546,12 +629,43 @@ export function AppointmentDetailModal({
                     />
                   </div>
 
+                  {/* If depositStatus is partial, show simple partial deposit input and remaining balance */}
+                  {depositStatus === "partial" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <InputField
+                        floatingLabel={false}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        label="Partial Deposit (NPR)"
+                        labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
+                        containerClassName="space-y-0"
+                        value={partialPaymentAmount}
+                        onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                        placeholder="e.g. 2000"
+                        icon={<DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                        className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+                      />
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                          Remaining Unpaid
+                        </label>
+                        <div className="w-full bg-amber-50/60 border border-amber-200/80 rounded-xl px-3 py-2 text-xs font-bold text-amber-700 flex items-center h-[37px]">
+                          {remainingDue !== null
+                            ? `NPR ${remainingDue.toLocaleString()}`
+                            : "—"}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Internal Staff Notes */}
                   <TextareaField
                     rows={3}
                     label="Private Internal Notes (Staff only)"
-                    labelClassName="block text-xs font-semibold text-gray-700"
-                    containerClassName="space-y-1.5"
+                    labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
+                    containerClassName="space-y-0"
                     value={internalNotes}
                     onChange={(e) => setInternalNotes(e.target.value)}
                     placeholder="e.g. Requires stencil resizing; custom color ink prepared; client has low pain tolerance..."

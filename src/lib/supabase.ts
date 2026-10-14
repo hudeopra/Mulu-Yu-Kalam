@@ -49,6 +49,7 @@ export interface Appointment {
   internal_notes: string | null;
   estimated_price: number | null;
   deposit_status: DepositStatus;
+  partial_payment_amount: number | null;
   status: AppointmentStatus;
 }
 

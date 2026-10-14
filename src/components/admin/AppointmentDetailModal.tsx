@@ -35,6 +35,23 @@ import {
   extractStoragePath,
 } from "@/lib/supabase";
 import { InputField, SelectField, TextareaField } from "@/components/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AppointmentDetailModalProps {
   appointment: Appointment | null;
@@ -157,15 +174,8 @@ export function AppointmentDetailModal({
         throw error;
       }
 
-      setFeedbackMessage({
-        type: "success",
-        text: "Appointment updated successfully!",
-      });
       onAppointmentUpdated(data as Appointment);
-
-      setTimeout(() => {
-        setFeedbackMessage(null);
-      }, 3000);
+      onClose();
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : "Failed to update appointment.";
@@ -281,34 +291,29 @@ export function AppointmentDetailModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-        <div
-          className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[92vh]"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="modal-title"
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-4xl sm:max-w-4xl w-full p-0 overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-2xl flex flex-col max-h-[92vh] gap-0 text-left"
         >
           {/* Modal Header */}
-          <div className="px-6 py-5 bg-white border-b border-gray-100 flex items-center justify-between sticky top-0 z-10">
+          <DialogHeader className="px-6 py-5 bg-white border-b border-gray-100 flex flex-row items-center justify-between gap-0 sticky top-0 z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-[#ffecd0] text-[#ff7b01] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-2xl bg-[#ffecd0] text-[#ff7b01] flex items-center justify-center font-bold shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2
-                    id="modal-title"
-                    className="text-lg sm:text-xl font-bold text-[#2e0249]"
-                  >
+                  <DialogTitle className="text-lg sm:text-xl font-bold text-[#2e0249]">
                     Appointment Details
-                  </h2>
+                  </DialogTitle>
                   <span
                     className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${getStatusBadge(status)}`}
                   >
                     {status}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400">
+                <DialogDescription className="text-xs text-gray-400">
                   Booked on{" "}
                   {new Date(appointment.created_at).toLocaleDateString(
                     undefined,
@@ -318,7 +323,7 @@ export function AppointmentDetailModal({
                       year: "numeric",
                     },
                   )}
-                </p>
+                </DialogDescription>
               </div>
             </div>
 
@@ -330,7 +335,7 @@ export function AppointmentDetailModal({
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
+          </DialogHeader>
 
           {/* Feedback alert banner */}
           {feedbackMessage ? (
@@ -802,45 +807,16 @@ export function AppointmentDetailModal({
                     )}
                   </div>
 
-                  {/* Danger Zone: Delete */}
+                  {/* Danger Zone: Delete (Soft delete & image renaming) */}
                   <div className="pt-6 border-t border-gray-200 mt-6">
-                    {!showDeleteConfirm ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Delete this Appointment</span>
-                      </button>
-                    ) : (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2">
-                        <p className="text-xs font-bold text-red-800">
-                          Confirm Suspension?
-                        </p>
-                        <p className="text-[11px] text-red-600 leading-tight">
-                          This will suspend this appointment from active records
-                          and tag its reference artwork with &ldquo;suspended-&rdquo; in storage.
-                        </p>
-                        <div className="flex items-center gap-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={handleDelete}
-                            disabled={isDeleting}
-                            className="flex-1 py-1.5 px-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            {isDeleting ? "Suspending..." : "Yes, Suspend"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setShowDeleteConfirm(false)}
-                            className="py-1.5 px-2.5 rounded-lg bg-white border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 cursor-pointer"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete this Appointment</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -876,13 +852,57 @@ export function AppointmentDetailModal({
               )}
             </button>
           </div>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete / Suspend Confirmation Alert Dialog (Rendered at root level with independent backdrop) */}
+      <AlertDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+      >
+        <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-md p-6">
+          <AlertDialogHeader className="text-left space-y-2">
+            <AlertDialogTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+              Suspend Appointment?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-gray-500 leading-relaxed">
+              This will soft-delete this appointment from active records
+              and tag its reference artwork with &ldquo;suspended-&rdquo; in storage.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex items-center justify-end gap-3 bg-transparent border-0 p-0">
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 border-0 cursor-pointer"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Suspending...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Yes, Suspend</span>
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Lightbox Modal for High-Res Artwork Zoom */}
       {showImageLightbox && activeImageUrl ? (
         <div
-          className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-[80] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setShowImageLightbox(false)}
         >
           <div className="relative max-w-5xl max-h-[90vh] flex flex-col items-center">

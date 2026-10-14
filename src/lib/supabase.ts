@@ -44,7 +44,6 @@ export interface Appointment {
   phone: string;
   appointment_date: string;
   appointment_time: string;
-  reference_image_url: string | null;
   reference_image_urls: string[] | null;
   notes: string | null;
   internal_notes: string | null;
@@ -54,36 +53,21 @@ export interface Appointment {
 }
 
 /**
- * Extracts all reference image URLs for an appointment, prioritizing
- * the native text[] array (reference_image_urls) with fallback to reference_image_url.
+ * Extracts all reference image URLs for an appointment from reference_image_urls (text[]).
+ * Works uniformly for single or multiple images.
  */
 export function getAppointmentReferenceUrls(
   appointment?: {
-    reference_image_url?: string | null;
     reference_image_urls?: string[] | null;
   } | null,
 ): string[] {
-  if (!appointment) return [];
-
-  // 1. Native PostgreSQL array
-  if (
-    Array.isArray(appointment.reference_image_urls) &&
-    appointment.reference_image_urls.length > 0
-  ) {
-    return appointment.reference_image_urls.filter(
-      (url): url is string => typeof url === 'string' && url.trim().length > 0,
-    );
+  if (!appointment || !Array.isArray(appointment.reference_image_urls)) {
+    return [];
   }
 
-  // 2. Single reference image fallback
-  if (
-    typeof appointment.reference_image_url === 'string' &&
-    appointment.reference_image_url.trim().length > 0
-  ) {
-    return [appointment.reference_image_url.trim()];
-  }
-
-  return [];
+  return appointment.reference_image_urls.filter(
+    (url): url is string => typeof url === 'string' && url.trim().length > 0,
+  );
 }
 
 /**
@@ -120,7 +104,6 @@ export function extractStoragePath(
  */
 export async function deleteAppointmentStorageImages(
   appointment?: {
-    reference_image_url?: string | null;
     reference_image_urls?: string[] | null;
   } | null,
   bucketName: string = 'tattoo-references',

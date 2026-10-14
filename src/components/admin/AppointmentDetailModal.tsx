@@ -200,12 +200,10 @@ export function AppointmentDetailModal({
       const remainingUrls = referenceUrls.filter(
         (url) => url !== activeImageUrl,
       );
-      const primaryUrl = remainingUrls[0] || null;
 
       const { data, error } = await supabase
         .from("appointments")
         .update({
-          reference_image_url: primaryUrl,
           reference_image_urls:
             remainingUrls.length > 0 ? remainingUrls : null,
           updated_at: new Date().toISOString(),

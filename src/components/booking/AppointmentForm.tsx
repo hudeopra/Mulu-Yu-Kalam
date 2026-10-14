@@ -137,8 +137,6 @@ export function AppointmentForm() {
       // 3. Add table row with input information and image URLs
       setStatusMessage('Booking your session in studio database...');
 
-      const primaryImageUrl = uploadedImageUrls[0] || null;
-
       const { data: record, error: insertError } = await supabase
         .from('appointments')
         .insert({
@@ -148,7 +146,6 @@ export function AppointmentForm() {
           phone: data.number,
           appointment_date: data.appointmentDate,
           appointment_time: data.appointmentTime,
-          reference_image_url: primaryImageUrl,
           reference_image_urls:
             uploadedImageUrls.length > 0 ? uploadedImageUrls : null,
           notes: data.notes || null,

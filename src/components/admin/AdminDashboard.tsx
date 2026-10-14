@@ -60,6 +60,7 @@ export function AdminDashboard() {
       const { data, error } = await supabase
         .from("appointments")
         .select("*")
+        .neq("status", "suspended")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -88,18 +89,30 @@ export function AdminDashboard() {
         (payload) => {
           if (payload.eventType === "INSERT") {
             const newRecord = payload.new as Appointment;
-            setAppointments((prev) => [newRecord, ...prev]);
+            if (newRecord.status !== "suspended") {
+              setAppointments((prev) => [newRecord, ...prev]);
+            }
           } else if (payload.eventType === "UPDATE") {
             const updatedRecord = payload.new as Appointment;
-            setAppointments((prev) =>
-              prev.map((app) =>
-                app.id === updatedRecord.id ? updatedRecord : app,
-              ),
-            );
-            // If the currently inspected modal is the updated record, update it too
-            setSelectedAppointment((prev) =>
-              prev && prev.id === updatedRecord.id ? updatedRecord : prev,
-            );
+            if (updatedRecord.status === "suspended") {
+              // Suspended / soft-deleted: remove from dashboard view
+              setAppointments((prev) =>
+                prev.filter((app) => app.id !== updatedRecord.id),
+              );
+              setSelectedAppointment((prev) =>
+                prev && prev.id === updatedRecord.id ? null : prev,
+              );
+            } else {
+              setAppointments((prev) =>
+                prev.map((app) =>
+                  app.id === updatedRecord.id ? updatedRecord : app,
+                ),
+              );
+              // If the currently inspected modal is the updated record, update it too
+              setSelectedAppointment((prev) =>
+                prev && prev.id === updatedRecord.id ? updatedRecord : prev,
+              );
+            }
           } else if (payload.eventType === "DELETE") {
             const deletedId = (payload.old as { id: string }).id;
             setAppointments((prev) =>
@@ -182,6 +195,11 @@ export function AdminDashboard() {
   const filteredAppointments = useMemo(() => {
     return appointments
       .filter((app) => {
+        // Exclude suspended appointments from admin dashboard view
+        if (app.status === "suspended") {
+          return false;
+        }
+
         // Status filter
         if (statusFilter !== "all" && app.status !== statusFilter) {
           return false;
@@ -214,17 +232,21 @@ export function AdminDashboard() {
       });
   }, [appointments, statusFilter, searchQuery, sortBy]);
 
-  // Statistics metrics
+  // Statistics metrics (strictly excluding suspended)
   const stats = useMemo(() => {
-    const total = appointments.length;
-    const pending = appointments.filter((a) => a.status === "pending").length;
-    const confirmed = appointments.filter(
+    const active = appointments.filter((a) => a.status !== "suspended");
+    const total = active.length;
+    const pending = active.filter((a) => a.status === "pending").length;
+    const confirmed = active.filter(
       (a) => a.status === "confirmed",
     ).length;
-    const completed = appointments.filter(
+    const completed = active.filter(
       (a) => a.status === "completed",
     ).length;
-    return { total, pending, confirmed, completed };
+    const canceled = active.filter(
+      (a) => a.status === "canceled",
+    ).length;
+    return { total, pending, confirmed, completed, canceled };
   }, [appointments]);
 
   const getStatusBadge = (s: AppointmentStatus) => {
@@ -441,15 +463,14 @@ export function AdminDashboard() {
             </span>
             {(
               [
-                { id: "all", label: "All", count: appointments.length },
+                { id: "all", label: "All", count: stats.total },
                 { id: "pending", label: "Pending", count: stats.pending },
                 { id: "confirmed", label: "Confirmed", count: stats.confirmed },
                 { id: "completed", label: "Completed", count: stats.completed },
                 {
                   id: "canceled",
                   label: "Canceled",
-                  count: appointments.filter((a) => a.status === "canceled")
-                    .length,
+                  count: stats.canceled,
                 },
               ] as const
             ).map((tab) => (
@@ -757,17 +778,20 @@ export function AdminDashboard() {
         </div>
       </main>
 
-      {/* Appointment Detail Inspector Modal */}
-      <AppointmentDetailModal
-        appointment={selectedAppointment}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedAppointment(null);
-        }}
-        onAppointmentUpdated={handleAppointmentUpdated}
-        onAppointmentDeleted={handleAppointmentDeleted}
-      />
+      {/* Appointment Detail Inspector Modal (Mounted independently per appointment) */}
+      {isModalOpen && selectedAppointment ? (
+        <AppointmentDetailModal
+          key={selectedAppointment.id}
+          appointment={selectedAppointment}
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          onAppointmentUpdated={handleAppointmentUpdated}
+          onAppointmentDeleted={handleAppointmentDeleted}
+        />
+      ) : null}
     </div>
   );
 }

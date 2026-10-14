@@ -31,7 +31,7 @@ import {
   type AppointmentStatus,
   type DepositStatus,
   getAppointmentReferenceUrls,
-  deleteAppointmentStorageImages,
+  suspendAppointmentStorageImages,
   extractStoragePath,
 } from "@/lib/supabase";
 import { InputField, SelectField, TextareaField } from "@/components/ui";
@@ -180,13 +180,20 @@ export function AppointmentDetailModal({
     setFeedbackMessage(null);
 
     try {
-      // 1. Delete associated reference images from Supabase Storage bucket
-      await deleteAppointmentStorageImages(appointment);
+      // 1. Rename associated reference images with "suspended-" prefix in Supabase Storage
+      const suspendedUrls = await suspendAppointmentStorageImages(appointment);
 
-      // 2. Delete database record
+      // 2. Soft-delete database record by updating status to 'suspended'
       const { error } = await supabase
         .from("appointments")
-        .delete()
+        .update({
+          status: "suspended",
+          reference_image_urls:
+            suspendedUrls.length > 0
+              ? suspendedUrls
+              : appointment.reference_image_urls,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", appointment.id);
 
       if (error) {
@@ -197,8 +204,9 @@ export function AppointmentDetailModal({
       onClose();
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : "Failed to delete appointment.";
+        err instanceof Error ? err.message : "Failed to suspend appointment.";
       setFeedbackMessage({ type: "error", text: errorMsg });
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -808,11 +816,11 @@ export function AppointmentDetailModal({
                     ) : (
                       <div className="bg-red-50 border border-red-200 rounded-xl p-3 space-y-2">
                         <p className="text-xs font-bold text-red-800">
-                          Confirm Deletion?
+                          Confirm Suspension?
                         </p>
                         <p className="text-[11px] text-red-600 leading-tight">
-                          This action cannot be undone and will permanently
-                          remove this record.
+                          This will suspend this appointment from active records
+                          and tag its reference artwork with &ldquo;suspended-&rdquo; in storage.
                         </p>
                         <div className="flex items-center gap-2 pt-1">
                           <button
@@ -821,7 +829,7 @@ export function AppointmentDetailModal({
                             disabled={isDeleting}
                             className="flex-1 py-1.5 px-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
                           >
-                            {isDeleting ? "Deleting..." : "Yes, Delete"}
+                            {isDeleting ? "Suspending..." : "Yes, Suspend"}
                           </button>
                           <button
                             type="button"

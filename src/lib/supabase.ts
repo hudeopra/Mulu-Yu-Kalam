@@ -31,7 +31,8 @@ export type AppointmentStatus =
   | 'pending'
   | 'confirmed'
   | 'completed'
-  | 'canceled';
+  | 'canceled'
+  | 'suspended';
 export type DepositStatus = 'unpaid' | 'paid' | 'partial';
 
 export interface Appointment {
@@ -131,4 +132,66 @@ export async function deleteAppointmentStorageImages(
   } catch (err) {
     console.warn('[Supabase Storage] Storage removal exception:', err);
   }
+}
+
+/**
+ * Renames all reference image files belonging to an appointment with a "suspended-" prefix in Supabase Storage,
+ * and returns the updated array of public URLs.
+ */
+export async function suspendAppointmentStorageImages(
+  appointment?: {
+    reference_image_urls?: string[] | null;
+  } | null,
+  bucketName: string = 'tattoo-references',
+): Promise<string[]> {
+  if (!appointment) return [];
+
+  const urls = getAppointmentReferenceUrls(appointment);
+  if (urls.length === 0) return [];
+
+  const updatedUrls: string[] = [];
+
+  for (const url of urls) {
+    const originalPath = extractStoragePath(url, bucketName);
+    if (!originalPath) {
+      updatedUrls.push(url);
+      continue;
+    }
+
+    const segments = originalPath.split('/');
+    const fileName = segments[segments.length - 1];
+
+    // Avoid double prefixing if already suspended
+    if (fileName.startsWith('suspended-')) {
+      updatedUrls.push(url);
+      continue;
+    }
+
+    segments[segments.length - 1] = `suspended-${fileName}`;
+    const newPath = segments.join('/');
+
+    try {
+      const { error } = await supabase.storage
+        .from(bucketName)
+        .move(originalPath, newPath);
+
+      if (error) {
+        console.warn(
+          `[Supabase Storage] Failed to rename image to "${newPath}":`,
+          error.message,
+        );
+        updatedUrls.push(url);
+      } else {
+        const { data: publicUrlData } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(newPath);
+        updatedUrls.push(publicUrlData.publicUrl);
+      }
+    } catch (err) {
+      console.warn('[Supabase Storage] Exception while renaming image:', err);
+      updatedUrls.push(url);
+    }
+  }
+
+  return updatedUrls;
 }

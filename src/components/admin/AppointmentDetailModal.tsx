@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from "react";
-import Image from "next/image";
+import { useState, useEffect, type FormEvent } from 'react';
+import Image from 'next/image';
 import {
   X,
   Calendar,
@@ -24,7 +24,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   supabase,
   type Appointment,
@@ -33,15 +33,15 @@ import {
   getAppointmentReferenceUrls,
   suspendAppointmentStorageImages,
   extractStoragePath,
-} from "@/lib/supabase";
-import { InputField, SelectField, TextareaField } from "@/components/ui";
+} from '@/lib/supabase';
+import { InputField, SelectField, TextareaField } from '@/components/ui';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +51,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 interface AppointmentDetailModalProps {
   appointment: Appointment | null;
@@ -69,13 +69,13 @@ export function AppointmentDetailModal({
   onAppointmentDeleted,
 }: AppointmentDetailModalProps) {
   // Form edit states
-  const [status, setStatus] = useState<AppointmentStatus>("pending");
-  const [depositStatus, setDepositStatus] = useState<DepositStatus>("unpaid");
-  const [appointmentDate, setAppointmentDate] = useState("");
-  const [appointmentTime, setAppointmentTime] = useState("");
-  const [estimatedPrice, setEstimatedPrice] = useState<string>("");
-  const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>("");
-  const [internalNotes, setInternalNotes] = useState<string>("");
+  const [status, setStatus] = useState<AppointmentStatus>('pending');
+  const [depositStatus, setDepositStatus] = useState<DepositStatus>('unpaid');
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [estimatedPrice, setEstimatedPrice] = useState<string>('');
+  const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>('');
+  const [internalNotes, setInternalNotes] = useState<string>('');
 
   // Interaction / Loading states
   const [isSaving, setIsSaving] = useState(false);
@@ -83,7 +83,7 @@ export function AppointmentDetailModal({
   const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{
-    type: "success" | "error";
+    type: 'success' | 'error';
     text: string;
   } | null>(null);
   const [showImageLightbox, setShowImageLightbox] = useState(false);
@@ -92,23 +92,23 @@ export function AppointmentDetailModal({
   // Sync form state whenever selected appointment changes
   useEffect(() => {
     if (appointment) {
-      setStatus(appointment.status || "pending");
-      setDepositStatus(appointment.deposit_status || "unpaid");
-      setAppointmentDate(appointment.appointment_date || "");
-      setAppointmentTime(appointment.appointment_time || "");
+      setStatus(appointment.status || 'pending');
+      setDepositStatus(appointment.deposit_status || 'unpaid');
+      setAppointmentDate(appointment.appointment_date || '');
+      setAppointmentTime(appointment.appointment_time || '');
       setEstimatedPrice(
         appointment.estimated_price !== null &&
           appointment.estimated_price !== undefined
           ? String(appointment.estimated_price)
-          : "",
+          : '',
       );
       setPartialPaymentAmount(
         appointment.partial_payment_amount !== null &&
           appointment.partial_payment_amount !== undefined
           ? String(appointment.partial_payment_amount)
-          : "",
+          : '',
       );
-      setInternalNotes(appointment.internal_notes || "");
+      setInternalNotes(appointment.internal_notes || '');
       setShowDeleteConfirm(false);
       setFeedbackMessage(null);
       setShowImageLightbox(false);
@@ -125,17 +125,17 @@ export function AppointmentDetailModal({
     referenceUrls[selectedImageIndex] || referenceUrls[0] || null;
 
   // Clean phone number for WhatsApp wa.me link
-  const phoneDigits = appointment.phone.replace(/[^0-9]/g, "");
+  const phoneDigits = appointment.phone.replace(/[^0-9]/g, '');
   // If no country code, default to Nepal code 977 if 10 digits starting with 9
   const whatsappNumber =
-    phoneDigits.length === 10 && phoneDigits.startsWith("9")
+    phoneDigits.length === 10 && phoneDigits.startsWith('9')
       ? `977${phoneDigits}`
       : phoneDigits;
 
   const estNum =
-    estimatedPrice.trim() === "" ? null : parseFloat(estimatedPrice);
+    estimatedPrice.trim() === '' ? null : parseFloat(estimatedPrice);
   const partNum =
-    partialPaymentAmount.trim() === ""
+    partialPaymentAmount.trim() === ''
       ? 0
       : parseFloat(partialPaymentAmount) || 0;
   const remainingDue = estNum !== null ? Math.max(0, estNum - partNum) : null;
@@ -146,15 +146,15 @@ export function AppointmentDetailModal({
     setFeedbackMessage(null);
 
     const numericPrice =
-      estimatedPrice.trim() === "" ? null : parseFloat(estimatedPrice);
+      estimatedPrice.trim() === '' ? null : parseFloat(estimatedPrice);
     const numericPartial =
-      depositStatus === "partial" && partialPaymentAmount.trim() !== ""
+      depositStatus === 'partial' && partialPaymentAmount.trim() !== ''
         ? parseFloat(partialPaymentAmount)
         : null;
 
     try {
       const { data, error } = await supabase
-        .from("appointments")
+        .from('appointments')
         .update({
           status,
           deposit_status: depositStatus,
@@ -163,10 +163,10 @@ export function AppointmentDetailModal({
           estimated_price: numericPrice,
           partial_payment_amount: numericPartial,
           internal_notes:
-            internalNotes.trim() === "" ? null : internalNotes.trim(),
+            internalNotes.trim() === '' ? null : internalNotes.trim(),
           updated_at: new Date().toISOString(),
         })
-        .eq("id", appointment.id)
+        .eq('id', appointment.id)
         .select()
         .single();
 
@@ -178,8 +178,8 @@ export function AppointmentDetailModal({
       onClose();
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : "Failed to update appointment.";
-      setFeedbackMessage({ type: "error", text: errorMsg });
+        err instanceof Error ? err.message : 'Failed to update appointment.';
+      setFeedbackMessage({ type: 'error', text: errorMsg });
     } finally {
       setIsSaving(false);
     }
@@ -195,16 +195,16 @@ export function AppointmentDetailModal({
 
       // 2. Soft-delete database record by updating status to 'suspended'
       const { error } = await supabase
-        .from("appointments")
+        .from('appointments')
         .update({
-          status: "suspended",
+          status: 'suspended',
           reference_image_urls:
             suspendedUrls.length > 0
               ? suspendedUrls
               : appointment.reference_image_urls,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", appointment.id);
+        .eq('id', appointment.id);
 
       if (error) {
         throw error;
@@ -214,8 +214,8 @@ export function AppointmentDetailModal({
       onClose();
     } catch (err: unknown) {
       const errorMsg =
-        err instanceof Error ? err.message : "Failed to suspend appointment.";
-      setFeedbackMessage({ type: "error", text: errorMsg });
+        err instanceof Error ? err.message : 'Failed to suspend appointment.';
+      setFeedbackMessage({ type: 'error', text: errorMsg });
     } finally {
       setIsDeleting(false);
     }
@@ -224,7 +224,7 @@ export function AppointmentDetailModal({
   const handleDeleteActiveImage = async () => {
     if (!activeImageUrl || !appointment) return;
     const confirmDelete = window.confirm(
-      "Are you sure you want to delete this reference image from storage?",
+      'Are you sure you want to delete this reference image from storage?',
     );
     if (!confirmDelete) return;
 
@@ -233,7 +233,7 @@ export function AppointmentDetailModal({
       // 1. Remove file from Supabase Storage
       const storagePath = extractStoragePath(activeImageUrl);
       if (storagePath) {
-        await supabase.storage.from("tattoo-references").remove([storagePath]);
+        await supabase.storage.from('tattoo-references').remove([storagePath]);
       }
 
       // 2. Update remaining URLs in PostgreSQL
@@ -242,13 +242,12 @@ export function AppointmentDetailModal({
       );
 
       const { data, error } = await supabase
-        .from("appointments")
+        .from('appointments')
         .update({
-          reference_image_urls:
-            remainingUrls.length > 0 ? remainingUrls : null,
+          reference_image_urls: remainingUrls.length > 0 ? remainingUrls : null,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", appointment.id)
+        .eq('id', appointment.id)
         .select()
         .single();
 
@@ -262,15 +261,15 @@ export function AppointmentDetailModal({
             : prev,
         );
         setFeedbackMessage({
-          type: "success",
-          text: "Reference image removed from storage and database.",
+          type: 'success',
+          text: 'Reference image removed from storage and database.',
         });
         setTimeout(() => setFeedbackMessage(null), 3000);
       }
     } catch (err: unknown) {
       const msg =
-        err instanceof Error ? err.message : "Failed to remove image.";
-      setFeedbackMessage({ type: "error", text: msg });
+        err instanceof Error ? err.message : 'Failed to remove image.';
+      setFeedbackMessage({ type: 'error', text: msg });
     } finally {
       setIsDeletingImage(false);
     }
@@ -278,14 +277,14 @@ export function AppointmentDetailModal({
 
   const getStatusBadge = (s: AppointmentStatus) => {
     switch (s) {
-      case "confirmed":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "canceled":
-        return "bg-red-100 text-red-800 border-red-200";
+      case 'confirmed':
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'canceled':
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return "bg-amber-100 text-amber-800 border-amber-200";
+        return 'bg-amber-100 text-amber-800 border-amber-200';
     }
   };
 
@@ -314,13 +313,13 @@ export function AppointmentDetailModal({
                   </span>
                 </div>
                 <DialogDescription className="text-xs text-gray-400">
-                  Booked on{" "}
+                  Booked on{' '}
                   {new Date(appointment.created_at).toLocaleDateString(
                     undefined,
                     {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
                     },
                   )}
                 </DialogDescription>
@@ -341,12 +340,12 @@ export function AppointmentDetailModal({
           {feedbackMessage ? (
             <div
               className={`px-6 py-3 text-xs font-semibold flex items-center gap-2 ${
-                feedbackMessage.type === "success"
-                  ? "bg-emerald-50 text-emerald-800 border-b border-emerald-100"
-                  : "bg-red-50 text-red-800 border-b border-red-100"
+                feedbackMessage.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border-b border-emerald-100'
+                  : 'bg-red-50 text-red-800 border-b border-red-100'
               }`}
             >
-              {feedbackMessage.type === "success" ? (
+              {feedbackMessage.type === 'success' ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               ) : (
                 <AlertCircle className="w-4 h-4 text-red-600" />
@@ -357,181 +356,181 @@ export function AppointmentDetailModal({
 
           {/* Modal Body - Scrollable */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: Client & Appointment Information */}
-              <div className="lg:col-span-7 space-y-6">
-                {/* Client Profile Card */}
-                <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-200/80 space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#2e0249] text-white flex items-center justify-center font-bold text-xs">
-                        <User className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-[#2e0249] text-base leading-tight">
-                          {appointment.name}
-                        </h3>
-                        <span className="text-[11px] text-gray-500">
-                          Client Info
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Quick Communication Actions */}
-                    <div className="flex items-center gap-1.5">
-                      {whatsappNumber ? (
-                        <a
-                          href={`https://wa.me/${whatsappNumber}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-xs transition-colors"
-                          title="Open WhatsApp chat"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">WhatsApp</span>
-                        </a>
-                      ) : null}
-                      <a
-                        href={`tel:${appointment.phone}`}
-                        className="p-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
-                        title="Call client"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                      </a>
-                      <a
-                        href={`mailto:${appointment.email}`}
-                        className="p-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
-                        title="Email client"
-                      >
-                        <Mail className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
+            {/* Client Profile Card */}
+            <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-200/80 space-y-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[#2e0249] text-white flex items-center justify-center font-bold text-xs">
+                    <User className="w-4 h-4" />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="space-y-1">
-                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
-                        Email
-                      </p>
-                      <a
-                        href={`mailto:${appointment.email}`}
-                        className="text-[#2e0249] font-medium hover:text-[#ff7b01] flex items-center gap-1 truncate"
-                      >
-                        <Mail className="w-3 h-3 shrink-0 text-gray-400" />
-                        <span className="truncate">{appointment.email}</span>
-                      </a>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
-                        Phone
-                      </p>
-                      <a
-                        href={`tel:${appointment.phone}`}
-                        className="text-[#2e0249] font-medium hover:text-[#ff7b01] flex items-center gap-1"
-                      >
-                        <Phone className="w-3 h-3 shrink-0 text-gray-400" />
-                        <span>{appointment.phone}</span>
-                      </a>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
-                        Tattoo Location
-                      </p>
-                      <div className="flex items-center gap-1 text-[#2e0249] font-medium">
-                        <MapPin className="w-3 h-3 shrink-0 text-[#ff7b01]" />
-                        <span className="capitalize">
-                          {appointment.tattoo_location}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
-                        Requested Slot
-                      </p>
-                      <div className="flex items-center gap-1 text-[#2e0249] font-medium">
-                        <Clock className="w-3 h-3 shrink-0 text-[#ff7b01]" />
-                        <span>{appointment.appointment_time}</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1 sm:col-span-2 pt-2 border-t border-gray-200">
-                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
-                        Payment & Deposit
-                      </p>
-                      {appointment.deposit_status === "partial" ? (
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="font-bold text-[#2e0249]">
-                            {appointment.estimated_price !== null &&
-                            appointment.estimated_price !== undefined
-                              ? `NPR ${appointment.estimated_price.toLocaleString()}`
-                              : "No Quote"}
-                          </span>
-                          <span className="text-gray-300">&bull;</span>
-                          <span className="text-gray-600">
-                            Paid:{" "}
-                            <strong className="text-blue-700 font-semibold">
-                              NPR{" "}
-                              {(
-                                appointment.partial_payment_amount ?? 0
-                              ).toLocaleString()}
-                            </strong>
-                          </span>
-                          <span className="text-gray-300">&bull;</span>
-                          <span className="text-gray-600">
-                            Due:{" "}
-                            <strong className="text-amber-600 font-bold">
-                              NPR{" "}
-                              {appointment.estimated_price !== null &&
-                              appointment.estimated_price !== undefined
-                                ? Math.max(
-                                    0,
-                                    appointment.estimated_price -
-                                      (appointment.partial_payment_amount ?? 0),
-                                  ).toLocaleString()
-                                : "—"}
-                            </strong>
-                          </span>
-                          <span className="text-[10px] font-bold px-2 py-0.2 rounded-full uppercase bg-blue-100 text-blue-800 border border-blue-200 ml-auto">
-                            Partial Deposit
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="font-bold text-[#2e0249]">
-                            {appointment.estimated_price !== null &&
-                            appointment.estimated_price !== undefined
-                              ? `NPR ${appointment.estimated_price.toLocaleString()}`
-                              : "No Quote Yet"}
-                          </span>
-                          <span
-                            className={`inline-block text-[10px] font-bold px-2 py-0.2 rounded-full uppercase border ${
-                              appointment.deposit_status === "paid"
-                                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                                : "bg-gray-100 text-gray-600 border-gray-200"
-                            }`}
-                          >
-                            Deposit: {appointment.deposit_status}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                  <div>
+                    <h3 className="font-bold text-[#2e0249] text-base leading-tight">
+                      {appointment.name}
+                    </h3>
+                    <span className="text-[11px] text-gray-500">
+                      Client Info
+                    </span>
                   </div>
-
-                  {appointment.notes ? (
-                    <div className="pt-2 border-t border-gray-200">
-                      <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] mb-1">
-                        Client Concept & Instructions:
-                      </p>
-                      <p className="text-xs text-gray-700 italic bg-white/70 p-2.5 rounded-xl border border-gray-200">
-                        &ldquo;{appointment.notes}&rdquo;
-                      </p>
-                    </div>
-                  ) : null}
                 </div>
 
+                {/* Quick Communication Actions */}
+                <div className="flex items-center gap-1.5">
+                  {whatsappNumber ? (
+                    <a
+                      href={`https://wa.me/${whatsappNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold shadow-xs transition-colors"
+                      title="Open WhatsApp chat"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">WhatsApp</span>
+                    </a>
+                  ) : null}
+                  <a
+                    href={`tel:${appointment.phone}`}
+                    className="p-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                    title="Call client"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href={`mailto:${appointment.email}`}
+                    className="p-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
+                    title="Email client"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="space-y-1">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                    Email
+                  </p>
+                  <a
+                    href={`mailto:${appointment.email}`}
+                    className="text-[#2e0249] font-medium hover:text-[#ff7b01] flex items-center gap-1 truncate"
+                  >
+                    <Mail className="w-3 h-3 shrink-0 text-gray-400" />
+                    <span className="truncate">{appointment.email}</span>
+                  </a>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                    Phone
+                  </p>
+                  <a
+                    href={`tel:${appointment.phone}`}
+                    className="text-[#2e0249] font-medium hover:text-[#ff7b01] flex items-center gap-1"
+                  >
+                    <Phone className="w-3 h-3 shrink-0 text-gray-400" />
+                    <span>{appointment.phone}</span>
+                  </a>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                    Tattoo Location
+                  </p>
+                  <div className="flex items-center gap-1 text-[#2e0249] font-medium">
+                    <MapPin className="w-3 h-3 shrink-0 text-[#ff7b01]" />
+                    <span className="capitalize">
+                      {appointment.tattoo_location}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                    Requested Slot
+                  </p>
+                  <div className="flex items-center gap-1 text-[#2e0249] font-medium">
+                    <Clock className="w-3 h-3 shrink-0 text-[#ff7b01]" />
+                    <span>{appointment.appointment_time}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1 sm:col-span-2 pt-2 border-t border-gray-200">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px]">
+                    Payment & Deposit
+                  </p>
+                  {appointment.deposit_status === 'partial' ? (
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="font-bold text-[#2e0249]">
+                        {appointment.estimated_price !== null &&
+                        appointment.estimated_price !== undefined
+                          ? `NPR ${appointment.estimated_price.toLocaleString()}`
+                          : 'No Quote'}
+                      </span>
+                      <span className="text-gray-300">&bull;</span>
+                      <span className="text-gray-600">
+                        Paid:{' '}
+                        <strong className="text-blue-700 font-semibold">
+                          NPR{' '}
+                          {(
+                            appointment.partial_payment_amount ?? 0
+                          ).toLocaleString()}
+                        </strong>
+                      </span>
+                      <span className="text-gray-300">&bull;</span>
+                      <span className="text-gray-600">
+                        Due:{' '}
+                        <strong className="text-amber-600 font-bold">
+                          NPR{' '}
+                          {appointment.estimated_price !== null &&
+                          appointment.estimated_price !== undefined
+                            ? Math.max(
+                                0,
+                                appointment.estimated_price -
+                                  (appointment.partial_payment_amount ?? 0),
+                              ).toLocaleString()
+                            : '—'}
+                        </strong>
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.2 rounded-full uppercase bg-blue-100 text-blue-800 border border-blue-200 ml-auto">
+                        Partial Deposit
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="font-bold text-[#2e0249]">
+                        {appointment.estimated_price !== null &&
+                        appointment.estimated_price !== undefined
+                          ? `NPR ${appointment.estimated_price.toLocaleString()}`
+                          : 'No Quote Yet'}
+                      </span>
+                      <span
+                        className={`inline-block text-[10px] font-bold px-2 py-0.2 rounded-full uppercase border ${
+                          appointment.deposit_status === 'paid'
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                        }`}
+                      >
+                        Deposit: {appointment.deposit_status}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {appointment.notes ? (
+                <div className="pt-2 border-t border-gray-200">
+                  <p className="text-gray-400 font-semibold uppercase tracking-wider text-[10px] mb-1">
+                    Client Concept & Instructions:
+                  </p>
+                  <p className="text-xs text-gray-700 italic bg-white/70 p-2.5 rounded-xl border border-gray-200">
+                    &ldquo;{appointment.notes}&rdquo;
+                  </p>
+                </div>
+              ) : null}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Client & Appointment Information */}
+
+              <div className="lg:col-span-7 space-y-6">
                 {/* Edit Form */}
                 <form
                   id="appointment-edit-form"
@@ -550,10 +549,10 @@ export function AppointmentDetailModal({
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {(
                         [
-                          "pending",
-                          "confirmed",
-                          "completed",
-                          "canceled",
+                          'pending',
+                          'confirmed',
+                          'completed',
+                          'canceled',
                         ] as AppointmentStatus[]
                       ).map((st) => (
                         <button
@@ -562,14 +561,14 @@ export function AppointmentDetailModal({
                           onClick={() => setStatus(st)}
                           className={`py-2 px-3 rounded-xl text-xs font-bold capitalize transition-all border cursor-pointer ${
                             status === st
-                              ? st === "confirmed"
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                                : st === "completed"
-                                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                                  : st === "canceled"
-                                    ? "bg-red-600 text-white border-red-600 shadow-xs"
-                                    : "bg-amber-500 text-white border-amber-500 shadow-xs"
-                              : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                              ? st === 'confirmed'
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                : st === 'completed'
+                                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                                  : st === 'canceled'
+                                    ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                                    : 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                           }`}
                         >
                           {st}
@@ -589,7 +588,9 @@ export function AppointmentDetailModal({
                       value={appointmentDate}
                       onChange={(e) => setAppointmentDate(e.target.value)}
                       required
-                      icon={<Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                      icon={
+                        <Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
+                      }
                       className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
                     />
 
@@ -603,7 +604,9 @@ export function AppointmentDetailModal({
                       onChange={(e) => setAppointmentTime(e.target.value)}
                       placeholder="e.g. 11:00 AM"
                       required
-                      icon={<Clock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                      icon={
+                        <Clock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
+                      }
                       className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
                     />
                   </div>
@@ -621,7 +624,9 @@ export function AppointmentDetailModal({
                       value={estimatedPrice}
                       onChange={(e) => setEstimatedPrice(e.target.value)}
                       placeholder="e.g. 5000"
-                      icon={<DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                      icon={
+                        <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
+                      }
                       className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
                     />
 
@@ -643,7 +648,7 @@ export function AppointmentDetailModal({
                   </div>
 
                   {/* If depositStatus is partial, show simple partial deposit input and remaining balance */}
-                  {depositStatus === "partial" && (
+                  {depositStatus === 'partial' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <InputField
                         floatingLabel={false}
@@ -654,9 +659,13 @@ export function AppointmentDetailModal({
                         labelClassName="block text-xs font-semibold text-gray-700 mb-1.5"
                         containerClassName="space-y-0"
                         value={partialPaymentAmount}
-                        onChange={(e) => setPartialPaymentAmount(e.target.value)}
+                        onChange={(e) =>
+                          setPartialPaymentAmount(e.target.value)
+                        }
                         placeholder="e.g. 2000"
-                        icon={<DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />}
+                        icon={
+                          <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
+                        }
                         className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-3 py-2 text-xs text-[#2e0249] focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
                       />
 
@@ -667,7 +676,7 @@ export function AppointmentDetailModal({
                         <div className="w-full bg-amber-50/60 border border-amber-200/80 rounded-xl px-3 py-2 text-xs font-bold text-amber-700 flex items-center h-[37px]">
                           {remainingDue !== null
                             ? `NPR ${remainingDue.toLocaleString()}`
-                            : "—"}
+                            : '—'}
                         </div>
                       </div>
                     </div>
@@ -695,8 +704,8 @@ export function AppointmentDetailModal({
                       <span>Artwork Reference</span>
                       {referenceUrls.length > 0 ? (
                         <span className="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
-                          {referenceUrls.length}{" "}
-                          {referenceUrls.length === 1 ? "Image" : "Images"}{" "}
+                          {referenceUrls.length}{' '}
+                          {referenceUrls.length === 1 ? 'Image' : 'Images'}{' '}
                           Uploaded
                         </span>
                       ) : null}
@@ -737,8 +746,8 @@ export function AppointmentDetailModal({
                                 onClick={() => setSelectedImageIndex(idx)}
                                 className={`relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                                   selectedImageIndex === idx
-                                    ? "border-[#ff7b01] shadow-md ring-2 ring-[#ff7b01]/20 scale-105"
-                                    : "border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100"
+                                    ? 'border-[#ff7b01] shadow-md ring-2 ring-[#ff7b01]/20 scale-105'
+                                    : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
                                 }`}
                                 title={`View image ${idx + 1}`}
                               >
@@ -856,10 +865,7 @@ export function AppointmentDetailModal({
       </Dialog>
 
       {/* Delete / Suspend Confirmation Alert Dialog (Rendered at root level with independent backdrop) */}
-      <AlertDialog
-        open={showDeleteConfirm}
-        onOpenChange={setShowDeleteConfirm}
-      >
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-white border border-gray-200 shadow-2xl rounded-2xl max-w-md p-6">
           <AlertDialogHeader className="text-left space-y-2">
             <AlertDialogTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -867,8 +873,8 @@ export function AppointmentDetailModal({
               Suspend Appointment?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-gray-500 leading-relaxed">
-              This will soft-delete this appointment from active records
-              and tag its reference artwork with &ldquo;suspended-&rdquo; in storage.
+              This will soft-delete this appointment from active records and tag
+              its reference artwork with &ldquo;suspended-&rdquo; in storage.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 flex items-center justify-end gap-3 bg-transparent border-0 p-0">
@@ -967,4 +973,4 @@ export function AppointmentDetailModal({
       ) : null}
     </>
   );
-};
+}

@@ -68,9 +68,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-[#faf7f2] px-4 sm:px-6 lg:px-8 relative overflow-hidden selection:bg-[#ff7b01] selection:text-white">
-      {/* Decorative background watermark */}
-      <div className="absolute inset-0 bg-[url('/assets/img/banner-bg.jpg')] bg-cover bg-center opacity-10 pointer-events-none" />
-
       {/* Back to website button */}
       <div className="absolute top-6 left-6 z-10">
         <Link
@@ -95,15 +92,10 @@ export default function LoginPage() {
               className="w-56 h-auto mx-auto drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
             />
           </Link>
-          <div className="mt-4 flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-widest text-[#ff7b01] bg-[#ffecd0] px-4 py-1.5 rounded-full inline-flex">
-            <ShieldCheck className="w-4 h-4" /> Studio Staff Portal
-          </div>
+
           <h2 className="text-2xl sm:text-3xl font-bold text-[#2e0249] mt-3 tracking-tight">
             Sign In to Dashboard
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Access appointment management & client records
-          </p>
         </div>
 
         {/* Login Card */}
@@ -158,13 +150,6 @@ export default function LoginPage() {
               Sign In to Admin
             </SubmitBtn>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-            <p className="text-xs text-gray-500">
-              Staff accounts are managed in Supabase Auth. Contact studio owner
-              for access.
-            </p>
-          </div>
         </div>
       </div>
     </div>

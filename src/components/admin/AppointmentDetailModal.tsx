@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   X,
   FileText,
   Save,
-  Loader2,
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { SubmitBtn } from '@/components/shared/forms';
 import {
   type Appointment,
-  type AppointmentStatus,
-  type DepositStatus,
   getAppointmentStatusBadge,
 } from '@/lib/supabase';
 import { appointmentsService, getAppointmentReferenceUrls } from '@/services';
@@ -23,6 +23,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  appointmentEditSchema,
+  type AppointmentEditFormData,
+} from '@/schemas';
 import {
   AppointmentClientCard,
   AppointmentEditForm,
@@ -46,17 +50,43 @@ export function AppointmentDetailModal({
   onAppointmentUpdated,
   onAppointmentDeleted,
 }: AppointmentDetailModalProps) {
-  // Form edit states
-  const [status, setStatus] = useState<AppointmentStatus>('pending');
-  const [depositStatus, setDepositStatus] = useState<DepositStatus>('unpaid');
-  const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTime, setAppointmentTime] = useState('');
-  const [estimatedPrice, setEstimatedPrice] = useState<string>('');
-  const [partialPaymentAmount, setPartialPaymentAmount] = useState<string>('');
-  const [internalNotes, setInternalNotes] = useState<string>('');
+  const initialStatus =
+    appointment?.status && appointment.status !== 'suspended'
+      ? appointment.status
+      : 'pending';
 
-  // Interaction / Loading states
-  const [isSaving, setIsSaving] = useState(false);
+  // React Hook Form with Zod validation schema
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<AppointmentEditFormData>({
+    resolver: zodResolver(appointmentEditSchema),
+    defaultValues: {
+      status: initialStatus,
+      depositStatus: appointment?.deposit_status || 'unpaid',
+      appointmentDate: appointment?.appointment_date || '',
+      appointmentTime: appointment?.appointment_time || '',
+      estimatedPrice:
+        appointment?.estimated_price != null
+          ? String(appointment.estimated_price)
+          : '',
+      partialPaymentAmount:
+        appointment?.partial_payment_amount != null
+          ? String(appointment.partial_payment_amount)
+          : '',
+      internalNotes: appointment?.internal_notes || '',
+    },
+    mode: 'onTouched',
+  });
+
+  // Watch current status for responsive badge display in modal header
+  const currentStatus = watch('status') || initialStatus;
+
+  // Modal interaction states
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeletingImage, setIsDeletingImage] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -70,31 +100,30 @@ export function AppointmentDetailModal({
   // Sync form state whenever selected appointment changes
   useEffect(() => {
     if (appointment) {
-      setStatus(appointment.status || 'pending');
-      setDepositStatus(appointment.deposit_status || 'unpaid');
-      setAppointmentDate(appointment.appointment_date || '');
-      setAppointmentTime(appointment.appointment_time || '');
-      setEstimatedPrice(
-        appointment.estimated_price !== null &&
-          appointment.estimated_price !== undefined
-          ? String(appointment.estimated_price)
-          : '',
-      );
-      setPartialPaymentAmount(
-        appointment.partial_payment_amount !== null &&
-          appointment.partial_payment_amount !== undefined
-          ? String(appointment.partial_payment_amount)
-          : '',
-      );
-      setInternalNotes(appointment.internal_notes || '');
+      const validStatus =
+        appointment.status !== 'suspended' ? appointment.status : 'pending';
+      reset({
+        status: validStatus,
+        depositStatus: appointment.deposit_status || 'unpaid',
+        appointmentDate: appointment.appointment_date || '',
+        appointmentTime: appointment.appointment_time || '',
+        estimatedPrice:
+          appointment.estimated_price != null
+            ? String(appointment.estimated_price)
+            : '',
+        partialPaymentAmount:
+          appointment.partial_payment_amount != null
+            ? String(appointment.partial_payment_amount)
+            : '',
+        internalNotes: appointment.internal_notes || '',
+      });
       setShowDeleteConfirm(false);
       setFeedbackMessage(null);
       setShowImageLightbox(false);
       setSelectedImageIndex(0);
       setIsDeleting(false);
-      setIsSaving(false);
     }
-  }, [appointment]);
+  }, [appointment, reset]);
 
   if (!isOpen || !appointment) return null;
 
@@ -102,34 +131,28 @@ export function AppointmentDetailModal({
   const activeImageUrl =
     referenceUrls[selectedImageIndex] || referenceUrls[0] || null;
 
-  const handleSave = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
+  const onSave = async (data: AppointmentEditFormData) => {
     setFeedbackMessage(null);
 
-    const numericPrice =
-      estimatedPrice.trim() === '' || isNaN(Number(estimatedPrice))
-        ? null
-        : parseFloat(estimatedPrice);
+    const numericPrice = data.estimatedPrice?.trim()
+      ? parseFloat(data.estimatedPrice)
+      : null;
     const numericPartial =
-      depositStatus === 'partial' &&
-      partialPaymentAmount.trim() !== '' &&
-      !isNaN(Number(partialPaymentAmount))
-        ? parseFloat(partialPaymentAmount)
+      data.depositStatus === 'partial' && data.partialPaymentAmount?.trim()
+        ? parseFloat(data.partialPaymentAmount)
         : null;
 
     try {
       const updated = await appointmentsService.updateAppointment(
         appointment.id,
         {
-          status,
-          deposit_status: depositStatus,
-          appointment_date: appointmentDate,
-          appointment_time: appointmentTime,
+          status: data.status,
+          deposit_status: data.depositStatus,
+          appointment_date: data.appointmentDate,
+          appointment_time: data.appointmentTime,
           estimated_price: numericPrice,
           partial_payment_amount: numericPartial,
-          internal_notes:
-            internalNotes.trim() === '' ? null : internalNotes.trim(),
+          internal_notes: data.internalNotes?.trim() || null,
         },
       );
 
@@ -139,8 +162,6 @@ export function AppointmentDetailModal({
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to update appointment.';
       setFeedbackMessage({ type: 'error', text: errorMsg });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -216,9 +237,9 @@ export function AppointmentDetailModal({
                     Appointment Details
                   </DialogTitle>
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${getAppointmentStatusBadge(status)}`}
+                    className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${getAppointmentStatusBadge(currentStatus)}`}
                   >
-                    {status}
+                    {currentStatus}
                   </span>
                 </div>
                 <DialogDescription className="text-xs text-gray-400">
@@ -273,21 +294,11 @@ export function AppointmentDetailModal({
               {/* Left Column: Workflow Controls & Edit Form */}
               <div className="lg:col-span-7 space-y-6">
                 <AppointmentEditForm
-                  status={status}
-                  setStatus={setStatus}
-                  depositStatus={depositStatus}
-                  setDepositStatus={setDepositStatus}
-                  appointmentDate={appointmentDate}
-                  setAppointmentDate={setAppointmentDate}
-                  appointmentTime={appointmentTime}
-                  setAppointmentTime={setAppointmentTime}
-                  estimatedPrice={estimatedPrice}
-                  setEstimatedPrice={setEstimatedPrice}
-                  partialPaymentAmount={partialPaymentAmount}
-                  setPartialPaymentAmount={setPartialPaymentAmount}
-                  internalNotes={internalNotes}
-                  setInternalNotes={setInternalNotes}
-                  onSubmit={handleSave}
+                  register={register}
+                  control={control}
+                  errors={errors}
+                  watch={watch}
+                  onSubmit={handleSubmit(onSave)}
                 />
               </div>
 
@@ -318,24 +329,16 @@ export function AppointmentDetailModal({
               Close
             </button>
 
-            <button
-              type="submit"
+            <SubmitBtn
               form="appointment-edit-form"
-              disabled={isSaving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#ff7b01] hover:bg-[#e66f00] text-white text-xs font-bold shadow-md shadow-[#ff7b01]/25 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              disabled={isSubmitting || !isDirty}
+              isSubmitting={isSubmitting}
+              loadingText="Saving Changes..."
+              icon={Save}
+              size="sm"
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving Changes...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Save Changes</span>
-                </>
-              )}
-            </button>
+              Save Changes
+            </SubmitBtn>
           </div>
         </DialogContent>
       </Dialog>

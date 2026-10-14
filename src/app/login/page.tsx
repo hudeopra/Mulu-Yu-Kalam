@@ -1,31 +1,42 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/context/AuthContext';
 import {
   Lock,
   Mail,
   Eye,
   EyeOff,
-  Loader2,
-  AlertCircle,
   ArrowLeft,
   ShieldCheck,
 } from 'lucide-react';
-import { InputField } from '@/components/ui';
+import { InputField, SubmitBtn } from '@/components/shared/forms';
+import { loginSchema, type LoginFormData } from '@/schemas';
 
 export default function LoginPage() {
   const { user, signIn } = useAuth();
   const router = useRouter();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    mode: 'onTouched',
+  });
 
   // If already logged in, redirect immediately to /admin
   useEffect(() => {
@@ -34,23 +45,15 @@ export default function LoginPage() {
     }
   }, [user, router]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage('Please enter both email and password.');
-      return;
-    }
-
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      setIsSubmitting(true);
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(data.email, data.password);
 
       if (error) {
-        setErrorMessage(
-          error.message || 'Invalid login credentials. Please try again.',
-        );
+        setError('password', {
+          message:
+            error.message || 'Invalid email or password. Please try again.',
+        });
         return;
       }
 
@@ -59,9 +62,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'An unexpected error occurred.';
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
+      setError('password', { message });
     }
   };
 
@@ -107,70 +108,55 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-black/5">
-          {errorMessage ? (
-            <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-3 animate-in fade-in duration-200">
-              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-xs">Authentication Failed</p>
-                <p className="text-xs text-red-600 mt-0.5">{errorMessage}</p>
-              </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+            <div className="space-y-5">
+              {/* Email Field */}
+              <InputField
+                label="Staff Email"
+                id="login-email"
+                type="email"
+                icon={Mail}
+                {...register('email')}
+                error={errors.email?.message}
+                autoComplete="email"
+              />
+
+              {/* Password Field */}
+              <InputField
+                label="Password"
+                id="login-password"
+                type={showPassword ? 'text' : 'password'}
+                icon={Lock}
+                {...register('password')}
+                error={errors.password?.message}
+                autoComplete="current-password"
+                rightAction={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={
+                      showPassword ? 'Hide password' : 'Show password'
+                    }
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer p-1"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                }
+              />
             </div>
-          ) : null}
-
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-            {/* Email Field */}
-            <InputField
-              type="email"
-              label="Staff Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@muluyukalam.com"
-              required
-              icon={<Mail className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-3 text-[#2e0249] text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
-            />
-
-            {/* Password Field */}
-            <InputField
-              type={showPassword ? 'text' : 'password'}
-              label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your staff password"
-              required
-              icon={<Lock className="absolute left-3.5 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />}
-              rightElement={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              }
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-12 py-3 text-[#2e0249] text-sm focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01] transition-all"
-            />
 
             {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#ff7b01] text-white font-bold text-base shadow-lg shadow-[#ff7b01]/30 hover:bg-[#e66f00] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50"
+            <SubmitBtn
+              isSubmitting={isSubmitting}
+              loadingText="Signing in..."
+              fullWidth
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Signing in...</span>
-                </>
-              ) : (
-                <span>Sign In to Admin</span>
-              )}
-            </button>
+              Sign In to Admin
+            </SubmitBtn>
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">

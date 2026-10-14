@@ -16,17 +16,21 @@ import {
   Plus,
 } from 'lucide-react';
 import Image from 'next/image';
+import { cn } from 'cn';
 import {
   compressImage,
   formatFileSize,
   type CompressionResult,
 } from '@/utils/imageCompressor';
 
-export interface FileUploadProps {
+export interface FileUploadFieldProps {
+  label?: string;
+  labelClassName?: string;
   value?: File[] | null;
   onChange: (files: File[]) => void;
   error?: string;
   maxFiles?: number;
+  containerClassName?: string;
 }
 
 interface UploadedItem {
@@ -36,12 +40,15 @@ interface UploadedItem {
   metrics?: CompressionResult;
 }
 
-export function FileUpload({
+export function FileUploadField({
+  label = 'Tattoo References / Designs (if any)',
+  labelClassName,
   value,
   onChange,
   error,
   maxFiles = 5,
-}: FileUploadProps) {
+  containerClassName,
+}: FileUploadFieldProps) {
   const [items, setItems] = useState<UploadedItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
@@ -58,7 +65,6 @@ export function FileUpload({
   // Sync with value prop (e.g. on form reset)
   useEffect(() => {
     const currentFiles = value || [];
-
     if (currentFiles.length === 0 && itemsRef.current.length > 0) {
       itemsRef.current.forEach((it) => {
         if (it.previewUrl) URL.revokeObjectURL(it.previewUrl);
@@ -80,7 +86,6 @@ export function FileUpload({
   const processFiles = async (rawFiles: File[]) => {
     setLocalError(null);
 
-    // Filter valid image types
     const validFiles = rawFiles.filter(
       (file) =>
         file.type.startsWith('image/') ||
@@ -119,7 +124,6 @@ export function FileUpload({
         });
 
         try {
-          // Compress to guaranteed <= 2MB WebP
           const result = await compressImage(file, 2.5 * 1024 * 1024);
           newItems.push({
             id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -150,21 +154,15 @@ export function FileUpload({
     }
   };
 
-  const handleDragOver = (e: DragEvent) => {
+  const handleDrag = (e: DragEvent, dragging: boolean) => {
     e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+    setIsDragging(dragging);
   };
 
   const handleDrop = async (e: DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    if (e.dataTransfer.files?.length > 0) {
       await processFiles(Array.from(e.dataTransfer.files));
     }
   };
@@ -194,18 +192,20 @@ export function FileUpload({
     }
   };
 
+  const displayError = error || localError;
+
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-semibold text-gray-800">
-          Tattoo References / Designs (if any)
+    <div className={cn('w-full', containerClassName)}>
+      {label && (
+        <label
+          className={cn(
+            'block text-sm font-semibold text-gray-800 mb-2',
+            labelClassName,
+          )}
+        >
+          {label}
         </label>
-        {/* <span className="text-xs text-gray-500 font-medium">
-          {items.length > 0
-            ? `${items.length} of ${maxFiles} selected`
-            : `Max ${maxFiles} images (2.5MB each)`}
-        </span> */}
-      </div>
+      )}
 
       <input
         ref={fileInputRef}
@@ -216,9 +216,9 @@ export function FileUpload({
         multiple
       />
 
-      {isCompressing ? (
-        <div className="border-2 border-dashed border-[#ff7b01] bg-[#ffecd0]/40 rounded-2xl p-6 text-center flex flex-col items-center justify-center gap-3 mb-3">
-          <Loader2 className="w-8 h-8 text-[#ff7b01] animate-spin" />
+      {isCompressing && (
+        <div className="border-2 border-dashed border-[#ff7b01] bg-[#ffecd0]/40 rounded-2xl p-6 text-center flex flex-col items-center justify-center gap-2 mb-3">
+          <Loader2 className="size-6 text-[#ff7b01] animate-spin" />
           <p className="text-sm font-semibold text-[#2e0249]">
             {compressingProgress
               ? `Optimizing reference image ${compressingProgress.current} of ${compressingProgress.total}...`
@@ -228,7 +228,7 @@ export function FileUpload({
             Scaling to 1600px & encoding to WebP under 2.5MB
           </p>
         </div>
-      ) : null}
+      )}
 
       {items.length === 0 ? (
         <div
@@ -241,19 +241,20 @@ export function FileUpload({
               fileInputRef.current?.click();
             }
           }}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          onDragOver={(e) => handleDrag(e, true)}
+          onDragLeave={(e) => handleDrag(e, false)}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-white/70 hover:bg-white select-none ${
-            error || localError
+          className={cn(
+            'border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-white/70 hover:bg-white select-none',
+            displayError
               ? 'border-red-500 bg-red-50/50'
               : isDragging
                 ? 'border-[#ff7b01] bg-[#ffecd0]/50 scale-[0.99]'
-                : 'border-[#ffbd5b] hover:border-[#ff7b01]'
-          }`}
+                : 'border-[#ffbd5b] hover:border-[#ff7b01]',
+          )}
         >
           <div className="p-3 bg-[#ffecd0] text-[#ff7b01] rounded-full shadow-sm pointer-events-none">
-            <UploadCloud className="w-6 h-6" />
+            <UploadCloud className="size-6" />
           </div>
           <p className="text-sm font-medium text-gray-700 pointer-events-none">
             <span className="text-[#ff7b01] font-semibold underline">
@@ -280,7 +281,7 @@ export function FileUpload({
                   width={56}
                   height={56}
                   unoptimized
-                  className="w-14 h-14 object-cover rounded-xl border border-gray-200 shadow-2xs shrink-0"
+                  className="size-14 object-cover rounded-xl border border-gray-200 shrink-0"
                 />
 
                 <div className="flex-1 min-w-0">
@@ -294,7 +295,7 @@ export function FileUpload({
                   {item.metrics && item.metrics.reductionPercent > 0 ? (
                     <div className="flex flex-wrap items-center gap-1 mt-1">
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-                        <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
+                        <Sparkles className="size-2.5 text-emerald-600" />
                         {formatFileSize(item.metrics.originalSize)} &rarr;{' '}
                         {formatFileSize(item.metrics.compressedSize)} (-
                         {item.metrics.reductionPercent}%)
@@ -317,13 +318,13 @@ export function FileUpload({
                   aria-label={`Remove reference image ${index + 1}`}
                   className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0 cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="size-4" />
                 </button>
               </div>
             ))}
           </div>
 
-          {items.length < maxFiles && !isCompressing ? (
+          {items.length < maxFiles && !isCompressing && (
             <div
               role="button"
               tabIndex={0}
@@ -334,31 +335,37 @@ export function FileUpload({
                   fileInputRef.current?.click();
                 }
               }}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
+              onDragOver={(e) => handleDrag(e, true)}
+              onDragLeave={(e) => handleDrag(e, false)}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-2xl p-3 text-center cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 bg-white/70 hover:bg-[#ffecd0]/30 select-none ${
+              className={cn(
+                'border-2 border-dashed rounded-2xl p-3 text-center cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 bg-white/70 hover:bg-[#ffecd0]/30 select-none',
                 isDragging
                   ? 'border-[#ff7b01] bg-[#ffecd0]/50 scale-[0.99]'
-                  : 'border-[#ffbd5b] hover:border-[#ff7b01]'
-              }`}
+                  : 'border-[#ffbd5b] hover:border-[#ff7b01]',
+              )}
             >
-              <Plus className="w-4 h-4 text-[#ff7b01] pointer-events-none" />
+              <Plus className="size-4 text-[#ff7b01] pointer-events-none" />
               <span className="text-xs font-semibold text-[#ff7b01] pointer-events-none">
                 Add more images ({maxFiles - items.length} slot
                 {maxFiles - items.length === 1 ? '' : 's'} remaining)
               </span>
             </div>
-          ) : null}
+          )}
         </div>
       )}
 
-      {error || localError ? (
+      {displayError && (
         <p className="mt-1.5 text-xs font-semibold text-red-500 flex items-center gap-1">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-          <span>{error || localError}</span>
+          <AlertCircle className="size-3.5 shrink-0" />
+          <span>{displayError}</span>
         </p>
-      ) : null}
+      )}
     </div>
   );
 }
+
+// Convenient alias for backwards compatibility
+export const FileUpload = FileUploadField;
+export type FileUploadProps = FileUploadFieldProps;
+

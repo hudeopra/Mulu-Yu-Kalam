@@ -5,7 +5,9 @@ interface AppointmentClientCardProps {
   appointment: Appointment;
 }
 
-export function AppointmentClientCard({ appointment }: AppointmentClientCardProps) {
+export function AppointmentClientCard({
+  appointment,
+}: AppointmentClientCardProps) {
   // Clean phone number for WhatsApp wa.me link
   const phoneDigits = appointment.phone.replace(/[^0-9]/g, '');
   // If no country code, default to Nepal code 977 if 10 digits starting with 9
@@ -31,7 +33,6 @@ export function AppointmentClientCard({ appointment }: AppointmentClientCardProp
             <h3 className="font-bold text-[#2e0249] text-base leading-tight">
               {appointment.name}
             </h3>
-            <span className="text-[11px] text-gray-500">Client Info</span>
           </div>
         </div>
 
@@ -132,9 +133,7 @@ export function AppointmentClientCard({ appointment }: AppointmentClientCardProp
                 Paid:{' '}
                 <strong className="text-blue-700 font-semibold">
                   NPR{' '}
-                  {(
-                    appointment.partial_payment_amount ?? 0
-                  ).toLocaleString()}
+                  {(appointment.partial_payment_amount ?? 0).toLocaleString()}
                 </strong>
               </span>
               <span className="text-gray-300">&bull;</span>
@@ -142,9 +141,7 @@ export function AppointmentClientCard({ appointment }: AppointmentClientCardProp
                 Due:{' '}
                 <strong className="text-amber-600 font-bold">
                   NPR{' '}
-                  {remainingDue !== null
-                    ? remainingDue.toLocaleString()
-                    : '—'}
+                  {remainingDue !== null ? remainingDue.toLocaleString() : '—'}
                 </strong>
               </span>
               <span className="text-[10px] font-bold px-2 py-0.2 rounded-full uppercase bg-blue-100 text-blue-800 border border-blue-200 ml-auto">
@@ -187,4 +184,3 @@ export function AppointmentClientCard({ appointment }: AppointmentClientCardProp
     </div>
   );
 }
-

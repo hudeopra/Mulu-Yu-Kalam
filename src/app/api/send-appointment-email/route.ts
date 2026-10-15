@@ -71,10 +71,10 @@ export async function POST(req: Request) {
     };
 
     // 1. Generate Studio Notification Email (subject, text, html)
-    const studioEmail = generateNotificationEmail(emailData);
+    const studioEmail = await generateNotificationEmail(emailData);
 
     // 2. Generate Client Booking Confirmation Email (subject, text, html)
-    const clientEmail = generateBookingConfirmationEmail(emailData);
+    const clientEmail = await generateBookingConfirmationEmail(emailData);
 
     // Senders & Recipients:
     const studioSender =

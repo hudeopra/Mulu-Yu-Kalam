@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 .next
+.react-email
 *.local
 
 # Environment files

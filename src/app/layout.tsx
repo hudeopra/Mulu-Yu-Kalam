@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: '%s | Mulu Yu Kalam Tattoo Studio',
   },
   description:
-    "Mulu Yu Kalam is Lalitpur's premier custom tattoo studio in Harisiddhi, Nepal. Specializing in bespoke fine line, realism & body artwork. Book your session.",
+    'Mulu Yu Kalam a tattoo studio in Harisiddhi, Lalitpur, Nepal. Specializing in fine line, realism & body artwork. Book Appointment Now.',
   keywords: [
     'Mulu Yu Kalam',
     'Mulu Yu Kalam Tattoo Studio',

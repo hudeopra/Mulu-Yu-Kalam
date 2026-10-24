@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock4,
+  PenTool,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -164,7 +165,7 @@ export default function AdminPage() {
       {/* Admin Top Navigation Bar */}
       <header className="bg-white border-b border-black/5 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <Link href="/admin" className="flex items-center gap-3 group">
               <Image
                 src="/assets/img/Mulu-Yu-Kalam.svg"
@@ -175,6 +176,24 @@ export default function AdminPage() {
                 className="w-40 h-auto drop-shadow-xs"
               />
             </Link>
+
+            {/* Unified Admin Navigation Tabs */}
+            <nav className="hidden md:flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl">
+              <Link
+                href="/admin"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-[#2e0249] shadow-xs"
+              >
+                <Calendar className="w-3.5 h-3.5 text-[#ff7b01]" />
+                <span>Appointments</span>
+              </Link>
+              <Link
+                href="/cms"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-white/60 transition-colors"
+              >
+                <PenTool className="w-3.5 h-3.5 text-gray-500" />
+                <span>Blog & Content</span>
+              </Link>
+            </nav>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">

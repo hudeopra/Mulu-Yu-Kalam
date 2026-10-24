@@ -9,21 +9,34 @@ import { s3Storage } from '@payloadcms/storage-s3'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Categories } from './collections/Categories'
+import { Posts } from './collections/Posts'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
+    theme: 'light',
     user: Users.slug,
     importMap: {
       baseDir: path.resolve(dirname),
+    },
+    meta: {
+      titleSuffix: '- Mulu Yu Kalam Studio',
+    },
+    components: {
+      header: ['/components/admin/AdminHeader#AdminHeader'],
+      beforeDashboard: ['/components/admin/DashboardBanner#DashboardBanner'],
+      graphics: {
+        Logo: '/components/admin/Logo#Logo',
+        Icon: '/components/admin/Icon#Icon',
+      },
     },
   },
   routes: {
     admin: '/cms',
   },
-  collections: [Users, Media, Categories],
+  collections: [Users, Media, Categories, Posts],
   plugins: [
     s3Storage({
       collections: {

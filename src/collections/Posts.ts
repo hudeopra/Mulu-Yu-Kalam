@@ -1,13 +1,26 @@
 import type { CollectionConfig } from 'payload'
+import { slugField } from '../fields/slug'
+import { calculateReadTime } from '../utilities/calculateReadTime'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'slug', 'status', 'publishedAt'],
+    defaultColumns: ['title', 'slug', '_status', 'featureTag', 'publishedAt'],
+  },
+  versions: {
+    drafts: true,
+    maxPerDoc: 10,
   },
   access: {
-    read: () => true,
+    read: ({ req: { user } }) => {
+      if (user) return true
+      return {
+        _status: {
+          equals: 'published',
+        },
+      }
+    },
   },
   fields: [
     // --- MAIN CONTENT AREA ---
@@ -42,20 +55,6 @@ export const Posts: CollectionConfig = {
 
     // --- SIDEBAR AREA (Publishing & Relations) ---
     {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Draft', value: 'draft' },
-        { label: 'Published', value: 'published' },
-      ],
-      defaultValue: 'draft',
-      required: true,
-      admin: {
-        position: 'sidebar',
-        description: 'Publishing status of the article',
-      },
-    },
-    {
       name: 'publishedAt',
       type: 'date',
       admin: {
@@ -64,7 +63,17 @@ export const Posts: CollectionConfig = {
         date: {
           pickerAppearance: 'dayAndTime',
         },
-        condition: (data) => data?.status === 'published',
+        condition: (data) => data?._status === 'published',
+      },
+      hooks: {
+        beforeChange: [
+          ({ siblingData, value }) => {
+            if (siblingData?._status === 'published' && !value) {
+              return new Date().toISOString()
+            }
+            return value
+          },
+        ],
       },
     },
     {
@@ -87,35 +96,62 @@ export const Posts: CollectionConfig = {
         description: 'Assign topics/categories',
       },
     },
-
-    // --- SIDEBAR AREA (Meta / SEO Collapsible Section) ---
     {
-      type: 'collapsible',
-      label: 'Meta / SEO',
+      name: 'featureTag',
+      type: 'relationship',
+      relationTo: 'feature-tags',
+      hasMany: false,
       admin: {
         position: 'sidebar',
-        initCollapsed: false,
+        description: 'Pin this post to the top of the feed with a featured badge',
       },
-      fields: [
-        {
-          name: 'slug',
-          type: 'text',
-          required: true,
-          unique: true,
-          index: true,
-          admin: {
-            description: 'URL slug (e.g. "my-first-post")',
+    },
+    {
+      name: 'relatedPosts',
+      type: 'relationship',
+      relationTo: 'posts',
+      hasMany: true,
+      filterOptions: ({ id }) => {
+        if (id) {
+          return {
+            id: {
+              not_equals: id,
+            },
+          }
+        }
+        return true
+      },
+      admin: {
+        position: 'sidebar',
+        description: 'Optional manual related posts (up to 3). If empty, auto-matches by category.',
+      },
+    },
+    {
+      name: 'readTime',
+      type: 'number',
+      admin: {
+        position: 'sidebar',
+        description: 'Estimated reading time in minutes (auto-calculated on save)',
+      },
+      hooks: {
+        beforeChange: [
+          ({ siblingData, value }) => {
+            if (siblingData?.content) {
+              return calculateReadTime(siblingData.content)
+            }
+            return value || 1
           },
-        },
-        {
-          name: 'excerpt',
-          type: 'textarea',
-          admin: {
-            description: 'Brief summary displayed on blog cards and search engine results',
-          },
-        },
-      ],
+        ],
+      },
+    },
+    slugField({ source: 'title' }),
+    {
+      name: 'excerpt',
+      type: 'textarea',
+      admin: {
+        position: 'sidebar',
+        description: 'Brief summary displayed on blog cards and used as fallback meta description',
+      },
     },
   ],
 }
-

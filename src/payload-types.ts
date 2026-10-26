@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     categories: Category;
+    'feature-tags': FeatureTag;
     posts: Post;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -81,6 +82,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    'feature-tags': FeatureTagsSelect<false> | FeatureTagsSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -127,6 +129,22 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Full name displayed publicly on articles and author bylines (e.g. "Jane Doe")
+   */
+  name?: string | null;
+  /**
+   * Unique public username/handle (e.g. "janedoe")
+   */
+  username?: string | null;
+  /**
+   * Optional public contact email for this author. If left empty, the site default from .env is used.
+   */
+  publicEmail?: string | null;
+  /**
+   * Designation / role within the editorial team
+   */
+  role?: ('admin' | 'editor' | 'author' | 'contributor') | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -175,7 +193,36 @@ export interface Category {
   id: number;
   title: string;
   /**
-   * URL-friendly identifier (e.g. tech, design)
+   * Auto-generated in real-time from title
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feature-tags".
+ */
+export interface FeatureTag {
+  id: number;
+  /**
+   * Tag title (e.g. "Editor's Choice", "Trending", "Most Popular")
+   */
+  name: string;
+  /**
+   * Optional emoji or icon symbol (e.g. ⭐, 🔥, 🏆, 💡, 📈)
+   */
+  icon?: string | null;
+  /**
+   * Higher priority score shows first at the top of the feed (e.g. 100 before 50). If equal or 0, ties are sorted alphabetically.
+   */
+  priority?: number | null;
+  /**
+   * Visual accent color theme for this badge on the frontend
+   */
+  badgeColor?: ('gold' | 'flame' | 'blue' | 'purple' | 'green') | null;
+  /**
+   * Auto-generated in real-time from name
    */
   slug: string;
   updatedAt: string;
@@ -207,10 +254,14 @@ export interface Post {
     };
     [k: string]: unknown;
   };
-  /**
-   * Publishing status of the article
-   */
-  status: 'draft' | 'published';
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+  };
   /**
    * Publication date (visible when published)
    */
@@ -224,15 +275,28 @@ export interface Post {
    */
   categories?: (number | Category)[] | null;
   /**
-   * URL slug (e.g. "my-first-post")
+   * Pin this post to the top of the feed with a featured badge
+   */
+  featureTag?: (number | null) | FeatureTag;
+  /**
+   * Optional manual related posts (up to 3). If empty, auto-matches by category.
+   */
+  relatedPosts?: (number | Post)[] | null;
+  /**
+   * Estimated reading time in minutes (auto-calculated on save)
+   */
+  readTime?: number | null;
+  /**
+   * Auto-generated in real-time from title
    */
   slug: string;
   /**
-   * Brief summary displayed on blog cards and search engine results
+   * Brief summary displayed on blog cards and used as fallback meta description
    */
   excerpt?: string | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -269,6 +333,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'categories';
         value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'feature-tags';
+        value: number | FeatureTag;
       } | null)
     | ({
         relationTo: 'posts';
@@ -321,6 +389,10 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  username?: T;
+  publicEmail?: T;
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -370,20 +442,43 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "feature-tags_select".
+ */
+export interface FeatureTagsSelect<T extends boolean = true> {
+  name?: T;
+  icon?: T;
+  priority?: T;
+  badgeColor?: T;
+  slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "posts_select".
  */
 export interface PostsSelect<T extends boolean = true> {
   title?: T;
   heroImage?: T;
   content?: T;
-  status?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+      };
   publishedAt?: T;
   authors?: T;
   categories?: T;
+  featureTag?: T;
+  relatedPosts?: T;
+  readTime?: T;
   slug?: T;
   excerpt?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

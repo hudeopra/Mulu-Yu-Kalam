@@ -4,7 +4,11 @@ import { createServerClient, parseCookieHeader } from '@supabase/ssr'
 export const Users: CollectionConfig = {
   slug: 'users',
   admin: {
-    useAsTitle: 'email',
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'username', 'publicEmail', 'role', 'email', 'createdAt'],
+  },
+  access: {
+    read: () => true,
   },
   auth: {
     strategies: [
@@ -65,6 +69,7 @@ export const Users: CollectionConfig = {
               data: {
                 email: sbUser.email,
                 password: Math.random().toString(36).slice(-10) + 'A1!xyz',
+                role: 'admin',
               },
             })
 
@@ -83,6 +88,58 @@ export const Users: CollectionConfig = {
       },
     ],
   },
-  fields: [],
+  fields: [
+    {
+      name: 'name',
+      type: 'text',
+      label: 'Full Name',
+      admin: {
+        description: 'Full name displayed publicly on articles and author bylines (e.g. "Jane Doe")',
+      },
+    },
+    {
+      name: 'username',
+      type: 'text',
+      label: 'Username',
+      unique: true,
+      index: true,
+      admin: {
+        description: 'Unique public username/handle (e.g. "janedoe")',
+      },
+      hooks: {
+        beforeValidate: [
+          ({ value }) => {
+            if (typeof value === 'string') {
+              return value.toLowerCase().trim().replace(/[^a-z0-9._-]/g, '')
+            }
+            return value
+          },
+        ],
+      },
+    },
+    {
+      name: 'publicEmail',
+      type: 'email',
+      label: 'Public Email',
+      admin: {
+        description: 'Optional public contact email for this author. If left empty, the site default from .env is used.',
+      },
+    },
+    {
+      name: 'role',
+      type: 'select',
+      label: 'Role',
+      defaultValue: 'author',
+      options: [
+        { label: 'Admin', value: 'admin' },
+        { label: 'Editor', value: 'editor' },
+        { label: 'Author', value: 'author' },
+        { label: 'Contributor', value: 'contributor' },
+      ],
+      admin: {
+        description: 'Designation / role within the editorial team',
+      },
+    },
+  ],
   versions: false,
 }

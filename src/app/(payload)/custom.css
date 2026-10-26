@@ -4,6 +4,7 @@
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700;800&display=swap');
+@import '../../components/admin/admin-header.css';
 
 /* --- Force Universal Studio Colors Across All Themes (No pitch black) --- */
 :root,
@@ -50,13 +51,33 @@ main,
   color: #2e0249 !important;
 }
 
-/* --- Top Header (White with subtle border like Image 1) --- */
+/* --- Adjust Payload CMS Layout for Unified Studio Header --- */
+.template-default {
+  padding-top: 0 !important;
+}
+
+aside.nav,
+.template-default aside.nav,
+nav.nav {
+  top: 76px !important;
+  height: calc(100vh - 76px) !important;
+}
+
+.template-default__wrap {
+  min-height: calc(100vh - 76px) !important;
+}
+
+.template-default__nav-toggler-wrapper {
+  top: 76px !important;
+}
+
+/* Secondary Breadcrumb Sub-bar inside CMS */
 .app-header,
 header.app-header,
 .template-default__header {
-  background: #ffffff !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  background: #faf7f2 !important;
+  border-bottom: 1px solid #ede3d4 !important;
+  box-shadow: none !important;
 }
 
 /* --- Left Sidebar (Clean white, matching appointments modal aesthetic) --- */

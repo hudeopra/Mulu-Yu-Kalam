@@ -5,10 +5,12 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 import { s3Storage } from '@payloadcms/storage-s3'
+import { seoPlugin } from '@payloadcms/plugin-seo'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Categories } from './collections/Categories'
+import { FeatureTags } from './collections/FeatureTags'
 import { Posts } from './collections/Posts'
 
 const filename = fileURLToPath(import.meta.url)
@@ -36,8 +38,27 @@ export default buildConfig({
   routes: {
     admin: '/cms',
   },
-  collections: [Users, Media, Categories, Posts],
+  collections: [Users, Media, Categories, FeatureTags, Posts],
   plugins: [
+    seoPlugin({
+      collections: ['posts'],
+      uploadsCollection: 'media',
+      tabbedUI: true,
+      generateTitle: ({ doc }) => (doc?.title ? `${doc.title} | Mulu Yu Kalam Blog` : 'Mulu Yu Kalam Blog'),
+      generateDescription: ({ doc }) => doc?.excerpt || 'A blog post published on Mulu Yu Kalam',
+      generateURL: ({ doc }) => {
+        const envUrl = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/+$/, '')
+        const baseUrl =
+          envUrl && (!envUrl.includes('localhost') || process.env.NODE_ENV !== 'production')
+            ? envUrl
+            : process.env.NODE_ENV === 'production'
+              ? 'https://blog.muluyukalam.com.np'
+              : 'http://localhost:3000'
+        return doc?.slug ? `${baseUrl}/posts/${doc.slug}` : `${baseUrl}/posts`
+      },
+      generateImage: ({ doc }) =>
+        typeof doc?.heroImage === 'object' && doc?.heroImage ? (doc.heroImage as any).id : doc?.heroImage,
+    }),
     s3Storage({
       collections: {
         media: process.env.R2_PUBLIC_URL

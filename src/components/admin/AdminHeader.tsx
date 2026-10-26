@@ -1,112 +1,120 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Calendar, PenTool, ExternalLink, LogOut } from 'lucide-react'
 import { useOptionalAuth } from '@/context/AuthContext'
-import { Button } from '@/components/ui/button'
+import './admin-header.css'
 
 export const AdminHeader: React.FC = () => {
   const pathname = usePathname()
   const router = useRouter()
   const auth = useOptionalAuth()
-  const user = auth?.user
+
+  // Track authenticated user across both frontend and Payload CMS
+  const [cmsUserEmail, setCmsUserEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    // If not running under frontend AuthProvider, fetch session from Payload /api/users/me
+    if (!auth?.user) {
+      fetch('/api/users/me')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.user?.email) {
+            setCmsUserEmail(data.user.email)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [auth?.user])
+
+  const userEmail = auth?.user?.email || cmsUserEmail || 'studio@muluyukalam.com.np'
 
   // Dynamic route highlight
-  const isAppointments = pathname ? pathname.startsWith('/admin') : true
-  const isCms = pathname ? pathname.startsWith('/cms') : false
+  const isAppointments = pathname ? pathname.startsWith('/admin') : false
+  const isCms = pathname ? pathname.startsWith('/cms') : true
 
   const handleSignOut = async () => {
-    if (auth?.signOut) {
-      await auth.signOut()
-    }
+    try {
+      if (auth?.signOut) {
+        await auth.signOut()
+      }
+    } catch {}
+    try {
+      await fetch('/api/users/logout', { method: 'POST' })
+    } catch {}
     router.replace('/login')
   }
 
   return (
-    <header className="bg-white border-b border-black/5 sticky top-0 z-50 shadow-xs font-sans w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <header className="studio-admin-header">
+      <div className="studio-admin-header__container">
         {/* Left: Studio Logo & Unified Navigation Switcher */}
-        <div className="flex items-center gap-6">
-          <Link href="/admin" className="flex items-center gap-3 group">
+        <div className="studio-admin-header__left">
+          <Link href="/admin" className="studio-admin-header__logo-link">
             <Image
               src="/assets/img/Mulu-Yu-Kalam.svg"
               alt="Mulu Yu Kalam"
               width={160}
               height={42}
               priority
-              className="w-40 h-auto drop-shadow-xs"
+              className="studio-admin-header__logo-img"
             />
           </Link>
 
           {/* Unified Navigation Switcher */}
-          <nav className="hidden md:flex items-center gap-1.5 bg-gray-100/80 p-1 rounded-xl">
+          <nav className="studio-admin-header__nav">
             <Link
               href="/admin"
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                isAppointments
-                  ? 'bg-white text-[#2e0249] shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+              className={`studio-admin-header__tab ${
+                isAppointments ? 'studio-admin-header__tab--active' : ''
               }`}
             >
-              <Calendar
-                className={`w-3.5 h-3.5 ${
-                  isAppointments ? 'text-[#ff7b01]' : 'text-gray-400'
-                }`}
-              />
+              <Calendar className="studio-admin-header__tab-icon" />
               <span>Appointments</span>
             </Link>
 
             <Link
               href="/cms"
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                isCms
-                  ? 'bg-white text-[#2e0249] shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+              className={`studio-admin-header__tab ${
+                isCms ? 'studio-admin-header__tab--active' : ''
               }`}
             >
-              <PenTool
-                className={`w-3.5 h-3.5 ${
-                  isCms ? 'text-[#ff7b01]' : 'text-gray-400'
-                }`}
-              />
+              <PenTool className="studio-admin-header__tab-icon" />
               <span>Blog & Content</span>
             </Link>
           </nav>
         </div>
 
         {/* Right: Public Link, User & Logout */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="studio-admin-header__right">
           <Link
             href="/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-[#ff7b01] px-3 py-2 rounded-xl hover:bg-gray-100 transition-colors"
+            className="studio-admin-header__public-link"
           >
             <span>View Public Studio</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink style={{ width: 14, height: 14 }} />
           </Link>
 
-          <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+          <div className="studio-admin-header__divider" />
 
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-semibold text-[#2e0249] truncate max-w-[180px]">
-              {user?.email || 'studio@muluyukalam.com.np'}
-            </p>
-            <p className="text-[10px] text-gray-400">Authenticated Staff</p>
+          <div className="studio-admin-header__user-block">
+            <p className="studio-admin-header__user-email">{userEmail}</p>
+            <p className="studio-admin-header__user-role">Authenticated Staff</p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
+            type="button"
             onClick={handleSignOut}
-            className="flex items-center gap-2 border-gray-200 hover:border-red-200 hover:bg-red-50 text-gray-700 hover:text-red-700 rounded-xl px-3 py-2 text-xs font-medium transition-colors"
+            className="studio-admin-header__logout-btn"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Sign Out</span>
-          </Button>
+            <LogOut style={{ width: 14, height: 14 }} />
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
     </header>
@@ -114,4 +122,3 @@ export const AdminHeader: React.FC = () => {
 }
 
 export default AdminHeader
-

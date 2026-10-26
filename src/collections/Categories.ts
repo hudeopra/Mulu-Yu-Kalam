@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { slugField } from '../fields/slug'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
@@ -15,16 +16,6 @@ export const Categories: CollectionConfig = {
       type: 'text',
       required: true,
     },
-    {
-      name: 'slug',
-      type: 'text',
-      required: true,
-      unique: true,
-      index: true,
-      admin: {
-        description: 'URL-friendly identifier (e.g. tech, design)',
-      },
-    },
+    slugField({ source: 'title' }),
   ],
 }
-

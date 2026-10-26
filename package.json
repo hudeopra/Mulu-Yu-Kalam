@@ -15,6 +15,7 @@
     "@base-ui/react": "^1.9.0",
     "@hookform/resolvers": "^5.9.1",
     "@payloadcms/db-postgres": "^3.92.0",
+    "@payloadcms/live-preview-react": "^3.92.0",
     "@payloadcms/next": "^3.92.0",
     "@payloadcms/plugin-seo": "^3.92.0",
     "@payloadcms/richtext-lexical": "^3.92.0",

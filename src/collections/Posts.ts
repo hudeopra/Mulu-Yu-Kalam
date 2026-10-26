@@ -7,6 +7,9 @@ export const Posts: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', '_status', 'featureTag', 'publishedAt'],
+    livePreview: {
+      url: ({ data }) => `/posts/${data?.slug || ''}`,
+    },
   },
   versions: {
     drafts: true,

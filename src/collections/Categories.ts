@@ -3,6 +3,7 @@ import { slugField } from '../fields/slug'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
+  dbName: 'blog_categories',
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', 'updatedAt'],

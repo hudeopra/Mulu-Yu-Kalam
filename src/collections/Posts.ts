@@ -4,6 +4,7 @@ import { calculateReadTime } from '../utilities/calculateReadTime'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
+  dbName: 'blog_posts',
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'slug', '_status', 'featureTag', 'publishedAt'],

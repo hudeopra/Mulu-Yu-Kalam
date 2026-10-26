@@ -3,6 +3,7 @@ import { slugField } from '../fields/slug'
 
 export const FeatureTags: CollectionConfig = {
   slug: 'feature-tags',
+  dbName: 'blog_feature_tags',
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'icon', 'priority', 'badgeColor', 'slug'],

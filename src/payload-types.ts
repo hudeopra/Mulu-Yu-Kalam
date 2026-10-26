@@ -267,7 +267,7 @@ export interface Post {
    */
   publishedAt?: string | null;
   /**
-   * Select one or more authors
+   * Post author(s). Automatically assigned to you on creation.
    */
   authors?: (number | User)[] | null;
   /**

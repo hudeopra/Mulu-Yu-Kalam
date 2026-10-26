@@ -24,6 +24,22 @@ export const Posts: CollectionConfig = {
         },
       }
     },
+    create: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => {
+      if (!user) return false
+      // Admins and editors can update any post
+      if (user.role === 'admin' || user.role === 'editor') return true
+      // Authors can update posts where they are assigned as author
+      return {
+        authors: {
+          contains: user.id,
+        },
+      }
+    },
+    delete: ({ req: { user } }) => {
+      // Only Admins & Editors can delete posts. No other role can delete posts.
+      return Boolean(user && (user.role === 'admin' || user.role === 'editor'))
+    },
   },
   fields: [
     // --- MAIN CONTENT AREA ---
@@ -84,9 +100,40 @@ export const Posts: CollectionConfig = {
       type: 'relationship',
       relationTo: 'users',
       hasMany: true,
+      defaultValue: ({ user }) => (user?.id ? [user.id] : []),
       admin: {
         position: 'sidebar',
-        description: 'Select one or more authors',
+        description: 'Post author(s). Automatically assigned to you on creation.',
+        // Only show author selection dropdown if:
+        // 1. The user is an admin or editor
+        // OR 2. Another user is editing an existing post whose author is someone else
+        condition: (data, siblingData, { user }) => {
+          if (user?.role === 'admin' || user?.role === 'editor') return true
+
+          if (Array.isArray(data?.authors) && data.authors.length > 0) {
+            const firstAuthor = data.authors[0]
+            const firstAuthorId =
+              typeof firstAuthor === 'object' && firstAuthor !== null ? firstAuthor.id : firstAuthor
+            if (firstAuthorId && firstAuthorId !== user?.id) {
+              return true
+            }
+          }
+
+          return false
+        },
+      },
+      hooks: {
+        beforeChange: [
+          ({ req, operation, value }) => {
+            // Ensure logged-in user is set as author if not manually passed
+            if (operation === 'create' && (!value || (Array.isArray(value) && value.length === 0))) {
+              if (req.user?.id) {
+                return [req.user.id]
+              }
+            }
+            return value
+          },
+        ],
       },
     },
     {

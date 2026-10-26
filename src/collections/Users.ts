@@ -6,9 +6,30 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'username', 'publicEmail', 'role', 'email', 'createdAt'],
+    // Only admins see the Users collection link in the sidebar
+    hidden: ({ user }) => user?.role !== 'admin',
   },
   access: {
+    // Allows public blog bylines & author queries
     read: () => true,
+    // Only admins can create new user accounts
+    create: ({ req: { user } }) => user?.role === 'admin',
+    // Admins can update any user; non-admins can only update their own profile
+    update: ({ req: { user } }) => {
+      if (user?.role === 'admin') return true
+      if (user) {
+        return {
+          id: {
+            equals: user.id,
+          },
+        }
+      }
+      return false
+    },
+    // Only admins can delete user accounts
+    delete: ({ req: { user } }) => user?.role === 'admin',
+    // Authenticated users can access the CMS panel
+    admin: ({ req: { user } }) => Boolean(user),
   },
   auth: {
     strategies: [
@@ -130,6 +151,10 @@ export const Users: CollectionConfig = {
       type: 'select',
       label: 'Role',
       defaultValue: 'author',
+      access: {
+        // Only admins can change user roles
+        update: ({ req: { user } }) => user?.role === 'admin',
+      },
       options: [
         { label: 'Admin', value: 'admin' },
         { label: 'Editor', value: 'editor' },

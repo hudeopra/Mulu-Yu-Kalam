@@ -223,13 +223,13 @@ a.card {
   color: #ff7b01 !important;
 }
 
-/* --- Form Fields & Inputs --- */
-input[type='text'],
-input[type='email'],
-input[type='password'],
-input[type='date'],
-textarea,
-select {
+/* --- Form Fields & Inputs (Excludes ReactSelect internal search inputs) --- */
+input[type='text']:not([class*='rs__']):not(.rs__input),
+input[type='email']:not([class*='rs__']):not(.rs__input),
+input[type='password']:not([class*='rs__']):not(.rs__input),
+input[type='date']:not([class*='rs__']):not(.rs__input),
+input[type='number']:not([class*='rs__']):not(.rs__input),
+textarea {
   border: 1px solid #e5dac9 !important;
   border-radius: 10px !important;
   padding: 10px 14px !important;
@@ -239,12 +239,176 @@ select {
   transition: all 0.15s ease !important;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
+input:not([class*='rs__']):not(.rs__input):focus,
+textarea:focus {
   border-color: #ff7b01 !important;
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(255, 123, 1, 0.15) !important;
+}
+
+/* ==========================================================================
+   Payload CMS Select & Relationship Dropdowns - Studio Theme
+   Fixes inner search input pill overlap and beautifully styles dropdowns
+   ========================================================================== */
+
+/* 1. Reset inner ReactSelect search input completely */
+.rs__input-container,
+.rs__input-container * {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+.rs__input-container input,
+.rs__input,
+input.rs__input,
+.react-select input,
+.react-select .rs__input-container input {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #2e0249 !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: inherit !important;
+  height: auto !important;
+  min-height: unset !important;
+}
+
+/* 2. Outer ReactSelect control container */
+.rs__control,
+.react-select .rs__control {
+  background-color: #ffffff !important;
+  border: 1px solid #e5dac9 !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 2px 8px !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+/* Relationship Add-New (+) button alignment */
+.relationship--allow-create .rs__control {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+button.relationship-add-new__add-button {
+  background-color: #faf7f2 !important;
+  border: 1px solid #e5dac9 !important;
+  border-left: none !important;
+  border-top-right-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
+  color: #2e0249 !important;
+  transition: all 0.15s ease !important;
+}
+
+button.relationship-add-new__add-button:hover {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+  border-color: #ff7b01 !important;
+}
+
+/* 3. Focus state for control */
+.rs__control--is-focused,
+.react-select .rs__control--is-focused {
+  border-color: #ff7b01 !important;
+  box-shadow: 0 0 0 3px rgba(255, 123, 1, 0.15) !important;
+  outline: none !important;
+}
+
+/* 4. Placeholder & Selected Values */
+.rs__placeholder {
+  color: #9c8a77 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+.rs__single-value {
+  color: #2e0249 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* Multi-select Pills (e.g. Authors, Categories) */
+.rs__multi-value {
+  background-color: #faf7f2 !important;
+  border: 1px solid #ede3d4 !important;
+  border-radius: 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  padding: 2px 6px !important;
+}
+
+.rs__multi-value__label {
+  color: #2e0249 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  padding: 2px 4px !important;
+}
+
+.rs__multi-value__remove {
+  color: #9c8a77 !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+
+.rs__multi-value__remove:hover {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+}
+
+/* 5. Dropdown Menu & Options */
+.rs__menu {
+  background-color: #ffffff !important;
+  border: 1px solid #ede3d4 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(46, 2, 73, 0.08) !important;
+  overflow: hidden !important;
+  margin-top: 4px !important;
+  z-index: 100 !important;
+}
+
+.rs__menu-list {
+  padding: 6px !important;
+}
+
+.rs__option {
+  color: #2e0249 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.rs__option--is-focused {
+  background-color: #faf7f2 !important;
+  color: #ff7b01 !important;
+}
+
+.rs__option--is-selected {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Chevron & Indicators */
+.rs__indicator {
+  color: #9c8a77 !important;
+  padding: 6px !important;
+}
+
+.rs__indicator:hover {
+  color: #ff7b01 !important;
 }
 
 .field-label,

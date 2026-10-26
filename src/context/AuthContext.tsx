@@ -92,22 +92,9 @@ export function AuthProvider({
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
 
-    // 1. Try Supabase Auth first
-    if (isSupabaseConfigured) {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (!error && data.session) {
-        setSession(data.session);
-        setUser(data.user);
-        setIsLoading(false);
-        return { error: null };
-      }
-    }
-
-    // 2. Unified fallback: Authenticate with Payload CMS
+    // 1. Authenticate with Payload CMS to set the HTTP-only 'payload-token' cookie for /cms
+    let payloadSuccess = false;
+    let payloadUser: any = null;
     try {
       const res = await fetch('/api/users/login', {
         method: 'POST',
@@ -117,34 +104,67 @@ export function AuthProvider({
 
       if (res.ok) {
         const payloadData = await res.json();
-        const payloadUser = payloadData.user;
-
-        const unifiedUser = {
-          id: String(payloadUser.id),
-          email: payloadUser.email,
-          aud: 'authenticated',
-          role: 'authenticated',
-          app_metadata: {},
-          user_metadata: {},
-          created_at: payloadUser.createdAt || new Date().toISOString(),
-        } as unknown as User;
-
-        setUser(unifiedUser);
-
-        // Also provision in Supabase Auth in background so both stay in sync
-        if (isSupabaseConfigured) {
-          try {
-            await supabase.auth.signUp({ email, password });
-          } catch {
-            // Ignore if already registered
-          }
-        }
-
-        setIsLoading(false);
-        return { error: null };
+        payloadUser = payloadData.user;
+        payloadSuccess = true;
       }
-    } catch (payloadErr) {
-      console.error('[Unified Auth] Payload login check error:', payloadErr);
+    } catch (err) {
+      console.warn('[Unified Auth] Payload CMS login error:', err);
+    }
+
+    // 2. Authenticate with Supabase Auth for /admin appointments
+    let supabaseSuccess = false;
+    let supabaseUser: any = null;
+    let supabaseSession: any = null;
+
+    if (isSupabaseConfigured) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (!error && data.session) {
+          supabaseSuccess = true;
+          supabaseUser = data.user;
+          supabaseSession = data.session;
+        } else if (payloadSuccess) {
+          // User exists in Payload CMS: auto-sync into Supabase Auth
+          try {
+            const signUpRes = await supabase.auth.signUp({ email, password });
+            if (signUpRes.data.session) {
+              supabaseSuccess = true;
+              supabaseUser = signUpRes.data.user;
+              supabaseSession = signUpRes.data.session;
+            }
+          } catch {}
+        }
+      } catch (err) {
+        console.warn('[Unified Auth] Supabase sign-in error:', err);
+      }
+    }
+
+    // 3. Unified authentication result
+    if (payloadSuccess || supabaseSuccess) {
+      const unifiedEmail = payloadUser?.email || supabaseUser?.email || email;
+      const unifiedId = String(payloadUser?.id || supabaseUser?.id || '1');
+      const unifiedRole = payloadUser?.role || 'authenticated';
+
+      const unifiedUser = {
+        id: unifiedId,
+        email: unifiedEmail,
+        aud: 'authenticated',
+        role: unifiedRole,
+        app_metadata: {},
+        user_metadata: {},
+        created_at: payloadUser?.createdAt || new Date().toISOString(),
+      } as unknown as User;
+
+      setUser(unifiedUser);
+      if (supabaseSession) {
+        setSession(supabaseSession);
+      }
+      setIsLoading(false);
+      return { error: null };
     }
 
     setIsLoading(false);
@@ -159,21 +179,25 @@ export function AuthProvider({
 
   const signOut = async () => {
     setIsLoading(true);
+
+    // 1. Sign out of Supabase
     if (isSupabaseConfigured) {
       try {
         await supabase.auth.signOut();
-      } catch {
-        // Ignore
-      }
+      } catch {}
     }
+
+    // 2. Sign out of Payload CMS
     try {
       await fetch('/api/users/logout', { method: 'POST' });
-    } catch {
-      // Ignore
-    }
+    } catch {}
+
     setUser(null);
     setSession(null);
     setIsLoading(false);
+
+    // 3. Force clean redirect to /login
+    window.location.href = '/login';
   };
 
   return (

@@ -528,3 +528,13 @@ label {
 ::-webkit-scrollbar-thumb:hover {
   background: #ff7b01;
 }
+
+
+/* --- Suppress Redundant Sidebar Logout in CMS (Unified AdminHeader handles global sign-out) --- */
+a[href*='/logout'],
+a[href*='logout'],
+.nav__log-out,
+.nav__logout,
+.nav button.logout {
+  display: none !important;
+}

@@ -38,12 +38,23 @@ export default function LoginPage() {
     mode: 'onTouched',
   });
 
-  // If already logged in, redirect immediately to /admin
+  const getRedirectTarget = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect && redirect.startsWith('/')) {
+        return redirect;
+      }
+    }
+    return '/admin';
+  };
+
+  // If already logged in, redirect immediately to intended target or /admin
   useEffect(() => {
     if (user) {
-      router.replace('/admin');
+      window.location.href = getRedirectTarget();
     }
-  }, [user, router]);
+  }, [user]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -57,8 +68,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Success: redirect to admin dashboard
-      router.replace('/admin');
+      // Success: redirect to intended target or /admin
+      window.location.href = getRedirectTarget();
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'An unexpected error occurred.';

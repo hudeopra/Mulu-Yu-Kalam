@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Calendar, PenTool, ExternalLink, LogOut } from 'lucide-react'
 import { useOptionalAuth } from '@/context/AuthContext'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import './admin-header.css'
 
 export const AdminHeader: React.FC = () => {
@@ -37,15 +38,27 @@ export const AdminHeader: React.FC = () => {
   const isCms = pathname ? pathname.startsWith('/cms') : true
 
   const handleSignOut = async () => {
+    // 1. Terminate Supabase Auth session
+    if (isSupabaseConfigured) {
+      try {
+        await supabase.auth.signOut()
+      } catch {}
+    }
+
+    // 2. Terminate Payload CMS session & clear payload-token cookie
+    try {
+      await fetch('/api/users/logout', { method: 'POST' })
+    } catch {}
+
+    // 3. Clear AuthContext state if running under frontend provider
     try {
       if (auth?.signOut) {
         await auth.signOut()
       }
     } catch {}
-    try {
-      await fetch('/api/users/logout', { method: 'POST' })
-    } catch {}
-    router.replace('/login')
+
+    // 4. Force full page reload to /login to flush all in-memory client state
+    window.location.href = '/login'
   }
 
   return (

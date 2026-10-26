@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { RichText, type JSXConvertersFunction } from '@payloadcms/richtext-lexical/react'
@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Eye,
   ArrowRight,
+  Link as LinkIcon,
 } from 'lucide-react'
 import '@/components/blog/blog.css'
 
@@ -40,6 +41,63 @@ export function PostView({ initialPost, relatedPosts }: PostViewProps) {
     serverURL,
     depth: 2,
   })
+
+  // Reading Progress Bar State (0 - 100%)
+  const [readingProgress, setReadingProgress] = useState(0)
+
+  // Heading Link Copy Toast State
+  const [copyToast, setCopyToast] = useState<{ visible: boolean; text: string }>({
+    visible: false,
+    text: '',
+  })
+
+  // Track scroll depth for the reading progress bar with passive listener for performance
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScroll = window.scrollY
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
+      if (totalHeight > 0) {
+        const progress = Math.min(100, Math.max(0, (currentScroll / totalHeight) * 100))
+        setReadingProgress(progress)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Deep-link copy handler: updates URL hash without jump, copies link, and smooth-scrolls
+  const handleCopyHeading = (e: React.MouseEvent<HTMLAnchorElement>, headingId: string, rawText: string) => {
+    e.preventDefault()
+    if (typeof window === 'undefined') return
+
+    const url = new URL(window.location.href)
+    url.hash = headingId
+
+    // Update browser URL without sudden jumping
+    window.history.pushState(null, '', url.toString())
+
+    // Copy direct link to clipboard
+    navigator.clipboard
+      .writeText(url.toString())
+      .then(() => {
+        setCopyToast({ visible: true, text: `Copied link to "${rawText.slice(0, 32)}${rawText.length > 32 ? '...' : ''}"` })
+        setTimeout(() => {
+          setCopyToast({ visible: false, text: '' })
+        }, 2200)
+      })
+      .catch(() => {
+        setCopyToast({ visible: true, text: 'Section link copied!' })
+        setTimeout(() => setCopyToast({ visible: false, text: '' }), 2000)
+      })
+
+    // Smooth scroll to the heading
+    const target = document.getElementById(headingId)
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
   const heroImage =
     typeof post.heroImage === 'object' && post.heroImage !== null
@@ -87,7 +145,9 @@ export function PostView({ initialPost, relatedPosts }: PostViewProps) {
               <a
                 href={`#${id}`}
                 className="heading-anchor-link"
+                title="Click to copy link to this section"
                 aria-label={`Direct link to ${rawText}`}
+                onClick={(e) => handleCopyHeading(e, id, rawText)}
               >
                 #
               </a>
@@ -100,7 +160,27 @@ export function PostView({ initialPost, relatedPosts }: PostViewProps) {
   }, [post.content])
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf7f2] font-sans antialiased text-[#2e0249]">
+    <>
+      {/* Real-time Hardware-Accelerated Reading Progress Bar */}
+      <div
+        className="reading-progress-bar"
+        style={{ transform: `scaleX(${readingProgress / 100})` }}
+        role="progressbar"
+        aria-valuenow={Math.round(readingProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Reading progress"
+      />
+
+      {/* Deep-link Copy Toast Notification */}
+      {copyToast.visible && (
+        <div className="copy-toast" role="status" aria-live="polite">
+          <Sparkles className="w-4 h-4 text-[#ffbd5b] shrink-0" />
+          <span>{copyToast.text}</span>
+        </div>
+      )}
+
+      <div className="min-h-screen flex flex-col bg-[#faf7f2] font-sans antialiased text-[#2e0249]">
       <BlogNav />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -358,6 +438,7 @@ export function PostView({ initialPost, relatedPosts }: PostViewProps) {
 
       <Footer />
     </div>
+  </>
   )
 }
 

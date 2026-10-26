@@ -4,7 +4,7 @@ import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { notFound } from 'next/navigation'
-import type { Media, Post, User } from '@/payload-types'
+import type { Category, Media, Post, User } from '@/payload-types'
 import { PostView } from './PostView'
 
 // Enable Incremental Static Regeneration (ISR): Cache pages for 60 seconds
@@ -240,7 +240,54 @@ export default async function PostPage({ params: paramsPromise }: Args) {
     finalRelatedPosts = [...finalRelatedPosts, ...fallbackResult.docs]
   }
 
-  // --- GOOGLE ARTICLE SCHEMA.ORG STRUCTURED DATA ---
+  // --- GOOGLE ARTICLE & BREADCRUMB SCHEMA.ORG STRUCTURED DATA ---
+  const firstCategory =
+    post.categories && post.categories.length > 0 && typeof post.categories[0] === 'object' && post.categories[0] !== null
+      ? (post.categories[0] as Category)
+      : null
+
+  const breadcrumbsJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: '/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Studio Journal',
+        item: '/posts',
+      },
+      ...(firstCategory
+        ? [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: firstCategory.title,
+              item: `/posts?category=${firstCategory.slug}`,
+            },
+            {
+              '@type': 'ListItem',
+              position: 4,
+              name: post.title,
+              item: `/posts/${post.slug}`,
+            },
+          ]
+        : [
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: post.title,
+              item: `/posts/${post.slug}`,
+            },
+          ]),
+    ],
+  }
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -271,9 +318,15 @@ export default async function PostPage({ params: paramsPromise }: Args) {
 
   return (
     <>
+      {/* Schema.org Rich Snippet for Search Engines */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      {/* Google Breadcrumbs Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
       />
       <PostView initialPost={post} relatedPosts={finalRelatedPosts} />
     </>

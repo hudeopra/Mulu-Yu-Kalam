@@ -47,6 +47,44 @@ export function PostView({ initialPost, relatedPosts, prevPost, nextPost }: Post
   // Reading Progress Bar State (0 - 100%)
   const [readingProgress, setReadingProgress] = useState(0)
 
+  // Reader Display Controls State (saved in localStorage)
+  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md')
+  const [fontFamily, setFontFamily] = useState<'sans' | 'serif'>('sans')
+
+  // Load saved reading preferences from localStorage safely
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('reader_display_prefs')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (['sm', 'md', 'lg'].includes(parsed.fontSize)) {
+          setFontSize(parsed.fontSize)
+        }
+        if (['sans', 'serif'].includes(parsed.fontFamily)) {
+          setFontFamily(parsed.fontFamily)
+        }
+      }
+    } catch {
+      // Ignore in SSR / private browsing
+    }
+  }, [])
+
+  const updateFontSize = (size: 'sm' | 'md' | 'lg') => {
+    setFontSize(size)
+    try {
+      const current = JSON.parse(localStorage.getItem('reader_display_prefs') || '{}')
+      localStorage.setItem('reader_display_prefs', JSON.stringify({ ...current, fontSize: size }))
+    } catch {}
+  }
+
+  const updateFontFamily = (family: 'sans' | 'serif') => {
+    setFontFamily(family)
+    try {
+      const current = JSON.parse(localStorage.getItem('reader_display_prefs') || '{}')
+      localStorage.setItem('reader_display_prefs', JSON.stringify({ ...current, fontFamily: family }))
+    } catch {}
+  }
+
   // Heading Link Copy Toast State
   const [copyToast, setCopyToast] = useState<{ visible: boolean; text: string }>({
     visible: false,
@@ -254,31 +292,82 @@ export function PostView({ initialPost, relatedPosts, prevPost, nextPost }: Post
                 {post.title}
               </h1>
 
-              {/* Byline Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-[#776655] pb-6 border-b border-[#ede3d4]">
-                {authors && (
-                  <span className="font-semibold text-[#2e0249]">
-                    Written by {authors}
-                  </span>
-                )}
+              {/* Byline Meta & Reader Display Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#ede3d4]">
+                <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-[#776655]">
+                  {authors && (
+                    <span className="font-semibold text-[#2e0249]">
+                      Written by {authors}
+                    </span>
+                  )}
 
-                {post.publishedAt && (
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Calendar className="w-4 h-4 text-[#ff7b01]" />
-                    {new Date(post.publishedAt).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </span>
-                )}
+                  {post.publishedAt && (
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Calendar className="w-4 h-4 text-[#ff7b01]" />
+                      {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  )}
 
-                {post.readTime && (
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Clock className="w-4 h-4 text-[#ff7b01]" />
-                    {post.readTime} min read
-                  </span>
-                )}
+                  {post.readTime && (
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Clock className="w-4 h-4 text-[#ff7b01]" />
+                      {post.readTime} min read
+                    </span>
+                  )}
+                </div>
+
+                {/* Reader Display Controls (Font Size & Typography) */}
+                <div className="reader-display-toolbar" role="group" aria-label="Reading display preferences">
+                  <div className="reader-btn-pill-group" title="Adjust text size">
+                    <button
+                      type="button"
+                      className={`reader-btn ${fontSize === 'sm' ? 'reader-btn-active' : ''}`}
+                      onClick={() => updateFontSize('sm')}
+                      aria-label="Small text size"
+                    >
+                      A⁻
+                    </button>
+                    <button
+                      type="button"
+                      className={`reader-btn ${fontSize === 'md' ? 'reader-btn-active' : ''}`}
+                      onClick={() => updateFontSize('md')}
+                      aria-label="Default text size"
+                    >
+                      A
+                    </button>
+                    <button
+                      type="button"
+                      className={`reader-btn ${fontSize === 'lg' ? 'reader-btn-active' : ''}`}
+                      onClick={() => updateFontSize('lg')}
+                      aria-label="Large text size"
+                    >
+                      A⁺
+                    </button>
+                  </div>
+
+                  <div className="reader-btn-pill-group" title="Toggle typography style">
+                    <button
+                      type="button"
+                      className={`reader-btn ${fontFamily === 'sans' ? 'reader-btn-active' : ''}`}
+                      onClick={() => updateFontFamily('sans')}
+                      aria-label="Sans-Serif font"
+                    >
+                      Sans
+                    </button>
+                    <button
+                      type="button"
+                      className={`reader-btn ${fontFamily === 'serif' ? 'reader-btn-active' : ''}`}
+                      onClick={() => updateFontFamily('serif')}
+                      aria-label="Serif font"
+                    >
+                      Serif
+                    </button>
+                  </div>
+                </div>
               </div>
             </header>
 
@@ -310,9 +399,9 @@ export function PostView({ initialPost, relatedPosts, prevPost, nextPost }: Post
               </div>
             )}
 
-            {/* RichText Article Body */}
+            {/* RichText Article Body with Dynamic Reader Controls */}
             <div className="bg-white rounded-3xl border border-[#ede3d4] p-6 sm:p-10 md:p-12 shadow-xs mb-10">
-              <div className="blog-rich-text">
+              <div className={`blog-rich-text font-size-${fontSize} font-family-${fontFamily}`}>
                 <RichText data={post.content} converters={jsxConverters} />
               </div>
             </div>

@@ -22,6 +22,9 @@ export const metadata: Metadata = {
     'Read articles and stories on custom tattoo craftsmanship, Newari cultural motifs, fine line ink art, and professional aftercare from Mulu Yu Kalam Studio in Harisiddhi, Lalitpur.',
 };
 
+// Enable Incremental Static Regeneration (ISR): Cache feed for 60 seconds
+export const revalidate = 60;
+
 export default async function PostsPage() {
   const payload = await getPayload({ config: configPromise });
 

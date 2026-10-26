@@ -223,12 +223,12 @@ a.card {
   color: #ff7b01 !important;
 }
 
-/* --- Form Fields & Inputs (Excludes ReactSelect internal search inputs) --- */
-input[type='text']:not([class*='rs__']):not(.rs__input),
-input[type='email']:not([class*='rs__']):not(.rs__input),
-input[type='password']:not([class*='rs__']):not(.rs__input),
-input[type='date']:not([class*='rs__']):not(.rs__input),
-input[type='number']:not([class*='rs__']):not(.rs__input),
+/* --- Form Fields & Inputs (Excludes ALL ReactSelect & Relationship search inputs) --- */
+input[type='text']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='email']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='password']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='date']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='number']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
 textarea {
   border: 1px solid #e5dac9 !important;
   border-radius: 10px !important;
@@ -239,7 +239,7 @@ textarea {
   transition: all 0.15s ease !important;
 }
 
-input:not([class*='rs__']):not(.rs__input):focus,
+input:not([class*='rs']):not([id*='react-select']):not([role='combobox']):focus,
 textarea:focus {
   border-color: #ff7b01 !important;
   outline: none !important;
@@ -258,14 +258,29 @@ textarea:focus {
   box-shadow: none !important;
   outline: none !important;
   background: transparent !important;
+  background-color: transparent !important;
 }
 
 .rs__input-container input,
 .rs__input,
 input.rs__input,
 .react-select input,
-.react-select .rs__input-container input {
-  border: none !important;
+.react-select input[type='text'],
+.react-select input[role='combobox'],
+.rs__control input,
+.rs__control input[type='text'],
+.rs__control input[role='combobox'],
+.rs__value-container input,
+.rs__value-container input[type='text'],
+.field-type.relationship input,
+.field-type.relationship input[type='text'],
+.field-type.select input,
+.field-type.select input[type='text'],
+input[id*='react-select'] {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
   border-radius: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
@@ -279,6 +294,21 @@ input.rs__input,
   line-height: inherit !important;
   height: auto !important;
   min-height: unset !important;
+  max-height: unset !important;
+  box-sizing: content-box !important;
+}
+
+.rs__input-container input:focus,
+.rs__input:focus,
+input.rs__input:focus,
+.react-select input:focus,
+.rs__control input:focus,
+.field-type.relationship input:focus,
+.field-type.select input:focus,
+input[id*='react-select']:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* 2. Outer ReactSelect control container */

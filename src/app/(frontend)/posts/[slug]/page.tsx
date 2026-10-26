@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cache } from 'react'
 import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
@@ -6,11 +7,78 @@ import { notFound } from 'next/navigation'
 import type { Media, Post, User } from '@/payload-types'
 import { PostView } from './PostView'
 
+// Enable Incremental Static Regeneration (ISR): Cache pages for 60 seconds
+export const revalidate = 60
+
 type Args = {
   params: Promise<{
     slug?: string
   }>
 }
+
+/**
+ * Pre-generate static HTML for all published posts at build time.
+ * Subsequent visits load instantly (< 20ms) from Next.js cache.
+ */
+export async function generateStaticParams() {
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const posts = await payload.find({
+      collection: 'posts',
+      where: {
+        _status: {
+          equals: 'published',
+        },
+      },
+      limit: 1000,
+      select: {
+        slug: true,
+      },
+    })
+
+    return posts.docs.map((doc) => ({
+      slug: doc.slug,
+    }))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Deduplicate database query between generateMetadata() and PostPage().
+ * React cache() guarantees this only hits PostgreSQL ONCE per request.
+ */
+const queryPostBySlug = cache(async (slug: string, isDraft: boolean, user?: any) => {
+  const payload = await getPayload({ config: configPromise })
+
+  const result = await payload.find({
+    collection: 'posts',
+    where: {
+      and: [
+        {
+          slug: {
+            equals: slug,
+          },
+        },
+        ...(isDraft
+          ? []
+          : [
+              {
+                _status: {
+                  equals: 'published' as const,
+                },
+              },
+            ]),
+      ],
+    },
+    draft: isDraft,
+    user,
+    depth: 2,
+    limit: 1,
+  })
+
+  return result.docs?.[0] || null
+})
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
   const { slug = '' } = await paramsPromise
@@ -18,20 +86,7 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
   const payload = await getPayload({ config: configPromise })
   const { user } = await payload.auth({ headers })
 
-  const result = await payload.find({
-    collection: 'posts',
-    where: {
-      slug: {
-        equals: slug,
-      },
-    },
-    draft: Boolean(user),
-    user,
-    depth: 1,
-    limit: 1,
-  })
-
-  const post = result.docs?.[0]
+  const post = await queryPostBySlug(slug, Boolean(user), user)
   if (!post) {
     return {
       title: 'Story Not Found | Mulu Yu Kalam Journal',
@@ -79,32 +134,7 @@ export default async function PostPage({ params: paramsPromise }: Args) {
   const payload = await getPayload({ config: configPromise })
   const { user } = await payload.auth({ headers })
 
-  const result = await payload.find({
-    collection: 'posts',
-    where: {
-      and: [
-        {
-          slug: {
-            equals: slug,
-          },
-        },
-        ...(user
-          ? []
-          : [
-              {
-                _status: {
-                  equals: 'published' as const,
-                },
-              },
-            ]),
-      ],
-    },
-    draft: Boolean(user), // Authenticated staff can preview unpublished drafts
-    user,
-    depth: 2,
-  })
-
-  const post = result.docs?.[0]
+  const post = await queryPostBySlug(slug, Boolean(user), user)
 
   if (!post) {
     notFound()

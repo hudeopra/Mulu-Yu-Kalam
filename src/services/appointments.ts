@@ -11,6 +11,11 @@ import {
   getAppointmentReferenceUrls,
 } from './storage';
 
+/**
+ * Database table name for tattoo appointments in Supabase.
+ */
+export const APPOINTMENTS_TABLE = 'tattoo_appointments';
+
 export interface CreateAppointmentInput {
   tattooLocation: string;
   name: string;
@@ -43,7 +48,7 @@ export const appointmentsService = {
    */
   async getActiveAppointments(): Promise<Appointment[]> {
     const { data, error } = await supabase
-      .from('appointments')
+      .from(APPOINTMENTS_TABLE)
       .select('*')
       .neq('status', 'suspended')
       .order('appointment_date', { ascending: false });
@@ -63,7 +68,7 @@ export const appointmentsService = {
     status: AppointmentStatus,
   ): Promise<Appointment> {
     const { data, error } = await supabase
-      .from('appointments')
+      .from(APPOINTMENTS_TABLE)
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
@@ -84,7 +89,7 @@ export const appointmentsService = {
     payload: UpdateAppointmentInput,
   ): Promise<Appointment> {
     const { data, error } = await supabase
-      .from('appointments')
+      .from(APPOINTMENTS_TABLE)
       .update({
         ...payload,
         updated_at: new Date().toISOString(),
@@ -107,7 +112,7 @@ export const appointmentsService = {
     input: CreateAppointmentInput,
   ): Promise<Appointment> {
     const { data, error } = await supabase
-      .from('appointments')
+      .from(APPOINTMENTS_TABLE)
       .insert({
         tattoo_location: input.tattooLocation,
         name: input.name,
@@ -142,7 +147,7 @@ export const appointmentsService = {
 
     // 2. Soft-delete database record by updating status to 'suspended'
     const { data, error } = await supabase
-      .from('appointments')
+      .from(APPOINTMENTS_TABLE)
       .update({
         status: 'suspended',
         reference_image_urls:
@@ -180,7 +185,7 @@ export const appointmentsService = {
     const remainingUrls = currentUrls.filter((url) => url !== targetImageUrl);
 
     const { data, error } = await supabase
-      .from('appointments')
+      .from(APPOINTMENTS_TABLE)
       .update({
         reference_image_urls: remainingUrls.length > 0 ? remainingUrls : null,
         updated_at: new Date().toISOString(),

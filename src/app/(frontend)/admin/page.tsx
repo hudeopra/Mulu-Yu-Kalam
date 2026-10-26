@@ -20,7 +20,7 @@ import {
   type AppointmentStatus,
   computeAppointmentStats,
 } from '@/lib/supabase';
-import { appointmentsService } from '@/services';
+import { appointmentsService, APPOINTMENTS_TABLE } from '@/services';
 import { AppointmentDetailModal } from '@/components/admin/AppointmentDetailModal';
 import { AppointmentDataTable } from '@/components/admin/appointment-table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -67,7 +67,7 @@ export default function AdminPage() {
         {
           event: '*',
           schema: 'public',
-          table: 'appointments',
+          table: APPOINTMENTS_TABLE,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Josefin_Sans } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
-import './globals.css';
+import '../globals.css';
 
 const josefinSans = Josefin_Sans({
   subsets: ['latin'],
@@ -104,6 +104,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: '/',
+    types: {
+      'application/rss+xml': '/feed.xml',
+    },
   },
   openGraph: {
     title: 'Mulu Yu Kalam | Ink Your Story',

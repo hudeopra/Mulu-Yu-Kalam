@@ -1,0 +1,530 @@
+/* ==========================================================================
+   Mulu Yu Kalam Studio - Complete CMS Theme Alignment
+   Matches Image 1 (Studio Appointments) & Brand Guidelines
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700;800&display=swap');
+@import '../../components/admin/admin-header.css';
+
+/* --- Force Universal Studio Colors Across All Themes (No pitch black) --- */
+:root,
+html,
+html[data-theme='light'],
+html[data-theme='dark'],
+body {
+  /* Warm studio canvas & card elevations */
+  --theme-elevation-0: #faf7f2 !important; /* Canvas background */
+  --theme-elevation-50: #ffffff !important; /* Pure white cards matching appointments */
+  --theme-elevation-100: #f0e8dc !important; /* Subtle borders */
+  --theme-elevation-150: #ebd8c0 !important;
+  --theme-elevation-200: #ffdca9 !important; /* Brand cream */
+  --theme-elevation-300: #ffbd5b !important; /* Brand accent */
+  --theme-elevation-400: #9c8a77 !important;
+  --theme-elevation-500: #ff7b01 !important; /* Brand primary orange */
+  --theme-elevation-600: #e06c00 !important;
+  --theme-elevation-800: #2e0249 !important; /* Deep studio purple */
+  --theme-elevation-900: #171717 !important; /* Deep dark */
+  --theme-text: #2e0249 !important;
+  --theme-border-color: #f0e8dc !important;
+  --theme-input-bg: #ffffff !important;
+
+  /* Typography */
+  --font-body: 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  --theme-font-sans: 'Josefin Sans', sans-serif !important;
+
+  background-color: #faf7f2 !important;
+  color: #2e0249 !important;
+  font-family: 'Josefin Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* --- Layout & Main Canvas Background --- */
+body,
+#app,
+main,
+.template-default,
+.template-default__content,
+.dashboard,
+.collection-list,
+.document-fields,
+.doc-header {
+  background-color: #faf7f2 !important;
+  color: #2e0249 !important;
+}
+
+/* --- Adjust Payload CMS Layout for Unified Studio Header --- */
+.template-default {
+  padding-top: 0 !important;
+}
+
+aside.nav,
+.template-default aside.nav,
+nav.nav {
+  top: 76px !important;
+  height: calc(100vh - 76px) !important;
+}
+
+.template-default__wrap {
+  min-height: calc(100vh - 76px) !important;
+}
+
+.template-default__nav-toggler-wrapper {
+  top: 76px !important;
+}
+
+/* Secondary Breadcrumb Sub-bar inside CMS */
+.app-header,
+header.app-header,
+.template-default__header {
+  background: #faf7f2 !important;
+  border-bottom: 1px solid #ede3d4 !important;
+  box-shadow: none !important;
+}
+
+/* --- Left Sidebar (Clean white, matching appointments modal aesthetic) --- */
+.nav,
+aside.nav,
+nav.nav {
+  background-color: #ffffff !important;
+  border-right: 1px solid #f0e8dc !important;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02) !important;
+}
+
+.nav__group-label {
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  color: #9c8a77 !important;
+  padding-left: 14px !important;
+  margin-top: 14px !important;
+  margin-bottom: 6px !important;
+}
+
+.nav__link {
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  color: #554433 !important;
+  border-radius: 10px !important;
+  margin: 3px 10px !important;
+  padding: 10px 14px !important;
+  transition: all 0.15s ease !important;
+}
+
+.nav__link:hover {
+  background: rgba(255, 123, 1, 0.08) !important;
+  color: #ff7b01 !important;
+  transform: translateX(2px) !important;
+}
+
+.nav__link.active,
+.nav__link[aria-current='page'] {
+  background: #ff7b01 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 12px rgba(255, 123, 1, 0.3) !important;
+}
+
+.nav__link.active svg,
+.nav__link[aria-current='page'] svg {
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* --- Dashboard Section Headings --- */
+.dashboard__label,
+h1, h2, h3, h4 {
+  color: #2e0249 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* --- Collection Cards (Redesigned like Image 1's Stat Cards) --- */
+.card,
+.collection-card,
+.dashboard__card,
+a.card {
+  background-color: #ffffff !important;
+  border: 1px solid #f0e8dc !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  box-shadow: 0 4px 16px rgba(46, 2, 73, 0.04) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100px !important;
+  color: #2e0249 !important;
+  text-decoration: none !important;
+  position: relative !important;
+}
+
+.card:hover,
+.collection-card:hover {
+  transform: translateY(-3px) !important;
+  border-color: #ffbd5b !important;
+  box-shadow: 0 10px 24px rgba(255, 123, 1, 0.14) !important;
+}
+
+.card__title,
+.card h3,
+.card a {
+  color: #2e0249 !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  margin: 0 0 6px 0 !important;
+  font-family: 'Josefin Sans', sans-serif !important;
+}
+
+.card p,
+.card span {
+  color: #776655 !important;
+  font-size: 13px !important;
+}
+
+.card__actions {
+  color: #ff7b01 !important;
+}
+
+/* --- Buttons (Brand Primary & Secondary) --- */
+.btn--style-primary {
+  --bg-color: #ff7b01 !important;
+  --color: #ffffff !important;
+  --hover-bg: #e06c00 !important;
+  --hover-color: #ffffff !important;
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  padding: 10px 20px !important;
+  box-shadow: 0 2px 8px rgba(255, 123, 1, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn--style-primary:hover {
+  background-color: #e06c00 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(255, 123, 1, 0.35) !important;
+}
+
+.btn--style-secondary {
+  border: 1px solid #f0e8dc !important;
+  background: #ffffff !important;
+  color: #2e0249 !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn--style-secondary:hover {
+  background: #faf7f2 !important;
+  border-color: #ffdca9 !important;
+  color: #ff7b01 !important;
+}
+
+/* --- Form Fields & Inputs (Excludes ALL ReactSelect & Relationship search inputs) --- */
+input[type='text']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='email']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='password']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='date']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='number']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+textarea {
+  border: 1px solid #e5dac9 !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  background-color: #ffffff !important;
+  color: #2e0249 !important;
+  transition: all 0.15s ease !important;
+}
+
+input:not([class*='rs']):not([id*='react-select']):not([role='combobox']):focus,
+textarea:focus {
+  border-color: #ff7b01 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(255, 123, 1, 0.15) !important;
+}
+
+/* ==========================================================================
+   Payload CMS Select & Relationship Dropdowns - Studio Theme
+   Fixes inner search input pill overlap and beautifully styles dropdowns
+   ========================================================================== */
+
+/* 1. Reset inner ReactSelect search input completely */
+.rs__input-container,
+.rs__input-container * {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.rs__input-container input,
+.rs__input,
+input.rs__input,
+.react-select input,
+.react-select input[type='text'],
+.react-select input[role='combobox'],
+.rs__control input,
+.rs__control input[type='text'],
+.rs__control input[role='combobox'],
+.rs__value-container input,
+.rs__value-container input[type='text'],
+.field-type.relationship input,
+.field-type.relationship input[type='text'],
+.field-type.select input,
+.field-type.select input[type='text'],
+input[id*='react-select'] {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #2e0249 !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: inherit !important;
+  height: auto !important;
+  min-height: unset !important;
+  max-height: unset !important;
+  box-sizing: content-box !important;
+}
+
+.rs__input-container input:focus,
+.rs__input:focus,
+input.rs__input:focus,
+.react-select input:focus,
+.rs__control input:focus,
+.field-type.relationship input:focus,
+.field-type.select input:focus,
+input[id*='react-select']:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* 2. Outer ReactSelect control container */
+.rs__control,
+.react-select .rs__control {
+  background-color: #ffffff !important;
+  border: 1px solid #e5dac9 !important;
+  border-radius: 10px !important;
+  min-height: 44px !important;
+  padding: 2px 8px !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+/* Relationship Add-New (+) button alignment */
+.relationship--allow-create .rs__control {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+button.relationship-add-new__add-button {
+  background-color: #faf7f2 !important;
+  border: 1px solid #e5dac9 !important;
+  border-left: none !important;
+  border-top-right-radius: 10px !important;
+  border-bottom-right-radius: 10px !important;
+  color: #2e0249 !important;
+  transition: all 0.15s ease !important;
+}
+
+button.relationship-add-new__add-button:hover {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+  border-color: #ff7b01 !important;
+}
+
+/* 3. Focus state for control */
+.rs__control--is-focused,
+.react-select .rs__control--is-focused {
+  border-color: #ff7b01 !important;
+  box-shadow: 0 0 0 3px rgba(255, 123, 1, 0.15) !important;
+  outline: none !important;
+}
+
+/* 4. Placeholder & Selected Values */
+.rs__placeholder {
+  color: #9c8a77 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+.rs__single-value {
+  color: #2e0249 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+/* Multi-select Pills (e.g. Authors, Categories) */
+.rs__multi-value {
+  background-color: #faf7f2 !important;
+  border: 1px solid #ede3d4 !important;
+  border-radius: 8px !important;
+  margin: 2px 4px 2px 0 !important;
+  padding: 2px 6px !important;
+}
+
+.rs__multi-value__label {
+  color: #2e0249 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  padding: 2px 4px !important;
+}
+
+.rs__multi-value__remove {
+  color: #9c8a77 !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+}
+
+.rs__multi-value__remove:hover {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+}
+
+/* 5. Dropdown Menu & Options */
+.rs__menu {
+  background-color: #ffffff !important;
+  border: 1px solid #ede3d4 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(46, 2, 73, 0.08) !important;
+  overflow: hidden !important;
+  margin-top: 4px !important;
+  z-index: 100 !important;
+}
+
+.rs__menu-list {
+  padding: 6px !important;
+}
+
+.rs__option {
+  color: #2e0249 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.rs__option--is-focused {
+  background-color: #faf7f2 !important;
+  color: #ff7b01 !important;
+}
+
+.rs__option--is-selected {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Chevron & Indicators */
+.rs__indicator {
+  color: #9c8a77 !important;
+  padding: 6px !important;
+}
+
+.rs__indicator:hover {
+  color: #ff7b01 !important;
+}
+
+.field-label,
+label {
+  font-weight: 700 !important;
+  color: #2e0249 !important;
+  font-size: 13px !important;
+  margin-bottom: 6px !important;
+}
+
+/* --- Tables & Lists (Matching the Appointments Table) --- */
+.table {
+  background: #ffffff !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  border: 1px solid #f0e8dc !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+}
+
+.table th {
+  background: #faf7f2 !important;
+  color: #2e0249 !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-bottom: 1px solid #f0e8dc !important;
+  padding: 14px 18px !important;
+}
+
+.table td {
+  border-bottom: 1px solid #f6f1e9 !important;
+  padding: 14px 18px !important;
+  color: #2e0249 !important;
+}
+
+.table tr:hover td {
+  background: #fffaf4 !important;
+}
+
+/* --- Status Pills / Badges --- */
+.pill,
+.status-pill {
+  border-radius: 20px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* --- Collapsible & Accordions --- */
+.collapsible {
+  background: #ffffff !important;
+  border: 1px solid #f0e8dc !important;
+  border-radius: 14px !important;
+  margin-bottom: 14px !important;
+  overflow: hidden !important;
+}
+
+.collapsible__toggle-wrap {
+  background: #fffdfa !important;
+  padding: 12px 18px !important;
+}
+
+/* --- Tabs --- */
+.tabs-field__tabs {
+  border-bottom: 2px solid #f0e8dc !important;
+}
+
+.tabs-field__tab-btn--active {
+  color: #ff7b01 !important;
+  border-bottom: 2px solid #ff7b01 !important;
+  font-weight: 700 !important;
+}
+
+/* --- Scrollbars --- */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #faf7f2;
+}
+::-webkit-scrollbar-thumb {
+  background: #e5dac9;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff7b01;
+}

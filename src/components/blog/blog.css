@@ -1,0 +1,378 @@
+/* ==========================================================================
+   Mulu Yu Kalam Studio - Blog & Lexical Typography Styles
+   Brand Theme: #2e0249 (Dark Purple), #ff7b01 (Primary Orange), #faf7f2 (Cream)
+   ========================================================================== */
+
+.blog-rich-text {
+  font-family: var(--font-sans, 'Josefin Sans', sans-serif);
+  color: #333333;
+  line-height: 1.85;
+  font-size: 1.125rem;
+}
+
+.blog-rich-text p {
+  margin-bottom: 1.5rem;
+  color: #403831;
+}
+
+.blog-rich-text h1,
+.blog-rich-text h2,
+.blog-rich-text h3,
+.blog-rich-text h4,
+.blog-rich-text h5,
+.blog-rich-text h6 {
+  color: #2e0249;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+.blog-rich-text h1 { font-size: 2.25rem; }
+.blog-rich-text h2 { font-size: 1.875rem; border-bottom: 1px solid #ede3d4; padding-bottom: 0.5rem; }
+.blog-rich-text h3 { font-size: 1.5rem; }
+.blog-rich-text h4 { font-size: 1.25rem; }
+
+.blog-rich-text a {
+  color: #ff7b01;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.blog-rich-text a:hover {
+  color: #e06c00;
+}
+
+.blog-rich-text strong,
+.blog-rich-text b {
+  color: #2e0249;
+  font-weight: 700;
+}
+
+.blog-rich-text blockquote {
+  border-left: 4px solid #ff7b01;
+  background-color: #faf7f2;
+  padding: 1.25rem 1.75rem;
+  margin: 2rem 0;
+  border-radius: 0 1rem 1rem 0;
+  font-style: italic;
+  color: #2e0249;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(46, 2, 73, 0.03);
+}
+
+.blog-rich-text ul,
+.blog-rich-text ol {
+  margin: 1.5rem 0 1.5rem 2rem;
+  padding-left: 0.5rem;
+}
+
+.blog-rich-text ul {
+  list-style-type: disc;
+}
+
+.blog-rich-text ol {
+  list-style-type: decimal;
+}
+
+.blog-rich-text li {
+  margin-bottom: 0.5rem;
+  color: #403831;
+}
+
+.blog-rich-text hr {
+  border: 0;
+  height: 1px;
+  background: #ede3d4;
+  margin: 3rem 0;
+}
+
+.blog-rich-text pre {
+  background-color: #1c1815;
+  color: #ffdca9;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  overflow-x: auto;
+  font-size: 0.95rem;
+  margin: 2rem 0;
+  border: 1px solid #332b25;
+}
+
+.blog-rich-text code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background-color: #f5efe6;
+  color: #2e0249;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.375rem;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.blog-rich-text pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.blog-rich-text img {
+  border-radius: 1.25rem;
+  margin: 2.5rem 0;
+  border: 1px solid #ede3d4;
+  box-shadow: 0 4px 20px rgba(46, 2, 73, 0.05);
+  max-width: 100%;
+  height: auto;
+}
+
+/* Heading Anchors for Table of Contents */
+.post-heading-anchor {
+  position: relative;
+  scroll-margin-top: 100px;
+}
+
+.heading-anchor-link {
+  position: absolute;
+  left: -22px;
+  color: #ff7b01 !important;
+  opacity: 0;
+  text-decoration: none !important;
+  font-weight: 400 !important;
+  transition: opacity 0.2s ease;
+  user-select: none;
+}
+
+.post-heading-anchor:hover .heading-anchor-link {
+  opacity: 0.7;
+}
+
+.heading-anchor-link:hover {
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   Reading Progress Bar & Deep-Link Copy Toast
+   Commit 17 - Hardware-Accelerated Reading Progress & Section Link Toast
+   ========================================================================== */
+
+.reading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3.5px;
+  background: linear-gradient(90deg, #ff7b01 0%, #ffbd5b 50%, #2e0249 100%);
+  transform-origin: left;
+  transform: scaleX(0);
+  z-index: 99999;
+  transition: transform 0.08s ease-out;
+  box-shadow: 0 0 10px rgba(255, 123, 1, 0.6), 0 0 4px rgba(255, 189, 91, 0.4);
+  pointer-events: none;
+}
+
+.copy-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #2e0249;
+  color: #faf7f2;
+  border: 1px solid rgba(255, 189, 91, 0.35);
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 12px 32px rgba(46, 2, 73, 0.25), 0 2px 6px rgba(0, 0, 0, 0.08);
+  z-index: 100000;
+  animation: toastSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+@keyframes toastSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   Chronological Previous / Next Article Navigation (Commit 19)
+   ========================================================================== */
+
+.post-pagination-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
+}
+
+.pagination-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem;
+  background-color: #ffffff;
+  border: 1px solid #ede3d4;
+  border-radius: 1.25rem;
+  text-decoration: none !important;
+  box-shadow: 0 1px 3px rgba(46, 2, 73, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.pagination-card:hover {
+  border-color: #ffbd5b;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 123, 1, 0.12);
+}
+
+.pagination-prev {
+  text-align: left;
+}
+
+.pagination-next {
+  text-align: right;
+  margin-left: auto;
+  width: 100%;
+}
+
+.pagination-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ff7b01;
+  margin-bottom: 0.5rem;
+}
+
+.pagination-next .pagination-label {
+  justify-content: flex-end;
+}
+
+.pagination-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2e0249;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.15s ease;
+}
+
+.pagination-card:hover .pagination-title {
+  color: #ff7b01;
+}
+
+.pagination-placeholder {
+  visibility: hidden;
+}
+
+@media (max-width: 640px) {
+  .post-pagination-nav {
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  .pagination-next {
+    text-align: left;
+  }
+
+  .pagination-next .pagination-label {
+    justify-content: flex-start;
+  }
+
+  .pagination-placeholder {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Reader Display Controls (Font Size & Typography) - Commit 20
+   ========================================================================== */
+
+.reader-display-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reader-btn-pill-group {
+  display: inline-flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #ede3d4;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  box-shadow: 0 1px 3px rgba(46, 2, 73, 0.03);
+}
+
+.reader-btn {
+  background: transparent;
+  border: none;
+  color: #776655;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.reader-btn:hover {
+  color: #2e0249;
+  background-color: #faf7f2;
+}
+
+.reader-btn-active {
+  background-color: #ff7b01 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(255, 123, 1, 0.35);
+}
+
+/* Dynamic Body Font Size & Typography Overrides */
+.blog-rich-text {
+  font-size: var(--post-font-size, 1.05rem);
+  line-height: var(--post-line-height, 1.8);
+  font-family: var(--post-font-family, inherit);
+  transition: font-size 0.15s ease, line-height 0.15s ease;
+}
+
+.blog-rich-text.font-size-sm {
+  --post-font-size: 0.95rem;
+  --post-line-height: 1.7;
+}
+
+.blog-rich-text.font-size-md {
+  --post-font-size: 1.08rem;
+  --post-line-height: 1.8;
+}
+
+.blog-rich-text.font-size-lg {
+  --post-font-size: 1.25rem;
+  --post-line-height: 1.85;
+}
+
+.blog-rich-text.font-family-sans {
+  --post-font-family: 'Josefin Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.blog-rich-text.font-family-serif {
+  --post-font-family: 'Georgia', 'Cambria', 'Times New Roman', Garamond, serif;
+}
+

@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -16,15 +16,9 @@ if (!isSupabaseConfigured && typeof window !== 'undefined') {
   );
 }
 
-export const supabase = createClient(
+export const supabase = createBrowserClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-anon-key',
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-    },
-  },
 );
 
 export type AppointmentStatus =
@@ -147,4 +141,3 @@ export {
   deleteAppointmentStorageImages,
   suspendAppointmentStorageImages,
 } from '@/services/storage';
-

@@ -240,6 +240,77 @@ export default async function PostPage({ params: paramsPromise }: Args) {
     finalRelatedPosts = [...finalRelatedPosts, ...fallbackResult.docs]
   }
 
+  // --- CHRONOLOGICAL PREVIOUS & NEXT ARTICLES ---
+  const currentPublishedAt = post.publishedAt || post.createdAt
+
+  const [prevResult, nextResult] = await Promise.all([
+    // Previous (older article)
+    payload.find({
+      collection: 'posts',
+      where: {
+        and: [
+          {
+            _status: {
+              equals: 'published',
+            },
+          },
+          {
+            id: {
+              not_equals: post.id,
+            },
+          },
+          {
+            publishedAt: {
+              less_than_equal: currentPublishedAt,
+            },
+          },
+        ],
+      },
+      sort: '-publishedAt',
+      limit: 1,
+      depth: 0,
+      select: {
+        slug: true,
+        title: true,
+        publishedAt: true,
+      },
+    }),
+    // Next (newer article)
+    payload.find({
+      collection: 'posts',
+      where: {
+        and: [
+          {
+            _status: {
+              equals: 'published',
+            },
+          },
+          {
+            id: {
+              not_equals: post.id,
+            },
+          },
+          {
+            publishedAt: {
+              greater_than_equal: currentPublishedAt,
+            },
+          },
+        ],
+      },
+      sort: 'publishedAt',
+      limit: 1,
+      depth: 0,
+      select: {
+        slug: true,
+        title: true,
+        publishedAt: true,
+      },
+    }),
+  ])
+
+  const prevPost = (prevResult.docs[0] as Pick<Post, 'slug' | 'title' | 'publishedAt'>) || null
+  const nextPost = (nextResult.docs[0] as Pick<Post, 'slug' | 'title' | 'publishedAt'>) || null
+
   // --- GOOGLE ARTICLE & BREADCRUMB SCHEMA.ORG STRUCTURED DATA ---
   const firstCategory =
     post.categories && post.categories.length > 0 && typeof post.categories[0] === 'object' && post.categories[0] !== null
@@ -328,7 +399,12 @@ export default async function PostPage({ params: paramsPromise }: Args) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbsJsonLd) }}
       />
-      <PostView initialPost={post} relatedPosts={finalRelatedPosts} />
+      <PostView
+        initialPost={post}
+        relatedPosts={finalRelatedPosts}
+        prevPost={prevPost}
+        nextPost={nextPost}
+      />
     </>
   )
 }

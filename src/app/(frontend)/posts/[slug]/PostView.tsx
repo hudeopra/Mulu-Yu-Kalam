@@ -25,9 +25,11 @@ import '@/components/blog/blog.css'
 type PostViewProps = {
   initialPost: Post
   relatedPosts: Post[]
+  prevPost?: Pick<Post, 'slug' | 'title' | 'publishedAt'> | null
+  nextPost?: Pick<Post, 'slug' | 'title' | 'publishedAt'> | null
 }
 
-export function PostView({ initialPost, relatedPosts }: PostViewProps) {
+export function PostView({ initialPost, relatedPosts, prevPost, nextPost }: PostViewProps) {
   const serverURL =
     typeof window !== 'undefined'
       ? window.location.origin
@@ -309,11 +311,46 @@ export function PostView({ initialPost, relatedPosts }: PostViewProps) {
             )}
 
             {/* RichText Article Body */}
-            <div className="bg-white rounded-3xl border border-[#ede3d4] p-6 sm:p-10 md:p-12 shadow-xs mb-14">
+            <div className="bg-white rounded-3xl border border-[#ede3d4] p-6 sm:p-10 md:p-12 shadow-xs mb-10">
               <div className="blog-rich-text">
                 <RichText data={post.content} converters={jsxConverters} />
               </div>
             </div>
+
+            {/* --- CHRONOLOGICAL PREVIOUS / NEXT ARTICLE NAVIGATION --- */}
+            {(prevPost || nextPost) && (
+              <nav className="post-pagination-nav" aria-label="Article navigation">
+                {prevPost ? (
+                  <Link
+                    href={`/posts/${prevPost.slug}`}
+                    className="pagination-card pagination-prev group/prev"
+                  >
+                    <span className="pagination-label">
+                      <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover/prev:-translate-x-1" />
+                      <span>Previous Story</span>
+                    </span>
+                    <span className="pagination-title">{prevPost.title}</span>
+                  </Link>
+                ) : (
+                  <div className="pagination-placeholder" />
+                )}
+
+                {nextPost ? (
+                  <Link
+                    href={`/posts/${nextPost.slug}`}
+                    className="pagination-card pagination-next group/next"
+                  >
+                    <span className="pagination-label">
+                      <span>Next Story</span>
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover/next:translate-x-1" />
+                    </span>
+                    <span className="pagination-title">{nextPost.title}</span>
+                  </Link>
+                ) : (
+                  <div className="pagination-placeholder" />
+                )}
+              </nav>
+            )}
 
             {/* --- RELATED POSTS SECTION --- */}
             {relatedPosts.length > 0 && (

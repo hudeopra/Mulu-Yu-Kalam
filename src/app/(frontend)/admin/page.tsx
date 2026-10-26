@@ -98,7 +98,7 @@ export default function AdminPage() {
         },
       )
       .subscribe((subStatus) => {
-        if (subStatus !== 'SUBSCRIBED') {
+        if (subStatus === 'CHANNEL_ERROR' || subStatus === 'TIMED_OUT') {
           console.warn(
             '[Supabase Realtime] Realtime subscription inactive. Using HTTP polling fallback.',
           );

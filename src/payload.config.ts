@@ -109,6 +109,8 @@ export default buildConfig({
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
   db: postgresAdapter({
+    push: false,
+    tablesFilter: ['blog_*', 'payload_*', '_blog_*'],
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },

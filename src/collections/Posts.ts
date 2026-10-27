@@ -7,7 +7,7 @@ export const Posts: CollectionConfig = {
   dbName: 'blog_posts',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'slug', '_status', 'featureTag', 'publishedAt'],
+    defaultColumns: ['title', 'heroImage', 'categories', 'authors', 'publishedAt'],
     livePreview: {
       url: ({ data }) => `/posts/${data?.slug || ''}`,
     },
@@ -54,6 +54,11 @@ export const Posts: CollectionConfig = {
               name: 'title',
               type: 'text',
               required: true,
+              admin: {
+                components: {
+                  Cell: '/components/admin/posts-cells/TitleAndSlugCell#TitleAndSlugCell',
+                },
+              },
             },
             {
               name: 'heroImage',
@@ -61,6 +66,9 @@ export const Posts: CollectionConfig = {
               relationTo: 'media',
               admin: {
                 description: 'Featured header image for the post',
+                components: {
+                  Cell: '/components/admin/posts-cells/HeroImageCell#HeroImageCell',
+                },
               },
             },
             {
@@ -84,6 +92,9 @@ export const Posts: CollectionConfig = {
           pickerAppearance: 'dayAndTime',
         },
         condition: (data) => data?._status === 'published',
+        components: {
+          Cell: '/components/admin/posts-cells/PostDatesCell#PostDatesCell',
+        },
       },
       hooks: {
         beforeChange: [
@@ -122,6 +133,9 @@ export const Posts: CollectionConfig = {
 
           return false
         },
+        components: {
+          Cell: '/components/admin/posts-cells/AuthorAndStatusCell#AuthorAndStatusCell',
+        },
       },
       hooks: {
         beforeChange: [
@@ -145,6 +159,9 @@ export const Posts: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: 'Assign topics/categories',
+        components: {
+          Cell: '/components/admin/posts-cells/CategoriesAndTagCell#CategoriesAndTagCell',
+        },
       },
     },
     {

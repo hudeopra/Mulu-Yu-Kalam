@@ -654,9 +654,18 @@ label {
 .table {
   background: #ffffff !important;
   border-radius: 18px !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  max-width: 100% !important;
   border: 1px solid #f0e8dc !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.table table {
+  min-width: 960px !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
 }
 
 .table th {
@@ -674,6 +683,7 @@ label {
   border-bottom: 1px solid #f6f1e9 !important;
   padding: 14px 18px !important;
   color: #2e0249 !important;
+  vertical-align: middle !important;
 }
 
 .table tr:hover td {

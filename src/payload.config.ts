@@ -25,6 +25,22 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: '- Mulu Yu Kalam Studio',
+      icons: [
+        {
+          rel: 'icon',
+          type: 'image/png',
+          url: '/assets/img/unalome-favicon.png',
+        },
+        {
+          rel: 'shortcut icon',
+          type: 'image/png',
+          url: '/assets/img/unalome-favicon.png',
+        },
+        {
+          rel: 'apple-touch-icon',
+          url: '/assets/img/unalome-favicon.png',
+        },
+      ],
     },
     components: {
       Nav: '/components/admin/AdminSidebar#AdminSidebar',

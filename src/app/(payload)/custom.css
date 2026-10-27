@@ -218,74 +218,51 @@ main,
   }
 }
 
-/* Secondary Breadcrumb Sub-bar inside CMS */
+/* --- Completely Remove and Suppress Built-in Payload App Header & Nav-Open States --- */
+:root {
+  --app-header-height: 0px !important;
+}
+
 .app-header,
 header.app-header,
-.template-default__header {
-  background: #faf7f2 !important;
-  border-bottom: 1px solid #ede3d4 !important;
+.app-header--nav-open,
+header.app-header--nav-open,
+.template-default__header,
+.app-header__content,
+.app-header__wrapper,
+.app-header__mobile-nav-toggler,
+.template-default__nav-toggler-wrapper {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
   box-shadow: none !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
-/* --- Dashboard Banner (Responsive) --- */
-.studio-dashboard-banner {
-  border-radius: 20px;
-  background-color: #2e0249;
-  padding: 24px 20px;
-  color: #ffffff;
-  margin-bottom: 24px;
-  box-shadow: 0 12px 30px rgba(46, 2, 73, 0.12);
-  position: relative;
-  overflow: hidden;
-  font-family: 'Josefin Sans', -apple-system, sans-serif;
-  box-sizing: border-box;
-  width: 100%;
+/* --- Class-based Top Padding for CMS Pages & Collection Lists --- */
+.gutter.gutter--left.gutter--right.collection-list__wrap,
+.collection-list__wrap,
+.dashboard.gutter.gutter--left.gutter--right,
+.doc-header.gutter.gutter--left.gutter--right,
+.template-default__wrap > .gutter.gutter--left.gutter--right,
+.template-default__content > .gutter.gutter--left.gutter--right {
+  padding-top: 32px !important;
 }
 
-.studio-dashboard-banner__eyebrow {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-  color: #ffbd5b;
-  display: block;
-  margin-bottom: 6px;
-}
-
-.studio-dashboard-banner__title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #ffffff;
-  margin: 0 0 10px 0;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-}
-
-.studio-dashboard-banner__description {
-  font-size: 13px;
-  color: #e2d3be;
-  margin: 0;
-  max-width: 720px;
-  line-height: 1.6;
-}
-
-@media (min-width: 768px) {
-  .studio-dashboard-banner {
-    border-radius: 24px;
-    padding: 36px 40px;
-    margin-bottom: 32px;
-  }
-
-  .studio-dashboard-banner__eyebrow {
-    font-size: 11px;
-  }
-
-  .studio-dashboard-banner__title {
-    font-size: 32px;
-  }
-
-  .studio-dashboard-banner__description {
-    font-size: 14px;
+@media (max-width: 767px) {
+  .gutter.gutter--left.gutter--right.collection-list__wrap,
+  .collection-list__wrap,
+  .dashboard.gutter.gutter--left.gutter--right,
+  .doc-header.gutter.gutter--left.gutter--right,
+  .template-default__wrap > .gutter.gutter--left.gutter--right,
+  .template-default__content > .gutter.gutter--left.gutter--right {
+    padding-top: 18px !important;
   }
 }
 
@@ -435,7 +412,7 @@ a.card {
 }
 
 /* --- Form Fields & Inputs (Excludes ALL ReactSelect & Relationship search inputs) --- */
-input[type='text']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='text']:not([class*='rs']):not([id*='react-select']):not([role='combobox']):not(.search-filter__input):not(#search-filter-input),
 input[type='email']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
 input[type='password']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
 input[type='date']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
@@ -448,6 +425,19 @@ textarea {
   background-color: #ffffff !important;
   color: #2e0249 !important;
   transition: all 0.15s ease !important;
+}
+
+/* --- Search Filter Inputs Left Padding (Prevents Search Icon & Placeholder Overlap) --- */
+.search-bar .search-filter input,
+.search-bar .search-filter__input,
+.search-filter input,
+.search-filter input[type='text'],
+.search-filter__input,
+.search-filter__input[type='text'],
+#search-filter-input,
+.search-bar input {
+  padding-left: 48px !important;
+  padding-inline-start: 48px !important;
 }
 
 input:not([class*='rs']):not([id*='react-select']):not([role='combobox']):focus,

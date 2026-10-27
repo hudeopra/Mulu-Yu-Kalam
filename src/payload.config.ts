@@ -28,7 +28,6 @@ export default buildConfig({
     },
     components: {
       Nav: '/components/admin/AdminSidebar#AdminSidebar',
-      beforeDashboard: ['/components/admin/DashboardBanner#DashboardBanner'],
       graphics: {
         Logo: '/components/admin/Logo#Logo',
         Icon: '/components/admin/Icon#Icon',

@@ -2,7 +2,9 @@ import {
   type AppRole,
   type PermissionKey,
   type RolePermissionsMatrix,
+  type RoleSecurityPolicies,
   DEFAULT_PERMISSIONS_MATRIX,
+  DEFAULT_SECURITY_POLICIES,
 } from '@/types/permissions';
 import { supabase } from '@/lib/supabase';
 
@@ -27,40 +29,76 @@ export function hasPermission(
 }
 
 /**
- * Fetches the dynamic permissions matrix from Supabase `blog_role_permissions`.
- * If any role is missing or error occurs, gracefully merges with defaults.
+ * Fetches both the dynamic permissions matrix and role session security policies from Supabase.
  */
-export async function getStoredPermissionsMatrix(): Promise<RolePermissionsMatrix> {
+export async function getStoredPermissionsAndPolicies(): Promise<{
+  matrix: RolePermissionsMatrix;
+  securityPolicies: RoleSecurityPolicies;
+}> {
   try {
     const { data, error } = await supabase
       .from('blog_role_permissions')
       .select('role, permissions');
 
     if (error || !data || data.length === 0) {
-      return DEFAULT_PERMISSIONS_MATRIX;
+      return {
+        matrix: DEFAULT_PERMISSIONS_MATRIX,
+        securityPolicies: DEFAULT_SECURITY_POLICIES,
+      };
     }
 
-    const merged: RolePermissionsMatrix = {
+    const mergedMatrix: RolePermissionsMatrix = {
       admin: { ...DEFAULT_PERMISSIONS_MATRIX.admin },
       artist: { ...DEFAULT_PERMISSIONS_MATRIX.artist },
       author: { ...DEFAULT_PERMISSIONS_MATRIX.author },
     };
 
+    const mergedPolicies: RoleSecurityPolicies = {
+      admin: { ...DEFAULT_SECURITY_POLICIES.admin },
+      artist: { ...DEFAULT_SECURITY_POLICIES.artist },
+      author: { ...DEFAULT_SECURITY_POLICIES.author },
+    };
+
     for (const row of data) {
       const r = row.role as AppRole;
-      if (merged[r] && row.permissions && typeof row.permissions === 'object') {
-        merged[r] = {
-          ...merged[r],
-          ...row.permissions,
-          ...(r === 'admin' ? DEFAULT_PERMISSIONS_MATRIX.admin : {}), // Admin remains strictly full access
-        };
+      if (row.permissions && typeof row.permissions === 'object') {
+        const { _security_policy, ...perms } = row.permissions as any;
+
+        if (mergedMatrix[r]) {
+          mergedMatrix[r] = {
+            ...mergedMatrix[r],
+            ...perms,
+            ...(r === 'admin' ? DEFAULT_PERMISSIONS_MATRIX.admin : {}), // Admin remains strictly full access
+          };
+        }
+
+        if (_security_policy && typeof _security_policy === 'object') {
+          mergedPolicies[r] = {
+            ...mergedPolicies[r],
+            ..._security_policy,
+          };
+        }
       }
     }
 
-    return merged;
+    return {
+      matrix: mergedMatrix,
+      securityPolicies: mergedPolicies,
+    };
   } catch (err) {
-    console.warn('[Permissions] Failed to fetch stored matrix, using defaults:', err);
-    return DEFAULT_PERMISSIONS_MATRIX;
+    console.warn('[Permissions] Failed to fetch stored matrix & policies, using defaults:', err);
+    return {
+      matrix: DEFAULT_PERMISSIONS_MATRIX,
+      securityPolicies: DEFAULT_SECURITY_POLICIES,
+    };
   }
 }
 
+/**
+ * Fetches the dynamic permissions matrix from Supabase `blog_role_permissions`.
+ * If any role is missing or error occurs, gracefully merges with defaults.
+ */
+export async function getStoredPermissionsMatrix(): Promise<RolePermissionsMatrix> {
+  const result = await getStoredPermissionsAndPolicies();
+  return result.matrix;
+}

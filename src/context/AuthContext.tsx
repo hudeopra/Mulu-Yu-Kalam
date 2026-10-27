@@ -26,23 +26,39 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes default
+const DEFAULT_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes fallback default
 const WARNING_TIME_MS = 2 * 60 * 1000; // 2 minutes warning countdown
 
-const getAutoLogoutConfig = () => {
+/**
+ * Resolves role-based auto-logout inactivity timeout configured by Admin in the Permissions Matrix.
+ */
+const getAutoLogoutConfig = (userRole?: string | null) => {
   if (typeof window === 'undefined') {
     return { enabled: true, timeoutMs: DEFAULT_TIMEOUT_MS };
   }
-  const stored = localStorage.getItem('studio_auto_logout_minutes');
-  const minutes =
-    stored !== null
-      ? Number(stored)
-      : Number(process.env.NEXT_PUBLIC_AUTO_LOGOUT_MINUTES || '30');
 
-  if (isNaN(minutes) || minutes <= 0) {
-    return { enabled: false, timeoutMs: 0 };
-  }
-  return { enabled: true, timeoutMs: minutes * 60 * 1000 };
+  // 1. Check admin-configured role session policies in localStorage
+  try {
+    const stored = localStorage.getItem('studio_role_security_policies');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const roleKey = (userRole?.toLowerCase() || 'author') as 'admin' | 'artist' | 'author';
+      const roleMinutes = parsed?.[roleKey]?.autoLogoutMinutes;
+      if (typeof roleMinutes === 'number') {
+        if (roleMinutes <= 0) {
+          return { enabled: false, timeoutMs: 0 };
+        }
+        return { enabled: true, timeoutMs: roleMinutes * 60 * 1000 };
+      }
+    }
+  } catch {}
+
+  // 2. Fallback to recommended role defaults (60m admin, 30m artist, 15m author)
+  const roleKey = (userRole?.toLowerCase() || 'author') as 'admin' | 'artist' | 'author';
+  const defaultMinutes =
+    roleKey === 'admin' ? 60 : roleKey === 'artist' ? 30 : 15;
+
+  return { enabled: true, timeoutMs: defaultMinutes * 60 * 1000 };
 };
 
 export function AuthProvider({
@@ -69,24 +85,25 @@ export function AuthProvider({
       if (res.ok) {
         const pData = await res.json();
         if (pData?.user) {
-          if (pData.user.role) role = pData.user.role;
-          if (pData.user.name) name = pData.user.name;
-          if (pData.user.username) username = pData.user.username;
+          role = pData.user.role || role || 'author';
+          name = pData.user.name || name;
+          username = pData.user.username || username;
         }
       }
-    } catch {}
+    } catch {
+      // Offline fallback
+    }
 
-    const assignedRole = role || 'author';
     return {
       ...baseUser,
-      role: assignedRole,
+      role,
       app_metadata: {
         ...baseUser.app_metadata,
-        role: assignedRole,
+        role,
       },
       user_metadata: {
         ...baseUser.user_metadata,
-        role: assignedRole,
+        role,
         name,
         username,
       },
@@ -145,6 +162,23 @@ export function AuthProvider({
     }
   };
 
+  // Sync role security policies from permissions API on mount
+  useEffect(() => {
+    fetch('/api/permissions')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.securityPolicies) {
+          try {
+            localStorage.setItem(
+              'studio_role_security_policies',
+              JSON.stringify(data.securityPolicies),
+            );
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     // 1. Check Supabase session first
     if (isSupabaseConfigured) {
@@ -189,7 +223,7 @@ export function AuthProvider({
     }
   }, []);
 
-  // Inactivity auto-logout tracker
+  // Inactivity auto-logout tracker governed by user role policy
   useEffect(() => {
     if (!user) {
       setIsWarningOpen(false);
@@ -218,9 +252,14 @@ export function AuthProvider({
       window.addEventListener(evt, updateActivity, { passive: true });
     });
 
+    const userRole =
+      (user?.role as string) ||
+      (user?.user_metadata?.role as string) ||
+      'author';
+
     const interval = setInterval(() => {
       try {
-        const { enabled, timeoutMs } = getAutoLogoutConfig();
+        const { enabled, timeoutMs } = getAutoLogoutConfig(userRole);
         if (!enabled || timeoutMs <= 0) {
           setIsWarningOpen(false);
           return;
@@ -338,6 +377,7 @@ export function AuthProvider({
           role: unifiedRole,
           name: unifiedName,
           username: unifiedUsername,
+          publicEmail: payloadUser?.publicEmail || '',
         },
         created_at: payloadUser?.createdAt || new Date().toISOString(),
       } as unknown as User;

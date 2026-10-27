@@ -20,14 +20,17 @@ import {
   Loader2,
   Sparkles,
   Info,
+  Clock,
 } from 'lucide-react';
 import {
   type AppRole,
   type PermissionKey,
   type PermissionCategory,
   type RolePermissionsMatrix,
+  type RoleSecurityPolicies,
   PERMISSION_DEFINITIONS,
   DEFAULT_PERMISSIONS_MATRIX,
+  DEFAULT_SECURITY_POLICIES,
 } from '@/types/permissions';
 
 export default function PermissionsPage() {
@@ -39,6 +42,12 @@ export default function PermissionsPage() {
   const [initialMatrix, setInitialMatrix] = useState<RolePermissionsMatrix>(
     DEFAULT_PERMISSIONS_MATRIX,
   );
+  const [securityPolicies, setSecurityPolicies] = useState<RoleSecurityPolicies>(
+    DEFAULT_SECURITY_POLICIES,
+  );
+  const [initialSecurityPolicies, setInitialSecurityPolicies] =
+    useState<RoleSecurityPolicies>(DEFAULT_SECURITY_POLICIES);
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(
@@ -50,7 +59,7 @@ export default function PermissionsPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  // Fetch current permissions matrix from API
+  // Fetch current permissions matrix & security policies from API
   useEffect(() => {
     async function loadPermissions() {
       setIsLoading(true);
@@ -62,10 +71,20 @@ export default function PermissionsPage() {
             setMatrix(data.matrix);
             setInitialMatrix(data.matrix);
           }
+          if (data.securityPolicies) {
+            setSecurityPolicies(data.securityPolicies);
+            setInitialSecurityPolicies(data.securityPolicies);
+            try {
+              localStorage.setItem(
+                'studio_role_security_policies',
+                JSON.stringify(data.securityPolicies),
+              );
+            } catch {}
+          }
         }
       } catch (err: any) {
         console.warn(
-          'Failed to load dynamic permissions, using defaults:',
+          'Failed to load dynamic permissions & policies, using defaults:',
           err,
         );
       } finally {
@@ -76,10 +95,13 @@ export default function PermissionsPage() {
     loadPermissions();
   }, []);
 
-  // Compute unsaved changes
+  // Compute unsaved changes across permissions and security policies
   const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(matrix) !== JSON.stringify(initialMatrix);
-  }, [matrix, initialMatrix]);
+    return (
+      JSON.stringify(matrix) !== JSON.stringify(initialMatrix) ||
+      JSON.stringify(securityPolicies) !== JSON.stringify(initialSecurityPolicies)
+    );
+  }, [matrix, initialMatrix, securityPolicies, initialSecurityPolicies]);
 
   // Compute role permission counts
   const roleCounts = useMemo(() => {
@@ -167,6 +189,17 @@ export default function PermissionsPage() {
     });
   };
 
+  // Handle security policy change for a role
+  const handlePolicyChange = (role: AppRole, minutes: number) => {
+    setSecurityPolicies((prev) => ({
+      ...prev,
+      [role]: {
+        ...prev[role],
+        autoLogoutMinutes: minutes,
+      },
+    }));
+  };
+
   // Save changes to API
   const handleSave = async () => {
     setIsSaving(true);
@@ -177,17 +210,28 @@ export default function PermissionsPage() {
       const res = await fetch('/api/permissions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matrix }),
+        body: JSON.stringify({ matrix, securityPolicies }),
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to update permissions');
+        throw new Error(data.error || 'Failed to update permissions & policies');
       }
 
       setInitialMatrix(data.matrix || matrix);
+      if (data.securityPolicies) {
+        setSecurityPolicies(data.securityPolicies);
+        setInitialSecurityPolicies(data.securityPolicies);
+        try {
+          localStorage.setItem(
+            'studio_role_security_policies',
+            JSON.stringify(data.securityPolicies),
+          );
+        } catch {}
+      }
+
       setSaveSuccessMessage(
-        'Permission matrix saved and applied live across all roles!',
+        'Permissions and session security policies saved and applied live across all roles!',
       );
       setTimeout(() => setSaveSuccessMessage(null), 5000);
     } catch (err: any) {
@@ -197,14 +241,15 @@ export default function PermissionsPage() {
     }
   };
 
-  // Reset to default matrix
+  // Reset to default matrix & security policies
   const handleResetDefaults = () => {
     if (
       window.confirm(
-        'Reset all role permissions back to recommended studio defaults?',
+        'Reset all role permissions and session security policies back to recommended studio defaults?',
       )
     ) {
       setMatrix(DEFAULT_PERMISSIONS_MATRIX);
+      setSecurityPolicies(DEFAULT_SECURITY_POLICIES);
     }
   };
 
@@ -263,7 +308,7 @@ export default function PermissionsPage() {
               Role & Permission Matrix
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">
-              Dynamically configure granular access control across Studio
+              Dynamically configure granular access control and session security across Studio
               Appointments and Blog CMS.
             </p>
           </div>
@@ -274,7 +319,7 @@ export default function PermissionsPage() {
               type="button"
               onClick={handleResetDefaults}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 shadow-2xs transition-colors cursor-pointer"
-              title="Reset matrix to factory recommendations"
+              title="Reset matrix & policies to factory recommendations"
             >
               <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
               <span>Reset Defaults</span>
@@ -429,6 +474,151 @@ export default function PermissionsPage() {
           </div>
         </div>
 
+        {/* Section 2: Role Session & Security Inactivity Policies */}
+        <div className="bg-white rounded-3xl p-6 sm:p-7 border border-gray-100 shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+            <div>
+              <h3 className="text-base font-bold text-[#2e0249] flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#ff7b01]" />
+                <span>Session & Inactivity Security Policies</span>
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Centrally control automated sign-out when unattended sessions exceed the inactivity threshold.
+                Enforced studio-wide per role by administrators.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200 self-start sm:self-auto">
+              <Lock className="w-3.5 h-3.5 text-amber-600" />
+              Role Governed
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
+            {/* Super Admin Policy Box */}
+            <div className="bg-[#faf7f2]/70 rounded-2xl p-4 sm:p-5 border border-purple-100/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-purple-100 text-[#2e0249] flex items-center justify-center font-bold text-xs">
+                    <ShieldCheck className="w-4 h-4 text-[#2e0249]" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-[#2e0249]">Super Admin</h4>
+                    <span className="text-[10px] text-gray-400 font-mono">role: 'admin'</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#2e0249]">
+                  {securityPolicies.admin.autoLogoutMinutes === 0
+                    ? 'No Timeout'
+                    : `${securityPolicies.admin.autoLogoutMinutes}m Timeout`}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Inactivity Timeout
+                </label>
+                <select
+                  value={securityPolicies.admin.autoLogoutMinutes}
+                  onChange={(e) => handlePolicyChange('admin', Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-[#2e0249] focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all cursor-pointer"
+                >
+                  <option value={15}>15 Minutes</option>
+                  <option value={30}>30 Minutes</option>
+                  <option value={60}>1 Hour (Recommended)</option>
+                  <option value={120}>2 Hours</option>
+                  <option value={240}>4 Hours</option>
+                  <option value={0}>Never (Disable Timeout)</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Protects unrestricted administrative studio access.
+                </p>
+              </div>
+            </div>
+
+            {/* Tattoo Artist Policy Box */}
+            <div className="bg-[#faf7f2]/70 rounded-2xl p-4 sm:p-5 border border-orange-100/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-orange-100 text-[#ff7b01] flex items-center justify-center font-bold text-xs">
+                    <Calendar className="w-4 h-4 text-[#ff7b01]" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-[#2e0249]">Tattoo Artist</h4>
+                    <span className="text-[10px] text-gray-400 font-mono">role: 'artist'</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-[#ff7b01]">
+                  {securityPolicies.artist.autoLogoutMinutes === 0
+                    ? 'No Timeout'
+                    : `${securityPolicies.artist.autoLogoutMinutes}m Timeout`}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Inactivity Timeout
+                </label>
+                <select
+                  value={securityPolicies.artist.autoLogoutMinutes}
+                  onChange={(e) => handlePolicyChange('artist', Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-[#2e0249] focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all cursor-pointer"
+                >
+                  <option value={15}>15 Minutes</option>
+                  <option value={30}>30 Minutes (Recommended)</option>
+                  <option value={60}>1 Hour</option>
+                  <option value={120}>2 Hours</option>
+                  <option value={240}>4 Hours</option>
+                  <option value={0}>Never (Disable Timeout)</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Secures client bookings and consultation records on shared studio tablets.
+                </p>
+              </div>
+            </div>
+
+            {/* Editorial Author Policy Box */}
+            <div className="bg-[#faf7f2]/70 rounded-2xl p-4 sm:p-5 border border-blue-100/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
+                    <PenTool className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-[#2e0249]">Editorial Author</h4>
+                    <span className="text-[10px] text-gray-400 font-mono">role: 'author'</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                  {securityPolicies.author.autoLogoutMinutes === 0
+                    ? 'No Timeout'
+                    : `${securityPolicies.author.autoLogoutMinutes}m Timeout`}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-1.5">
+                  Inactivity Timeout
+                </label>
+                <select
+                  value={securityPolicies.author.autoLogoutMinutes}
+                  onChange={(e) => handlePolicyChange('author', Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-[#2e0249] focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all cursor-pointer"
+                >
+                  <option value={15}>15 Minutes (Recommended)</option>
+                  <option value={30}>30 Minutes</option>
+                  <option value={60}>1 Hour</option>
+                  <option value={120}>2 Hours</option>
+                  <option value={240}>4 Hours</option>
+                  <option value={0}>Never (Disable Timeout)</option>
+                </select>
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Prevents unauthorized editorial draft publishing or modification.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Filter & Search Bar */}
         <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Category Tabs */}
@@ -457,64 +647,57 @@ export default function PermissionsPage() {
             ))}
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full md:w-64">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          {/* Search Box */}
+          <div className="relative w-full md:w-72">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search capabilities..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ff7b01]/30 focus:border-[#ff7b01]"
+              placeholder="Search capability or key..."
+              className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-1 focus:ring-[#ff7b01]/20 transition-all"
             />
           </div>
         </div>
 
-        {/* Main Permissions Matrix Table */}
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+        {/* Permission Matrix Table */}
+        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-gray-50/90 border-b border-gray-200 text-xs font-bold text-gray-700">
-                  <th className="py-4 px-6 w-2/5">Capability & Description</th>
-                  <th className="py-4 px-4 w-1/5 text-center">
+                <tr className="border-b border-gray-200 bg-gray-50/60 text-gray-500 uppercase tracking-wider text-[11px] font-bold">
+                  <th className="py-4 px-6 min-w-[280px]">Capability & Resource</th>
+                  <th className="py-4 px-4 text-center w-36">
                     <div className="flex flex-col items-center">
-                      <span className="font-bold text-[#2e0249]">Admin</span>
-                      <span className="text-[10px] font-normal text-gray-500">
-                        Superuser
-                      </span>
+                      <span className="text-[#2e0249] font-bold">Admin</span>
+                      <span className="text-[10px] font-normal text-gray-400">Full Access</span>
                     </div>
                   </th>
-                  <th className="py-4 px-4 w-1/5 text-center">
+                  <th className="py-4 px-4 text-center w-36">
                     <div className="flex flex-col items-center">
-                      <span className="font-bold text-[#ff7b01]">Artist</span>
-                      <span className="text-[10px] font-normal text-gray-500">
-                        Studio Staff
-                      </span>
+                      <span className="text-[#ff7b01] font-bold">Artist</span>
+                      <span className="text-[10px] font-normal text-gray-400">Studio Staff</span>
                     </div>
                   </th>
-                  <th className="py-4 px-4 w-1/5 text-center">
+                  <th className="py-4 px-4 text-center w-36">
                     <div className="flex flex-col items-center">
-                      <span className="font-bold text-blue-600">Author</span>
-                      <span className="text-[10px] font-normal text-gray-500">
-                        Blog Writer
-                      </span>
+                      <span className="text-blue-600 font-bold">Author</span>
+                      <span className="text-[10px] font-normal text-gray-400">Content Only</span>
                     </div>
                   </th>
                 </tr>
               </thead>
-
-              <tbody className="divide-y divide-gray-100 text-xs">
+              <tbody className="divide-y divide-gray-100">
                 {Object.entries(groupedDefinitions).map(([category, items]) => {
                   if (items.length === 0) return null;
 
                   return (
                     <React.Fragment key={category}>
                       {/* Category Header Row */}
-                      <tr className="bg-gray-100/60 font-bold text-gray-700 text-xs">
-                        <td colSpan={4} className="px-6 py-2.5">
+                      <tr className="bg-gray-50/90 border-t border-b border-gray-200/60">
+                        <td colSpan={4} className="py-2.5 px-6">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 font-bold text-[#2e0249] text-xs uppercase tracking-wider">
                               {category === 'Appointments' ? (
                                 <Calendar className="w-4 h-4 text-[#ff7b01]" />
                               ) : null}
@@ -674,18 +857,15 @@ export default function PermissionsPage() {
           <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="font-bold text-amber-950">
-              How Dynamic Permissions Work
+              How Dynamic Permissions & Security Policies Work
             </h4>
             <p className="text-amber-800 leading-relaxed">
-              When you save changes, the permission matrix updates the{' '}
+              When you save changes, both the permission matrix and session security policies are committed to the{' '}
               <code className="font-mono bg-amber-100/70 px-1 py-0.5 rounded text-[11px]">
                 blog_role_permissions
               </code>{' '}
-              table in Supabase. Both the frontend appointment views and Payload
-              CMS editorial collections consult this matrix dynamically on every
-              user action. The <strong>Super Admin</strong> role is hard-locked
-              to unrestricted access so you can never be locked out of the
-              studio system.
+              table in Supabase. Inactivity timeouts and role capabilities are enforced live across all studio
+              devices. The <strong>Super Admin</strong> role is hard-locked to unrestricted permissions for system integrity.
             </p>
           </div>
         </div>

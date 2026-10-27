@@ -228,3 +228,23 @@ export const DEFAULT_PERMISSIONS_MATRIX: RolePermissionsMatrix = {
   },
 };
 
+/**
+ * Role-Based Session Security & Inactivity Policies
+ */
+export interface RoleSecurityPolicy {
+  autoLogoutMinutes: number; // Inactivity timeout in minutes (0 = disabled)
+}
+
+export type RoleSecurityPolicies = Record<AppRole, RoleSecurityPolicy>;
+
+export const DEFAULT_SECURITY_POLICIES: RoleSecurityPolicies = {
+  admin: {
+    autoLogoutMinutes: 60, // 1 Hour for Super Administrator
+  },
+  artist: {
+    autoLogoutMinutes: 30, // 30 Minutes for Studio Artists
+  },
+  author: {
+    autoLogoutMinutes: 15, // 15 Minutes for Blog Authors
+  },
+};

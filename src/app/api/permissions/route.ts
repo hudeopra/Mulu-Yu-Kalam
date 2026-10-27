@@ -3,14 +3,16 @@ import { supabase } from '@/lib/supabase';
 import {
   type AppRole,
   type RolePermissionsMatrix,
+  type RoleSecurityPolicies,
   DEFAULT_PERMISSIONS_MATRIX,
+  DEFAULT_SECURITY_POLICIES,
 } from '@/types/permissions';
-import { getStoredPermissionsMatrix } from '@/lib/permissions';
+import { getStoredPermissionsAndPolicies } from '@/lib/permissions';
 
 export async function GET() {
   try {
-    const matrix = await getStoredPermissionsMatrix();
-    return NextResponse.json({ success: true, matrix });
+    const { matrix, securityPolicies } = await getStoredPermissionsAndPolicies();
+    return NextResponse.json({ success: true, matrix, securityPolicies });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to retrieve permissions' },
@@ -21,9 +23,10 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    // 1. Parse incoming matrix payload
+    // 1. Parse incoming matrix & security policies payload
     const body = await req.json();
-    const newMatrix = body?.matrix as RolePermissionsMatrix;
+    const newMatrix = body?.matrix as RolePermissionsMatrix | undefined;
+    const newPolicies = body?.securityPolicies as RoleSecurityPolicies | undefined;
 
     if (!newMatrix || typeof newMatrix !== 'object') {
       return NextResponse.json(
@@ -33,7 +36,6 @@ export async function POST(req: Request) {
     }
 
     // 2. Validate session & verify user is an admin
-    // Check Payload /api/users/me cookie header
     const cookieHeader = req.headers.get('cookie') || '';
     let isAdmin = false;
 
@@ -77,21 +79,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Upsert roles into blog_role_permissions
-    // Admin permissions always forced to all true for system integrity
+    // 3. Upsert roles into blog_role_permissions including security policies
     const roles: AppRole[] = ['admin', 'artist', 'author'];
     for (const r of roles) {
       const rolePerms =
         r === 'admin'
-          ? DEFAULT_PERMISSIONS_MATRIX.admin
+          ? { ...DEFAULT_PERMISSIONS_MATRIX.admin }
           : { ...DEFAULT_PERMISSIONS_MATRIX[r], ...(newMatrix[r] || {}) };
+
+      const rolePolicy =
+        newPolicies?.[r] && typeof newPolicies[r].autoLogoutMinutes === 'number'
+          ? newPolicies[r]
+          : DEFAULT_SECURITY_POLICIES[r];
 
       const { error } = await supabase
         .from('blog_role_permissions')
         .upsert(
           {
             role: r,
-            permissions: rolePerms,
+            permissions: {
+              ...rolePerms,
+              _security_policy: rolePolicy,
+            },
             updated_at: new Date().toISOString(),
           },
           { onConflict: 'role' },
@@ -102,8 +111,12 @@ export async function POST(req: Request) {
       }
     }
 
-    const updated = await getStoredPermissionsMatrix();
-    return NextResponse.json({ success: true, matrix: updated });
+    const updated = await getStoredPermissionsAndPolicies();
+    return NextResponse.json({
+      success: true,
+      matrix: updated.matrix,
+      securityPolicies: updated.securityPolicies,
+    });
   } catch (error: any) {
     console.error('[Permissions API Error]:', error);
     return NextResponse.json(
@@ -112,4 +125,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

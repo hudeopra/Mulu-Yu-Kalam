@@ -11,14 +11,10 @@ import {
   Eye,
   EyeOff,
   AtSign,
-  Shield,
-  Clock,
   CheckCircle2,
   AlertCircle,
   Save,
   RotateCcw,
-  Sparkles,
-  ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
 
@@ -54,35 +50,11 @@ export default function ProfilePage() {
 
   const [userRole, setUserRole] = useState<string>('author');
   const [userCreatedAt, setUserCreatedAt] = useState<string>('');
-  const [autoLogoutMinutes, setAutoLogoutMinutes] = useState<number>(30);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Read stored auto logout preference
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('studio_auto_logout_minutes');
-      if (stored !== null) {
-        setAutoLogoutMinutes(Number(stored));
-      }
-    }
-  }, []);
-
-  const handleAutoLogoutChange = (minutes: number) => {
-    setAutoLogoutMinutes(minutes);
-    try {
-      localStorage.setItem('studio_auto_logout_minutes', String(minutes));
-      localStorage.setItem('studio_last_active', String(Date.now()));
-    } catch {}
-    setSuccessMessage(
-      minutes === 0
-        ? 'Automatic session logout has been disabled.'
-        : `Auto-logout timer updated to ${minutes} minutes of inactivity.`,
-    );
-  };
 
   // Load current user profile from unified API
   useEffect(() => {
@@ -136,86 +108,77 @@ export default function ProfilePage() {
 
   const handleChange = (field: keyof ProfileFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    setSuccessMessage(null);
-    setErrorMessage(null);
   };
 
   const handleReset = () => {
     setFormData(initialData);
-    setSuccessMessage(null);
     setErrorMessage(null);
+    setSuccessMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccessMessage(null);
+    setIsSaving(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
-    // Validation
-    if (formData.password) {
-      if (formData.password.length < 6) {
-        setErrorMessage('New password must be at least 6 characters long.');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setErrorMessage('New password and confirm password do not match.');
-        return;
-      }
+    // 1. Password confirmation check
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      setErrorMessage('New password and confirmation do not match.');
+      setIsSaving(false);
+      return;
     }
 
-    setIsSaving(true);
+    // 2. Password length check
+    if (formData.password && formData.password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.');
+      setIsSaving(false);
+      return;
+    }
+
     try {
-      // 1. Update in Payload CMS (blog_users) via Local API
+      // 3. Update Payload CMS User Profile via internal API
       const res = await fetch('/api/user/profile', {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
           username: formData.username,
           publicEmail: formData.publicEmail,
           email: formData.email,
-          ...(formData.password ? { password: formData.password } : {}),
+          password: formData.password || undefined,
         }),
       });
 
-      const data = await res.json();
+      const resData = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to update profile.');
+        throw new Error(resData.error || 'Failed to update CMS profile');
       }
 
-      // 2. Synchronize with Supabase Auth
-      if (isSupabaseConfigured) {
-        try {
-          const updatePayload: Record<string, any> = {
-            data: {
-              name: formData.name,
-              username: formData.username,
-            },
-          };
-          if (
-            formData.email &&
-            formData.email.toLowerCase() !== initialData.email.toLowerCase()
-          ) {
-            updatePayload.email = formData.email;
-          }
-          if (formData.password) {
-            updatePayload.password = formData.password;
-          }
-          await supabase.auth.updateUser(updatePayload);
-        } catch (sbErr) {
-          console.warn(
-            '[ProfilePage] Supabase auth updateUser warning:',
-            sbErr,
-          );
+      // 4. Update Supabase Auth if password was changed & Supabase is live
+      if (formData.password && isSupabaseConfigured) {
+        const { error: sbError } = await supabase.auth.updateUser({
+          password: formData.password,
+          data: {
+            name: formData.name,
+            username: formData.username,
+          },
+        });
+
+        if (sbError) {
+          console.warn('[ProfilePage] Supabase auth sync warning:', sbError);
         }
       }
 
-      // 3. Refresh AuthContext state across all components
+      // 5. Refresh context state
       await refreshUser();
 
-      // Reset password inputs & mark saved
+      // Update initial baseline
       const updatedInitial: ProfileFormData = {
-        ...formData,
+        name: formData.name,
+        username: formData.username,
+        publicEmail: formData.publicEmail,
+        email: formData.email,
         password: '',
         confirmPassword: '',
       };
@@ -255,17 +218,6 @@ export default function ProfilePage() {
       <div className="bg-white border-b border-[#f0e8dc] sticky top-0 z-20 shadow-2xs backdrop-blur-md bg-white/95">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-[#ffecd0] text-[#ff7b01] border border-[#ffbd5b]/40">
-              <UserIcon className="w-3.5 h-3.5 text-[#ff7b01]" />
-              Staff Account Settings
-            </span>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <ShieldCheck className="w-3 h-3" />
-              Supabase & CMS Synced
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
             <Link
               href="/admin"
               className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors"
@@ -277,24 +229,6 @@ export default function ProfilePage() {
       </div>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Hero Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#2e0249] via-[#3b075e] to-[#2e0249] rounded-3xl p-6 sm:p-8 text-white shadow-xl shadow-[#2e0249]/10">
-          <div className="relative z-10 max-w-2xl space-y-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#ffbd5b]">
-              PERSONAL CREDENTIALS & SECURITY
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Staff Profile & Security
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-200 leading-relaxed">
-              Manage your display name, public author byline, login credentials,
-              and account security. Updates are synchronized instantly between
-              Supabase Auth and Payload CMS.
-            </p>
-          </div>
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[url('/assets/img/bg-img.svg')] bg-contain bg-no-repeat bg-right opacity-15 pointer-events-none" />
-        </div>
-
         {/* Notifications */}
         {successMessage ? (
           <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-center gap-3 animate-in fade-in duration-200">
@@ -344,12 +278,8 @@ export default function ProfilePage() {
               </div>
 
               <div className="shrink-0 flex items-center gap-2 bg-[#faf7f2] border border-[#ede3d4] px-3.5 py-2 rounded-2xl text-[11px] text-[#554433] font-semibold">
-                <Clock className="w-3.5 h-3.5 text-[#ff7b01]" />
-                <span>
-                  {autoLogoutMinutes === 0
-                    ? 'Auto-Logout Disabled'
-                    : `${autoLogoutMinutes}-Min Auto Logout`}
-                </span>
+                <ShieldCheck className="w-3.5 h-3.5 text-[#ff7b01]" />
+                <span>Protected Role Session</span>
               </div>
             </div>
 
@@ -357,19 +287,18 @@ export default function ProfilePage() {
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#f0e8dc] shadow-xs space-y-6">
               <div className="border-b border-[#f0e8dc] pb-4">
                 <h3 className="text-base font-bold text-[#2e0249] flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#ff7b01]" />
-                  <span>Public Author & Editorial Profile</span>
+                  <UserIcon className="w-4 h-4 text-[#ff7b01]" />
+                  <span>Author Bylines & Profile</span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  These details appear on blog articles, story bylines, and
-                  author bio tags.
+                  These details identify you across the studio system and on published blog articles.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    Full Name
+                    Display Name
                   </label>
                   <div className="relative">
                     <UserIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -377,18 +306,19 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleChange('name', e.target.value)}
-                      placeholder="e.g. Prajwol Maharjan"
+                      placeholder="e.g. Maya Shrestha"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
+                      required
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-1.5">
-                    Displayed publicly on articles you publish.
+                    Your full public name displayed as article author.
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    Author Username
+                    Username
                   </label>
                   <div className="relative">
                     <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -396,18 +326,39 @@ export default function ProfilePage() {
                       type="text"
                       value={formData.username}
                       onChange={(e) => handleChange('username', e.target.value)}
-                      placeholder="e.g. prajwol"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all font-mono"
+                      placeholder="e.g. maya_ink"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
+                      required
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-1.5">
-                    Unique identifier used for author profile URLs.
+                    Unique handle for internal studio mentions.
                   </p>
                 </div>
 
-                <div className="sm:col-span-2">
+                <div>
                   <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    Public Contact Email (Optional)
+                    Primary Sign-In Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      placeholder="staff@mulu-yu-kalam.com"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
+                      required
+                    />
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-1.5">
+                    Used for authenticating into both Studio Appointments and CMS.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
+                    Public Contact Email
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -417,55 +368,33 @@ export default function ProfilePage() {
                       onChange={(e) =>
                         handleChange('publicEmail', e.target.value)
                       }
-                      placeholder="e.g. artist@muluyukalam.com.np"
+                      placeholder="Optional public email"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-1.5">
-                    Public contact address for client queries. If empty, the
-                    studio default is used.
+                    Optional contact address displayed to clients on author bio cards.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Section 2: Account Login Credentials */}
+            {/* Section 2: Password Management */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#f0e8dc] shadow-xs space-y-6">
               <div className="border-b border-[#f0e8dc] pb-4">
                 <h3 className="text-base font-bold text-[#2e0249] flex items-center gap-2">
                   <Lock className="w-4 h-4 text-[#ff7b01]" />
-                  <span>Account Login Credentials</span>
+                  <span>Security & Credentials</span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  Manage your login email and password used to access Studio
-                  Admin and Payload CMS.
+                  Update your authentication credentials. Leave blank if you don't wish to change your password.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    Login Email
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
-                    />
-                  </div>
-                  <p className="text-[11px] text-gray-400 mt-1.5">
-                    Used to sign in across both Studio Appointments feed and
-                    Payload CMS.
-                  </p>
-                </div>
-
                 <div>
                   <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    New Password (Optional)
+                    New Password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -519,65 +448,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Section 3: Session & Security Policies */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#f0e8dc] shadow-xs space-y-5">
-              <div className="border-b border-[#f0e8dc] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-base font-bold text-[#2e0249] flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-[#ff7b01]" />
-                    <span>Session Security & Inactivity Timeout</span>
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Control how long before unattended sessions automatically sign out for security.
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 self-start sm:self-auto">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  {autoLogoutMinutes === 0
-                    ? 'Auto-Logout Disabled'
-                    : `${autoLogoutMinutes} Min Inactivity Active`}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-center">
-                <div>
-                  <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    Auto-Logout Inactivity Timer
-                  </label>
-                  <select
-                    value={autoLogoutMinutes}
-                    onChange={(e) => handleAutoLogoutChange(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 font-semibold focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all cursor-pointer"
-                  >
-                    <option value={15}>15 Minutes</option>
-                    <option value={30}>30 Minutes (Recommended)</option>
-                    <option value={60}>1 Hour</option>
-                    <option value={120}>2 Hours</option>
-                    <option value={240}>4 Hours</option>
-                    <option value={0}>Never (Disable Auto-Logout)</option>
-                  </select>
-                  <p className="text-[11px] text-gray-400 mt-1.5">
-                    Applies automatically across both Studio Appointments and Payload CMS.
-                  </p>
-                </div>
-
-                <div className="bg-[#faf7f2] rounded-2xl p-4 border border-[#ede3d4] text-xs text-[#554433] space-y-1">
-                  <p className="font-bold text-[#2e0249]">How this protects your studio:</p>
-                  <p className="text-[11px] text-gray-600 leading-relaxed">
-                    If left unattended, your session terminates safely to prevent unauthorized edits.
-                    A warning countdown will appear 2 minutes before signing out.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* Form Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={!hasChanges || isSaving}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Discard Changes</span>

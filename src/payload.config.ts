@@ -124,7 +124,10 @@ export default buildConfig({
       enabled: Boolean(process.env.R2_BUCKET),
     }),
   ],
-  editor: lexicalEditor(),
+  editor: lexicalEditor({
+    features: ({ defaultFeatures }) =>
+      defaultFeatures.filter((feature) => feature.key !== 'horizontalRule'),
+  }),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

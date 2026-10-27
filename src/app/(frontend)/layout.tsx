@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Josefin_Sans } from 'next/font/google';
 import { AuthProvider } from '@/context/AuthContext';
+import { PublicLandingClient } from '@/components/ui/PublicLandingClient';
 import '../globals.css';
 
 const josefinSans = Josefin_Sans({
@@ -391,6 +392,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body className="font-sans antialiased text-[#2e0249] selection:bg-[#ff7b01] selection:text-white bg-white">
+        <PublicLandingClient />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

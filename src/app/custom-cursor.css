@@ -1,9 +1,21 @@
-
-/* Custom Tattoo Machine Cursor for Public Landing Pages */
+/* Custom Tattoo Machine Cursor for Public Landing Pages & Blog */
+body.custom-cursor-page,
 .custom-cursor-page {
   cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDxnPgogICAgPHBhdGggZD0ibTQ4OS44MjIgMTc1LjE5MS05NS4zNDUtOTUuMzQ1IDIxLjIyNC0yMS4yMjctMjEuMjExLTIxLjIxMS0yMS4yMjQgMjEuMjI3LTQyLjQzOC00Mi40MzgtMjEuMjExIDIxLjIxMSA0Mi40MzggNDIuNDQyLTIxLjIgMjEuMjA0LTIxLjIwOS0yMS4yMDktODQuODczIDg0Ljg0NCAyMS4yMTEgMjEuMjExLTIxLjIzNyAyMS4yMzctNTIuOTQyLTUyLjkzNy0yMS4yMTEgMjEuMjExIDMxLjcxIDMxLjY5OUw3Ni40NDMgMzEzLjMxMmwxMDUuNzMyIDEwNS43OTEgMTA2LjIxOS0xMDUuOTAxIDMxLjc2OSAzMS43OGMxNC43MDcgMTQuNTAyIDMzLjkyNiAyMS43MzggNTMuMTE1IDIxLjczOCAxOS4yMTkgMCAzOC4zNzktNy4yNjYgNTIuOTM5LTIxLjgxMmw2My41NDUtNjMuNTNDNTA0LjA5IDI2Ny4yMjggNTEyIDI0OC4zNiA1MTIgMjI4LjI2M3MtNy45MS0zOC45OC0yMi4xNzgtNTMuMDcyTTI2Ny4xOTUgMjA3LjExbDIxLjIxMSAyMS4yMTEgODQuODczLTg0Ljg0NC0yMS4yMTMtMjEuMjEzIDIxLjItMjEuMjAyIDYzLjYzMyA2My42MzgtMjEuMTk4IDIxLjE5OC0yMS4yMTEtMjEuMjExLTg0Ljg0NCA4NC44NTggMjEuMjExIDIxLjIxMS0yMS4yMzMgMjEuMjMzLTYzLjY2NC02My42NDZ6bTIwMS40MTYgNTIuOTg0LTYzLjYwNCA2My42MDRjLTE3LjQ2MSAxNy40MzItNDYuMDU1IDE3LjQwMi02My42OTEgMGwtMTAuNDg4LTEwLjQ4OCAyMS4yNC0yMS4yNCAyMS4yMTEgMjEuMjExIDg0Ljg0NC04NC44NTgtMjEuMjExLTIxLjIxMSAyMS4xOTYtMjEuMTk2IDEwLjU2MiAxMC41NjJjOC41ODQgOC40ODEgMTMuMzMgMTkuNzYxIDEzLjMzIDMxLjc4NyAwIDEyLjAwOS00Ljc0NiAyMy4yODktMTMuMzg5IDMxLjgyOU02My4yMyAzNjguODE0bC0yMS4zMzkgNjMuNjNMMCA0NzQuNTkybDIxLjIxMSAyMS4yMTEgNDEuOTU1LTQyLjIxMyA2My41MjItMjEuMjc1IDEzLjE4NS0xMy4wOTktNjMuNTU2LTYzLjU4OXoiIGZpbGw9IiMxMTExMTEiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48L3BhdGg+CiAgPC9nPgo8L3N2Zz4K") 1 30, url("/assets/img/tattoo-cursor-default.svg") 1 30, auto;
 }
 
+body.custom-cursor-page a,
+body.custom-cursor-page button,
+body.custom-cursor-page [role="button"],
+body.custom-cursor-page .cursor-pointer,
+body.custom-cursor-page [class*="cursor-pointer"],
+body.custom-cursor-page input[type="submit"],
+body.custom-cursor-page input[type="button"],
+body.custom-cursor-page input[type="checkbox"],
+body.custom-cursor-page input[type="radio"],
+body.custom-cursor-page select,
+body.custom-cursor-page summary,
+body.custom-cursor-page label,
 .custom-cursor-page a,
 .custom-cursor-page button,
 .custom-cursor-page [role="button"],
@@ -19,6 +31,11 @@
   cursor: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiPgogIDxnPgogICAgPHBhdGggZD0ibTQ4OS44MjIgMTc1LjE5MS05NS4zNDUtOTUuMzQ1IDIxLjIyNC0yMS4yMjctMjEuMjExLTIxLjIxMS0yMS4yMjQgMjEuMjI3LTQyLjQzOC00Mi40MzgtMjEuMjExIDIxLjIxMSA0Mi40MzggNDIuNDQyLTIxLjIgMjEuMjA0LTIxLjIwOS0yMS4yMDktODQuODczIDg0Ljg0NCAyMS4yMTEgMjEuMjExLTIxLjIzNyAyMS4yMzctNTIuOTQyLTUyLjkzNy0yMS4yMTEgMjEuMjExIDMxLjcxIDMxLjY5OUw3Ni40NDMgMzEzLjMxMmwxMDUuNzMyIDEwNS43OTEgMTA2LjIxOS0xMDUuOTAxIDMxLjc2OSAzMS43OGMxNC43MDcgMTQuNTAyIDMzLjkyNiAyMS43MzggNTMuMTE1IDIxLjczOCAxOS4yMTkgMCAzOC4zNzktNy4yNjYgNTIuOTM5LTIxLjgxMmw2My41NDUtNjMuNTNDNTA0LjA5IDI2Ny4yMjggNTEyIDI0OC4zNiA1MTIgMjI4LjI2M3MtNy45MS0zOC45OC0yMi4xNzgtNTMuMDcyTTI2Ny4xOTUgMjA3LjExbDIxLjIxMSAyMS4yMTEgODQuODczLTg0Ljg0NC0yMS4yMTMtMjEuMjEzIDIxLjItMjEuMjAyIDYzLjYzMyA2My42MzgtMjEuMTk4IDIxLjE5OC0yMS4yMTEtMjEuMjExLTg0Ljg0NCA4NC44NTggMjEuMjExIDIxLjIxMS0yMS4yMzMgMjEuMjMzLTYzLjY2NC02My42NDZ6bTIwMS40MTYgNTIuOTg0LTYzLjYwNCA2My42MDRjLTE3LjQ2MSAxNy40MzItNDYuMDU1IDE3LjQwMi02My42OTEgMGwtMTAuNDg4LTEwLjQ4OCAyMS4yNC0yMS4yNCAyMS4yMTEgMjEuMjExIDg0Ljg0NC04NC44NTgtMjEuMjExLTIxLjIxMSAyMS4xOTYtMjEuMTk2IDEwLjU2MiAxMC41NjJjOC41ODQgOC40ODEgMTMuMzMgMTkuNzYxIDEzLjMzIDMxLjc4NyAwIDEyLjAwOS00Ljc0NiAyMy4yODktMTMuMzg5IDMxLjgyOU02My4yMyAzNjguODE0bC0yMS4zMzkgNjMuNjNMMCA0NzQuNTkybDIxLjIxMSAyMS4yMTEgNDEuOTU1LTQyLjIxMyA2My41MjItMjEuMjc1IDEzLjE4NS0xMy4wOTktNjMuNTU2LTYzLjU4OXoiIGZpbGw9IiNmZjdiMDEiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj48L3BhdGg+CiAgPC9nPgo8L3N2Zz4K") 1 30, url("/assets/img/tattoo-cursor-pointer.svg") 1 30, pointer !important;
 }
 
+body.custom-cursor-page input[type="text"],
+body.custom-cursor-page input[type="email"],
+body.custom-cursor-page input[type="tel"],
+body.custom-cursor-page input[type="date"],
+body.custom-cursor-page textarea,
 .custom-cursor-page input[type="text"],
 .custom-cursor-page input[type="email"],
 .custom-cursor-page input[type="tel"],
@@ -26,3 +43,102 @@
 .custom-cursor-page textarea {
   cursor: text !important;
 }
+
+/* Custom Cursor Disabled Override (when user clicks toggle to turn pointer off) */
+body.custom-cursor-disabled,
+html.custom-cursor-disabled,
+.custom-cursor-disabled,
+body.custom-cursor-disabled *,
+html.custom-cursor-disabled *,
+.custom-cursor-disabled * {
+  cursor: auto !important;
+}
+
+body.custom-cursor-disabled a,
+body.custom-cursor-disabled button,
+body.custom-cursor-disabled [role="button"],
+body.custom-cursor-disabled .cursor-pointer,
+body.custom-cursor-disabled [class*="cursor-pointer"],
+body.custom-cursor-disabled select,
+body.custom-cursor-disabled summary,
+body.custom-cursor-disabled label,
+html.custom-cursor-disabled a,
+html.custom-cursor-disabled button,
+html.custom-cursor-disabled [role="button"],
+html.custom-cursor-disabled .cursor-pointer,
+html.custom-cursor-disabled [class*="cursor-pointer"],
+.custom-cursor-disabled a,
+.custom-cursor-disabled button,
+.custom-cursor-disabled [role="button"],
+.custom-cursor-disabled .cursor-pointer,
+.custom-cursor-disabled [class*="cursor-pointer"] {
+  cursor: pointer !important;
+}
+
+body.custom-cursor-disabled input[type="text"],
+body.custom-cursor-disabled input[type="email"],
+body.custom-cursor-disabled input[type="tel"],
+body.custom-cursor-disabled input[type="date"],
+body.custom-cursor-disabled textarea,
+html.custom-cursor-disabled input[type="text"],
+html.custom-cursor-disabled input[type="email"],
+html.custom-cursor-disabled input[type="tel"],
+html.custom-cursor-disabled input[type="date"],
+html.custom-cursor-disabled textarea,
+.custom-cursor-disabled input[type="text"],
+.custom-cursor-disabled input[type="email"],
+.custom-cursor-disabled input[type="tel"],
+.custom-cursor-disabled input[type="date"],
+.custom-cursor-disabled textarea {
+  cursor: text !important;
+}
+
+/* Custom Cursor Disabled Override (when user clicks toggle to turn pointer off) */
+body.custom-cursor-disabled,
+html.custom-cursor-disabled,
+.custom-cursor-disabled,
+body.custom-cursor-disabled *,
+html.custom-cursor-disabled *,
+.custom-cursor-disabled * {
+  cursor: auto !important;
+}
+
+body.custom-cursor-disabled a,
+body.custom-cursor-disabled button,
+body.custom-cursor-disabled [role="button"],
+body.custom-cursor-disabled .cursor-pointer,
+body.custom-cursor-disabled [class*="cursor-pointer"],
+body.custom-cursor-disabled select,
+body.custom-cursor-disabled summary,
+body.custom-cursor-disabled label,
+html.custom-cursor-disabled a,
+html.custom-cursor-disabled button,
+html.custom-cursor-disabled [role="button"],
+html.custom-cursor-disabled .cursor-pointer,
+html.custom-cursor-disabled [class*="cursor-pointer"],
+.custom-cursor-disabled a,
+.custom-cursor-disabled button,
+.custom-cursor-disabled [role="button"],
+.custom-cursor-disabled .cursor-pointer,
+.custom-cursor-disabled [class*="cursor-pointer"] {
+  cursor: pointer !important;
+}
+
+body.custom-cursor-disabled input[type="text"],
+body.custom-cursor-disabled input[type="email"],
+body.custom-cursor-disabled input[type="tel"],
+body.custom-cursor-disabled input[type="date"],
+body.custom-cursor-disabled textarea,
+html.custom-cursor-disabled input[type="text"],
+html.custom-cursor-disabled input[type="email"],
+html.custom-cursor-disabled input[type="tel"],
+html.custom-cursor-disabled input[type="date"],
+html.custom-cursor-disabled textarea,
+.custom-cursor-disabled input[type="text"],
+.custom-cursor-disabled input[type="email"],
+.custom-cursor-disabled input[type="tel"],
+.custom-cursor-disabled input[type="date"],
+.custom-cursor-disabled textarea {
+  cursor: text !important;
+}
+

@@ -43,7 +43,7 @@ export default async function PostsPage() {
   const posts = postsResult.docs;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf7f2] font-sans antialiased text-[#2e0249]">
+    <div className="custom-cursor-page min-h-screen flex flex-col bg-[#faf7f2] font-sans antialiased text-[#2e0249]">
       <BlogNav />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">

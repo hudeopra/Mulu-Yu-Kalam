@@ -20,6 +20,7 @@ interface AppointmentArtworkViewerProps {
   onDeleteImage: () => void;
   isDeletingImage: boolean;
   onRequestDeleteAppointment: () => void;
+  canDelete?: boolean;
 }
 
 export function AppointmentArtworkViewer({
@@ -32,6 +33,7 @@ export function AppointmentArtworkViewer({
   onDeleteImage,
   isDeletingImage,
   onRequestDeleteAppointment,
+  canDelete = false,
 }: AppointmentArtworkViewerProps) {
   return (
     <div className="bg-gray-50/80 rounded-2xl p-5 border border-gray-200/80 h-full flex flex-col justify-between">
@@ -124,19 +126,21 @@ export function AppointmentArtworkViewer({
                 <Download className="w-4 h-4" />
               </a>
 
-              <button
-                type="button"
-                onClick={onDeleteImage}
-                disabled={isDeletingImage}
-                className="p-2 rounded-xl bg-white border border-gray-200 hover:bg-red-50 hover:border-red-200 text-gray-500 hover:text-red-600 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                title="Delete this reference image from storage"
-              >
-                {isDeletingImage ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-              </button>
+              {canDelete ? (
+                <button
+                  type="button"
+                  onClick={onDeleteImage}
+                  disabled={isDeletingImage}
+                  className="p-2 rounded-xl bg-white border border-gray-200 hover:bg-red-50 hover:border-red-200 text-gray-500 hover:text-red-600 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+                  title="Delete this reference image from storage"
+                >
+                  {isDeletingImage ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              ) : null}
             </div>
           </div>
         ) : (
@@ -153,17 +157,19 @@ export function AppointmentArtworkViewer({
         )}
       </div>
 
-      {/* Danger Zone: Delete (Soft delete & image renaming) */}
-      <div className="pt-6 border-t border-gray-200 mt-6">
-        <button
-          type="button"
-          onClick={onRequestDeleteAppointment}
-          className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          <span>Delete this Appointment</span>
-        </button>
-      </div>
+      {/* Danger Zone: Delete (Only admin can delete) */}
+      {canDelete ? (
+        <div className="pt-6 border-t border-gray-200 mt-6">
+          <button
+            type="button"
+            onClick={onRequestDeleteAppointment}
+            className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-red-600 hover:bg-red-50 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete this Appointment</span>
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

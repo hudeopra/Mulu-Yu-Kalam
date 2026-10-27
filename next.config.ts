@@ -38,6 +38,20 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react'],
   },
+  async redirects() {
+    return [
+      {
+        source: '/cms/login',
+        destination: '/login?redirect=/cms',
+        permanent: false,
+      },
+      {
+        source: '/cms/logout',
+        destination: '/login',
+        permanent: false,
+      },
+    ]
+  },
   allowedDevOrigins: ['192.168.0.110', '192.168.*.*', '192.168.0.*', 'localhost', '127.0.0.1'],
 }
 

@@ -4,7 +4,7 @@
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500;600;700;800&display=swap');
-@import '../../components/admin/admin-header.css';
+@import '../../components/admin/admin-sidebar.css';
 
 /* --- Force Universal Studio Colors Across All Themes (No pitch black) --- */
 :root,
@@ -51,42 +51,230 @@ main,
   color: #2e0249 !important;
 }
 
-/* --- Adjust Payload CMS Layout for Unified Studio Header --- */
-.template-default {
-  padding-top: 0 !important;
+/* ==========================================================================
+   Mulu Yu Kalam Studio - Complete CMS Theme Alignment
+   Matches Image 1 (Studio Appointments) & Brand Guidelines
+   ========================================================================== */
+
+/* --- Desktop Layout (>= 768px) --- */
+@media (min-width: 768px) {
+  :root {
+    --nav-width: 260px !important;
+  }
+
+  .template-default {
+    display: grid !important;
+    grid-template-columns: 260px minmax(0, 1fr) !important;
+    min-height: 100vh !important;
+    padding-top: 0 !important;
+  }
+
+  .template-default aside.nav,
+  .template-default .studio-sidebar-nav,
+  aside.nav {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    height: 100vh !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background-color: #ffffff !important;
+    border-right: 1px solid #f0e8dc !important;
+    border-bottom: none !important;
+    z-index: 40 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02) !important;
+  }
+
+  .template-default__wrap {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    background-color: #faf7f2 !important;
+  }
+
+  .template-default__nav-toggler-wrapper {
+    display: none !important;
+  }
 }
 
-aside.nav,
-.template-default aside.nav,
-nav.nav {
-  top: 76px !important;
-  height: calc(100vh - 76px) !important;
+/* --- Mobile Layout (< 768px / 767px) --- */
+@media (max-width: 767px) {
+  :root {
+    --nav-width: 100% !important;
+    --gutter-h: 16px !important;
+  }
+
+  body,
+  #app,
+  .template-default {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .template-default {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
+    padding-top: 0 !important;
+    width: 100% !important;
+  }
+
+  .template-default aside.nav,
+  .template-default .studio-sidebar-nav,
+  aside.nav {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    left: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    background-color: #ffffff !important;
+    border-right: none !important;
+    border-bottom: 1px solid #f0e8dc !important;
+    z-index: 100 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+  }
+
+  .template-default__wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100vw !important;
+    flex: 1 1 auto !important;
+    background-color: #faf7f2 !important;
+    overflow-x: hidden !important;
+    padding: 0 !important;
+  }
+
+  .template-default__content {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    padding-top: 16px !important;
+    padding-bottom: 32px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Hide Payload's built-in redundant togglers */
+  .template-default__nav-toggler-wrapper,
+  .app-header__mobile-nav-toggler {
+    display: none !important;
+  }
+
+  /* Make sure collection list table can scroll horizontally without breaking page width */
+  .collection-list,
+  .table {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Responsive card grid */
+  .dashboard__cards {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .card,
+  .collection-card,
+  .dashboard__card {
+    padding: 18px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Wrap collection and doc controls smoothly on mobile */
+  .collection-list__header {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  .collection-list__wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .doc-header__controls {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .doc-header__title {
+    font-size: 20px !important;
+  }
 }
 
-.template-default__wrap {
-  min-height: calc(100vh - 76px) !important;
+/* --- Completely Remove and Suppress Built-in Payload App Header & Nav-Open States --- */
+:root {
+  --app-header-height: 0px !important;
 }
 
-.template-default__nav-toggler-wrapper {
-  top: 76px !important;
-}
-
-/* Secondary Breadcrumb Sub-bar inside CMS */
 .app-header,
 header.app-header,
-.template-default__header {
-  background: #faf7f2 !important;
-  border-bottom: 1px solid #ede3d4 !important;
+.app-header--nav-open,
+header.app-header--nav-open,
+.template-default__header,
+.app-header__content,
+.app-header__wrapper,
+.app-header__mobile-nav-toggler,
+.template-default__nav-toggler-wrapper {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
   box-shadow: none !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
-/* --- Left Sidebar (Clean white, matching appointments modal aesthetic) --- */
-.nav,
-aside.nav,
-nav.nav {
-  background-color: #ffffff !important;
-  border-right: 1px solid #f0e8dc !important;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02) !important;
+/* --- Class-based Top Padding for CMS Pages & Collection Lists --- */
+.gutter.gutter--left.gutter--right.collection-list__wrap,
+.collection-list__wrap,
+.dashboard.gutter.gutter--left.gutter--right,
+.doc-header.gutter.gutter--left.gutter--right,
+.template-default__wrap > .gutter.gutter--left.gutter--right,
+.template-default__content > .gutter.gutter--left.gutter--right {
+  padding-top: 32px !important;
+}
+
+@media (max-width: 767px) {
+  .gutter.gutter--left.gutter--right.collection-list__wrap,
+  .collection-list__wrap,
+  .dashboard.gutter.gutter--left.gutter--right,
+  .doc-header.gutter.gutter--left.gutter--right,
+  .template-default__wrap > .gutter.gutter--left.gutter--right,
+  .template-default__content > .gutter.gutter--left.gutter--right {
+    padding-top: 18px !important;
+  }
+}
+
+/* --- Left Sidebar (Desktop only border-right) --- */
+@media (min-width: 768px) {
+  .nav,
+  aside.nav,
+  nav.nav {
+    background-color: #ffffff !important;
+    border-right: 1px solid #f0e8dc !important;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02) !important;
+  }
 }
 
 .nav__group-label {
@@ -224,7 +412,7 @@ a.card {
 }
 
 /* --- Form Fields & Inputs (Excludes ALL ReactSelect & Relationship search inputs) --- */
-input[type='text']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
+input[type='text']:not([class*='rs']):not([id*='react-select']):not([role='combobox']):not(.search-filter__input):not(#search-filter-input),
 input[type='email']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
 input[type='password']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
 input[type='date']:not([class*='rs']):not([id*='react-select']):not([role='combobox']),
@@ -237,6 +425,19 @@ textarea {
   background-color: #ffffff !important;
   color: #2e0249 !important;
   transition: all 0.15s ease !important;
+}
+
+/* --- Search Filter Inputs Left Padding (Prevents Search Icon & Placeholder Overlap) --- */
+.search-bar .search-filter input,
+.search-bar .search-filter__input,
+.search-filter input,
+.search-filter input[type='text'],
+.search-filter__input,
+.search-filter__input[type='text'],
+#search-filter-input,
+.search-bar input {
+  padding-left: 48px !important;
+  padding-inline-start: 48px !important;
 }
 
 input:not([class*='rs']):not([id*='react-select']):not([role='combobox']):focus,
@@ -453,9 +654,18 @@ label {
 .table {
   background: #ffffff !important;
   border-radius: 18px !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  max-width: 100% !important;
   border: 1px solid #f0e8dc !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02) !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.table table {
+  min-width: 960px !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
 }
 
 .table th {
@@ -473,6 +683,7 @@ label {
   border-bottom: 1px solid #f6f1e9 !important;
   padding: 14px 18px !important;
   color: #2e0249 !important;
+  vertical-align: middle !important;
 }
 
 .table tr:hover td {
@@ -528,3 +739,37 @@ label {
 ::-webkit-scrollbar-thumb:hover {
   background: #ff7b01;
 }
+
+
+/* --- Suppress Redundant Sidebar Logout in CMS (Unified AdminSidebar handles global sign-out) --- */
+a[href*='/logout'],
+a[href*='logout'],
+.nav__log-out,
+.nav__logout,
+.nav button.logout {
+  display: none !important;
+}
+
+/* --- Suppress Payload Settings & Language Selector in User / Account View --- */
+.payload-settings,
+.payload-settings__language,
+.payload-settings h3,
+.payload-settings__theme,
+[class*='payload-settings'] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.payload-settings:before,
+.payload-settings:after {
+  display: none !important;
+  content: none !important;
+}
+

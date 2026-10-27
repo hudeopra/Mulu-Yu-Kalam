@@ -3,12 +3,16 @@ import { slugField } from '../fields/slug'
 
 export const FeatureTags: CollectionConfig = {
   slug: 'feature-tags',
+  dbName: 'blog_feature_tags',
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'icon', 'priority', 'badgeColor', 'slug'],
   },
   access: {
     read: () => true,
+    create: ({ req: { user } }) => Boolean(user && (user.role === 'admin' || user.role === 'artist')),
+    update: ({ req: { user } }) => Boolean(user && (user.role === 'admin' || user.role === 'artist')),
+    delete: ({ req: { user } }) => user?.role === 'admin',
   },
   fields: [
     {

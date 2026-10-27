@@ -4,9 +4,10 @@ import { calculateReadTime } from '../utilities/calculateReadTime'
 
 export const Posts: CollectionConfig = {
   slug: 'posts',
+  dbName: 'blog_posts',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'slug', '_status', 'featureTag', 'publishedAt'],
+    defaultColumns: ['title', 'heroImage', 'categories', 'authors', 'publishedAt'],
     livePreview: {
       url: ({ data }) => `/posts/${data?.slug || ''}`,
     },
@@ -28,7 +29,7 @@ export const Posts: CollectionConfig = {
     update: ({ req: { user } }) => {
       if (!user) return false
       // Admins and editors can update any post
-      if (user.role === 'admin' || user.role === 'editor') return true
+      if (user.role === 'admin' || user.role === 'artist') return true
       // Authors can update posts where they are assigned as author
       return {
         authors: {
@@ -38,7 +39,7 @@ export const Posts: CollectionConfig = {
     },
     delete: ({ req: { user } }) => {
       // Only Admins & Editors can delete posts. No other role can delete posts.
-      return Boolean(user && (user.role === 'admin' || user.role === 'editor'))
+      return user?.role === 'admin'
     },
   },
   fields: [
@@ -53,6 +54,11 @@ export const Posts: CollectionConfig = {
               name: 'title',
               type: 'text',
               required: true,
+              admin: {
+                components: {
+                  Cell: '/components/admin/posts-cells/TitleAndSlugCell#TitleAndSlugCell',
+                },
+              },
             },
             {
               name: 'heroImage',
@@ -60,6 +66,9 @@ export const Posts: CollectionConfig = {
               relationTo: 'media',
               admin: {
                 description: 'Featured header image for the post',
+                components: {
+                  Cell: '/components/admin/posts-cells/HeroImageCell#HeroImageCell',
+                },
               },
             },
             {
@@ -83,6 +92,9 @@ export const Posts: CollectionConfig = {
           pickerAppearance: 'dayAndTime',
         },
         condition: (data) => data?._status === 'published',
+        components: {
+          Cell: '/components/admin/posts-cells/PostDatesCell#PostDatesCell',
+        },
       },
       hooks: {
         beforeChange: [
@@ -108,7 +120,7 @@ export const Posts: CollectionConfig = {
         // 1. The user is an admin or editor
         // OR 2. Another user is editing an existing post whose author is someone else
         condition: (data, siblingData, { user }) => {
-          if (user?.role === 'admin' || user?.role === 'editor') return true
+          if (user?.role === 'admin' || user?.role === 'artist') return true
 
           if (Array.isArray(data?.authors) && data.authors.length > 0) {
             const firstAuthor = data.authors[0]
@@ -120,6 +132,9 @@ export const Posts: CollectionConfig = {
           }
 
           return false
+        },
+        components: {
+          Cell: '/components/admin/posts-cells/AuthorAndStatusCell#AuthorAndStatusCell',
         },
       },
       hooks: {
@@ -144,6 +159,9 @@ export const Posts: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: 'Assign topics/categories',
+        components: {
+          Cell: '/components/admin/posts-cells/CategoriesAndTagCell#CategoriesAndTagCell',
+        },
       },
     },
     {

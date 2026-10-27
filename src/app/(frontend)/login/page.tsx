@@ -14,6 +14,7 @@ import {
   EyeOff,
   ArrowLeft,
   ShieldCheck,
+  Clock,
 } from 'lucide-react';
 import { InputField, SubmitBtn } from '@/components/shared/forms';
 import { loginSchema, type LoginFormData } from '@/schemas';
@@ -23,6 +24,16 @@ export default function LoginPage() {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [isTimeout, setIsTimeout] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('reason') === 'timeout') {
+        setIsTimeout(true);
+      }
+    }
+  }, []);
 
   const {
     register,
@@ -38,12 +49,23 @@ export default function LoginPage() {
     mode: 'onTouched',
   });
 
-  // If already logged in, redirect immediately to /admin
+  const getRedirectTarget = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect');
+      if (redirect && redirect.startsWith('/')) {
+        return redirect;
+      }
+    }
+    return '/admin';
+  };
+
+  // If already logged in, redirect immediately to intended target or /admin
   useEffect(() => {
     if (user) {
-      router.replace('/admin');
+      window.location.href = getRedirectTarget();
     }
-  }, [user, router]);
+  }, [user]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -57,8 +79,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Success: redirect to admin dashboard
-      router.replace('/admin');
+      // Success: redirect to intended target or /admin
+      window.location.href = getRedirectTarget();
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'An unexpected error occurred.';
@@ -100,6 +122,13 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-white rounded-3xl p-8 shadow-xl border border-black/5">
+          {isTimeout && (
+            <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-3 animate-in fade-in duration-200">
+              <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>Your session expired due to 30 minutes of inactivity. Please sign in again to continue.</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
             <div className="space-y-5">
               {/* Email Field */}

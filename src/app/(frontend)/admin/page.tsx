@@ -3,31 +3,32 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import {
-  LogOut,
-  ExternalLink,
   Calendar,
   Users,
   CheckCircle2,
   AlertCircle,
   Clock4,
-  PenTool,
 } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
 import {
   supabase,
   type Appointment,
   type AppointmentStatus,
   computeAppointmentStats,
 } from '@/lib/supabase';
-import { appointmentsService } from '@/services';
+import { appointmentsService, APPOINTMENTS_TABLE } from '@/services';
 import { AppointmentDetailModal } from '@/components/admin/AppointmentDetailModal';
 import { AppointmentDataTable } from '@/components/admin/appointment-table';
+import { AppointmentKanbanView } from '@/components/admin/appointment-kanban';
+import { AppointmentCalendarView } from '@/components/admin/appointment-calendar';
+import {
+  AppointmentViewSwitcher,
+  type AdminViewMode,
+} from '@/components/admin/AppointmentViewSwitcher';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
 export default function AdminPage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   // Appointments State
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -38,6 +39,30 @@ export default function AdminPage() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // View Switcher Mode State ('table' | 'kanban' | 'calendar')
+  const [viewMode, setViewMode] = useState<AdminViewMode>('table');
+
+  // Load view preference on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('admin_appointments_view') as AdminViewMode | null;
+      if (saved && (saved === 'table' || saved === 'kanban' || saved === 'calendar')) {
+        setViewMode(saved);
+      }
+    } catch {
+      // Ignore localStorage issues in private mode
+    }
+  }, []);
+
+  const handleViewChange = (mode: AdminViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('admin_appointments_view', mode);
+    } catch {
+      // Ignore localStorage issues
+    }
+  };
 
   // Fetch appointments from Supabase (excluding soft-deleted / suspended records)
   const fetchAppointments = useCallback(async () => {
@@ -67,7 +92,7 @@ export default function AdminPage() {
         {
           event: '*',
           schema: 'public',
-          table: 'appointments',
+          table: APPOINTMENTS_TABLE,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -98,7 +123,7 @@ export default function AdminPage() {
         },
       )
       .subscribe((subStatus) => {
-        if (subStatus !== 'SUBSCRIBED') {
+        if (subStatus === 'CHANNEL_ERROR' || subStatus === 'TIMED_OUT') {
           console.warn(
             '[Supabase Realtime] Realtime subscription inactive. Using HTTP polling fallback.',
           );
@@ -137,7 +162,7 @@ export default function AdminPage() {
     setSelectedAppointment(null);
   };
 
-  // Quick status toggle directly from table action
+  // Quick status toggle directly from table or kanban action
   const handleQuickStatusChange = async (
     id: string,
     newStatus: AppointmentStatus,
@@ -151,6 +176,22 @@ export default function AdminPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Status update failed';
       alert(`Could not update status: ${msg}`);
+    }
+  };
+
+  // Quick reschedule callback directly from calendar drag or day view
+  const handleRescheduleAppointment = async (
+    id: string,
+    newDate: string,
+  ) => {
+    try {
+      const updated = await appointmentsService.updateAppointment(id, {
+        appointment_date: newDate,
+      });
+      handleAppointmentUpdated(updated);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Reschedule failed';
+      alert(`Could not reschedule session: ${msg}`);
     }
   };
 
@@ -271,18 +312,67 @@ export default function AdminPage() {
           </Alert>
         ) : null}
 
-        {/* TanStack Data Table for Appointments */}
-        <AppointmentDataTable
-          data={appointments}
-          stats={stats}
-          isLoading={isLoading}
-          onRefresh={fetchAppointments}
-          onViewDetails={(app) => {
-            setSelectedAppointment(app);
-            setIsModalOpen(true);
-          }}
-          onQuickStatusChange={handleQuickStatusChange}
-        />
+        {/* View Switcher Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+          <div>
+            <h2 className="text-lg font-extrabold text-[#2e0249]">
+              {viewMode === 'table'
+                ? 'All Appointments Table'
+                : viewMode === 'kanban'
+                  ? 'Workflow Kanban Board'
+                  : 'Appointments Calendar'}
+            </h2>
+            <p className="text-xs text-gray-500">
+              {viewMode === 'table'
+                ? 'Paginated table list with multi-column sorting and filtering'
+                : viewMode === 'kanban'
+                  ? 'Drag and drop cards across columns to change appointment status'
+                  : 'Monthly calendar grid mapping booked client tattoo sessions'}
+            </p>
+          </div>
+
+          <AppointmentViewSwitcher
+            currentView={viewMode}
+            onViewChange={handleViewChange}
+          />
+        </div>
+
+        {/* Dynamic View Rendering */}
+        {viewMode === 'table' ? (
+          <AppointmentDataTable
+            data={appointments}
+            stats={stats}
+            isLoading={isLoading}
+            onRefresh={fetchAppointments}
+            onViewDetails={(app) => {
+              setSelectedAppointment(app);
+              setIsModalOpen(true);
+            }}
+            onQuickStatusChange={handleQuickStatusChange}
+          />
+        ) : viewMode === 'kanban' ? (
+          <AppointmentKanbanView
+            data={appointments}
+            isLoading={isLoading}
+            onRefresh={fetchAppointments}
+            onViewDetails={(app) => {
+              setSelectedAppointment(app);
+              setIsModalOpen(true);
+            }}
+            onQuickStatusChange={handleQuickStatusChange}
+          />
+        ) : (
+          <AppointmentCalendarView
+            data={appointments}
+            isLoading={isLoading}
+            onRefresh={fetchAppointments}
+            onViewDetails={(app) => {
+              setSelectedAppointment(app);
+              setIsModalOpen(true);
+            }}
+            onRescheduleAppointment={handleRescheduleAppointment}
+          />
+        )}
       </main>
 
       {/* Appointment Detail Inspector Modal (Mounted independently per appointment) */}
@@ -297,6 +387,7 @@ export default function AdminPage() {
           }}
           onAppointmentUpdated={handleAppointmentUpdated}
           onAppointmentDeleted={handleAppointmentDeleted}
+          canDelete={user?.role === 'admin'}
         />
       ) : null}
     </div>

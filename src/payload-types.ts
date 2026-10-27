@@ -144,7 +144,7 @@ export interface User {
   /**
    * Designation / role within the editorial team
    */
-  role?: ('admin' | 'editor' | 'author' | 'contributor') | null;
+  role?: ('admin' | 'artist' | 'author') | null;
   updatedAt: string;
   createdAt: string;
   email: string;

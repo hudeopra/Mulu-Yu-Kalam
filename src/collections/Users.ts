@@ -3,6 +3,7 @@ import { createServerClient, parseCookieHeader } from '@supabase/ssr'
 
 export const Users: CollectionConfig = {
   slug: 'users',
+  dbName: 'blog_users',
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'username', 'publicEmail', 'role', 'email', 'createdAt'],
@@ -157,9 +158,9 @@ export const Users: CollectionConfig = {
       },
       options: [
         { label: 'Admin', value: 'admin' },
-        { label: 'Editor', value: 'editor' },
+        { label: 'Artist', value: 'artist' },
         { label: 'Author', value: 'author' },
-        { label: 'Contributor', value: 'contributor' },
+
       ],
       admin: {
         description: 'Designation / role within the editorial team',

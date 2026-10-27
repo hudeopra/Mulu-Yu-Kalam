@@ -158,9 +158,9 @@ export const Users: CollectionConfig = {
       },
       options: [
         { label: 'Admin', value: 'admin' },
-        { label: 'Editor', value: 'editor' },
+        { label: 'Artist', value: 'artist' },
         { label: 'Author', value: 'author' },
-        { label: 'Contributor', value: 'contributor' },
+
       ],
       admin: {
         description: 'Designation / role within the editorial team',

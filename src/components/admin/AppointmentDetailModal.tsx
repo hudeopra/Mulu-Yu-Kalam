@@ -41,6 +41,7 @@ interface AppointmentDetailModalProps {
   onClose: () => void;
   onAppointmentUpdated: (updated: Appointment) => void;
   onAppointmentDeleted: (id: string) => void;
+  canDelete?: boolean;
 }
 
 export function AppointmentDetailModal({
@@ -49,6 +50,7 @@ export function AppointmentDetailModal({
   onClose,
   onAppointmentUpdated,
   onAppointmentDeleted,
+  canDelete = false,
 }: AppointmentDetailModalProps) {
   const initialStatus =
     appointment?.status && appointment.status !== 'suspended'
@@ -314,6 +316,7 @@ export function AppointmentDetailModal({
                   onDeleteImage={handleDeleteActiveImage}
                   isDeletingImage={isDeletingImage}
                   onRequestDeleteAppointment={() => setShowDeleteConfirm(true)}
+                  canDelete={canDelete}
                 />
               </div>
             </div>

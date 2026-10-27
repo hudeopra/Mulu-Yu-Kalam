@@ -26,13 +26,42 @@ export function AuthProvider({
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const enrichUserWithRole = async (baseUser: User | null): Promise<User | null> => {
+    if (!baseUser) return null;
+    let role = (baseUser.user_metadata?.role as string) || (baseUser.app_metadata?.role as string);
+    try {
+      const res = await fetch('/api/users/me');
+      if (res.ok) {
+        const pData = await res.json();
+        if (pData?.user?.role) {
+          role = pData.user.role;
+        }
+      }
+    } catch {}
+
+    const assignedRole = role || 'author';
+    return {
+      ...baseUser,
+      role: assignedRole,
+      app_metadata: {
+        ...baseUser.app_metadata,
+        role: assignedRole,
+      },
+      user_metadata: {
+        ...baseUser.user_metadata,
+        role: assignedRole,
+      },
+    } as User;
+  };
+
   useEffect(() => {
     // 1. Check Supabase session first
     if (isSupabaseConfigured) {
       supabase.auth.getSession().then(async ({ data: { session } }) => {
         if (session) {
           setSession(session);
-          setUser(session?.user ?? null);
+          const enriched = await enrichUserWithRole(session.user);
+          setUser(enriched);
           setIsLoading(false);
         } else {
           // Fallback: Check Payload active session (/api/users/me)
@@ -46,7 +75,8 @@ export function AuthProvider({
       } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session) {
           setSession(session);
-          setUser(session?.user ?? null);
+          const enriched = await enrichUserWithRole(session.user);
+          setUser(enriched);
           setIsLoading(false);
         } else {
           await checkPayloadSession();
@@ -71,9 +101,9 @@ export function AuthProvider({
             id: String(data.user.id),
             email: data.user.email,
             aud: 'authenticated',
-            role: 'authenticated',
-            app_metadata: {},
-            user_metadata: {},
+            role: data.user.role || 'author',
+            app_metadata: { role: data.user.role || 'author' },
+            user_metadata: { role: data.user.role || 'author', name: data.user.name },
             created_at: data.user.createdAt || new Date().toISOString(),
           } as unknown as User;
           setUser(unifiedUser);
@@ -147,15 +177,15 @@ export function AuthProvider({
     if (payloadSuccess || supabaseSuccess) {
       const unifiedEmail = payloadUser?.email || supabaseUser?.email || email;
       const unifiedId = String(payloadUser?.id || supabaseUser?.id || '1');
-      const unifiedRole = payloadUser?.role || 'authenticated';
+      const unifiedRole = payloadUser?.role || (supabaseUser?.user_metadata?.role as string) || 'author';
 
       const unifiedUser = {
         id: unifiedId,
         email: unifiedEmail,
         aud: 'authenticated',
         role: unifiedRole,
-        app_metadata: {},
-        user_metadata: {},
+        app_metadata: { role: unifiedRole },
+        user_metadata: { role: unifiedRole },
         created_at: payloadUser?.createdAt || new Date().toISOString(),
       } as unknown as User;
 

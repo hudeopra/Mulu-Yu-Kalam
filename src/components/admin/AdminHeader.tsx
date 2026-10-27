@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { Calendar, PenTool, ExternalLink, LogOut } from 'lucide-react'
+import { Calendar, PenTool, ExternalLink, LogOut, Shield } from 'lucide-react'
 import { useOptionalAuth } from '@/context/AuthContext'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import './admin-header.css'
@@ -16,6 +16,7 @@ export const AdminHeader: React.FC = () => {
 
   // Track authenticated user across both frontend and Payload CMS
   const [cmsUserEmail, setCmsUserEmail] = useState<string | null>(null)
+  const [cmsUserRole, setCmsUserRole] = useState<string | null>(null)
 
   useEffect(() => {
     // If not running under frontend AuthProvider, fetch session from Payload /api/users/me
@@ -25,6 +26,9 @@ export const AdminHeader: React.FC = () => {
         .then((data) => {
           if (data?.user?.email) {
             setCmsUserEmail(data.user.email)
+            if (data.user.role) {
+              setCmsUserRole(data.user.role)
+            }
           }
         })
         .catch(() => {})
@@ -32,10 +36,14 @@ export const AdminHeader: React.FC = () => {
   }, [auth?.user])
 
   const userEmail = auth?.user?.email || cmsUserEmail || 'studio@muluyukalam.com.np'
+  const userRole = (auth?.user?.role as string) || (auth?.user?.user_metadata?.role as string) || cmsUserRole || 'author'
+  const isAuthor = userRole === 'author'
+  const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1)
 
   // Dynamic route highlight
-  const isAppointments = pathname ? pathname.startsWith('/admin') : false
-  const isCms = pathname ? pathname.startsWith('/cms') : true
+  const isPermissions = pathname ? pathname.startsWith('/admin/permissions') : false
+  const isAppointments = pathname ? (pathname === '/admin' || (pathname.startsWith('/admin') && !isPermissions)) : false
+  const isCms = pathname ? pathname.startsWith('/cms') : false
 
   const handleSignOut = async () => {
     // 1. Terminate Supabase Auth session
@@ -79,15 +87,17 @@ export const AdminHeader: React.FC = () => {
 
           {/* Unified Navigation Switcher */}
           <nav className="studio-admin-header__nav">
-            <Link
-              href="/admin"
-              className={`studio-admin-header__tab ${
-                isAppointments ? 'studio-admin-header__tab--active' : ''
-              }`}
-            >
-              <Calendar className="studio-admin-header__tab-icon" />
-              <span>Appointments</span>
-            </Link>
+            {!isAuthor ? (
+              <Link
+                href="/admin"
+                className={`studio-admin-header__tab ${
+                  isAppointments ? 'studio-admin-header__tab--active' : ''
+                }`}
+              >
+                <Calendar className="studio-admin-header__tab-icon" />
+                <span>Appointments</span>
+              </Link>
+            ) : null}
 
             <Link
               href="/cms"
@@ -98,6 +108,18 @@ export const AdminHeader: React.FC = () => {
               <PenTool className="studio-admin-header__tab-icon" />
               <span>Blog & Content</span>
             </Link>
+
+            {userRole === 'admin' ? (
+              <Link
+                href="/admin/permissions"
+                className={`studio-admin-header__tab ${
+                  isPermissions ? 'studio-admin-header__tab--active' : ''
+                }`}
+              >
+                <Shield className="studio-admin-header__tab-icon" />
+                <span>Permissions</span>
+              </Link>
+            ) : null}
           </nav>
         </div>
 
@@ -117,7 +139,7 @@ export const AdminHeader: React.FC = () => {
 
           <div className="studio-admin-header__user-block">
             <p className="studio-admin-header__user-email">{userEmail}</p>
-            <p className="studio-admin-header__user-role">Authenticated Staff</p>
+            <p className="studio-admin-header__user-role">{displayRole}</p>
           </div>
 
           <button

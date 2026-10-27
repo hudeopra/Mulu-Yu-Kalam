@@ -5,6 +5,9 @@ export const Media: CollectionConfig = {
   dbName: 'blog_media',
   access: {
     read: () => true,
+    create: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => Boolean(user && (user.role === 'admin' || user.role === 'artist')),
+    delete: ({ req: { user } }) => user?.role === 'admin',
   },
   fields: [
     {

@@ -10,6 +10,9 @@ export const FeatureTags: CollectionConfig = {
   },
   access: {
     read: () => true,
+    create: ({ req: { user } }) => Boolean(user && (user.role === 'admin' || user.role === 'artist')),
+    update: ({ req: { user } }) => Boolean(user && (user.role === 'admin' || user.role === 'artist')),
+    delete: ({ req: { user } }) => user?.role === 'admin',
   },
   fields: [
     {

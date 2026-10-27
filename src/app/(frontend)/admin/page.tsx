@@ -297,6 +297,7 @@ export default function AdminPage() {
           }}
           onAppointmentUpdated={handleAppointmentUpdated}
           onAppointmentDeleted={handleAppointmentDeleted}
+          canDelete={user?.role === 'admin'}
         />
       ) : null}
     </div>

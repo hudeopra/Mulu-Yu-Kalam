@@ -29,7 +29,7 @@ export const Posts: CollectionConfig = {
     update: ({ req: { user } }) => {
       if (!user) return false
       // Admins and editors can update any post
-      if (user.role === 'admin' || user.role === 'editor') return true
+      if (user.role === 'admin' || user.role === 'artist') return true
       // Authors can update posts where they are assigned as author
       return {
         authors: {
@@ -39,7 +39,7 @@ export const Posts: CollectionConfig = {
     },
     delete: ({ req: { user } }) => {
       // Only Admins & Editors can delete posts. No other role can delete posts.
-      return Boolean(user && (user.role === 'admin' || user.role === 'editor'))
+      return user?.role === 'admin'
     },
   },
   fields: [
@@ -109,7 +109,7 @@ export const Posts: CollectionConfig = {
         // 1. The user is an admin or editor
         // OR 2. Another user is editing an existing post whose author is someone else
         condition: (data, siblingData, { user }) => {
-          if (user?.role === 'admin' || user?.role === 'editor') return true
+          if (user?.role === 'admin' || user?.role === 'artist') return true
 
           if (Array.isArray(data?.authors) && data.authors.length > 0) {
             const firstAuthor = data.authors[0]

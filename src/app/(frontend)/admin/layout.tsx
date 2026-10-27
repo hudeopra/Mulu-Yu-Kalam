@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AdminAuthGuard } from "@/components/admin/AdminAuthGuard";
-import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export const metadata: Metadata = {
   title: "Studio Administration Dashboard | Mulu Yu Kalam",
@@ -19,8 +19,12 @@ export default function AdminLayout({
 }) {
   return (
     <AdminAuthGuard>
-      <AdminHeader />
-      {children}
+      <div className="min-h-screen bg-[#faf7f2] flex flex-col md:flex-row">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          {children}
+        </div>
+      </div>
     </AdminAuthGuard>
   );
 }

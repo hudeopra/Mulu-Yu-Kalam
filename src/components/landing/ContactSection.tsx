@@ -1,7 +1,14 @@
 import { ContactInformation } from './ContactInformation';
 import { AppointmentForm } from '@/components/booking/AppointmentForm';
+import { SiteSettings, DEFAULT_SITE_SETTINGS } from '@/types/landing';
 
-export function ContactSection() {
+interface ContactSectionProps {
+  settings?: SiteSettings;
+}
+
+export function ContactSection({
+  settings = DEFAULT_SITE_SETTINGS,
+}: ContactSectionProps) {
   return (
     <section
       id="contact"
@@ -11,7 +18,7 @@ export function ContactSection() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-14 items-start">
           {/* Left Column: Heading, contact list, and pattern */}
           <div className="order-2 md:order-1 md:col-span-5">
-            <ContactInformation />
+            <ContactInformation settings={settings} />
           </div>
 
           {/* Right Column: Appointment Form */}

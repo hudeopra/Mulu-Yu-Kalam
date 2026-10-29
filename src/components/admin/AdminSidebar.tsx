@@ -18,6 +18,9 @@ import {
   Menu,
   X,
   User as UserIcon,
+  FileText,
+  Settings,
+  Layers,
 } from 'lucide-react';
 import { useOptionalAuth } from '@/context/AuthContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -31,6 +34,7 @@ export function AdminSidebar(props?: any) {
     role?: string;
   } | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('/assets/img/Mulu-Yu-Kalam.svg');
 
   // Payload CMS passes user directly in props or serverProps
   const propsUser = props?.user || props?.serverProps?.user;
@@ -47,6 +51,14 @@ export function AdminSidebar(props?: any) {
         })
         .catch(() => {});
     }
+    fetch('/api/admin/landing/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.settings?.logo_url) {
+          setLogoUrl(data.settings.logo_url);
+        }
+      })
+      .catch(() => {});
   }, [auth?.user, propsUser]);
 
   // Lock background scroll when mobile drawer is open
@@ -81,6 +93,9 @@ export function AdminSidebar(props?: any) {
   const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
 
   // Active route checks
+  const isAboutActive = pathname === '/admin/about';
+  const isGalleryActive = pathname === '/admin/gallery';
+  const isSettingsActive = pathname === '/admin/settings';
   const isAppointmentsActive = pathname === '/admin';
   const isPermissionsActive = pathname
     ? pathname.startsWith('/admin/permissions')
@@ -137,7 +152,7 @@ export function AdminSidebar(props?: any) {
           onClick={() => setIsMobileOpen(false)}
         >
           <Image
-            src="/assets/img/Mulu-Yu-Kalam.svg"
+            src={logoUrl}
             alt="Mulu Yu Kalam"
             width={145}
             height={38}
@@ -265,6 +280,43 @@ export function AdminSidebar(props?: any) {
 
           </ul>
         </div>
+
+        {/* GROUP 3: Website & Landing Page */}
+        <div className="studio-sidebar__group">
+          <p className="studio-sidebar__group-label">Website & Landing Page</p>
+          <ul className="studio-sidebar__nav-list">
+            <li>
+              <Link
+                href="/admin/about"
+                onClick={() => setIsMobileOpen(false)}
+                className={`studio-sidebar__link ${isAboutActive ? 'is-active' : ''}`}
+              >
+                <FileText />
+                <span>About Section</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/gallery"
+                onClick={() => setIsMobileOpen(false)}
+                className={`studio-sidebar__link ${isGalleryActive ? 'is-active' : ''}`}
+              >
+                <Layers />
+                <span>Gallery & Showcase</span>
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/admin/settings"
+                onClick={() => setIsMobileOpen(false)}
+                className={`studio-sidebar__link ${isSettingsActive ? 'is-active' : ''}`}
+              >
+                <Settings />
+                <span>Website Settings</span>
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
 
       {/* Sidebar Footer: User Card, View Studio, Sign Out */}
@@ -328,7 +380,7 @@ export function AdminSidebar(props?: any) {
           onClick={() => setIsMobileOpen(false)}
         >
           <Image
-            src="/assets/img/Mulu-Yu-Kalam.svg"
+            src={logoUrl}
             alt="Mulu Yu Kalam"
             width={130}
             height={34}

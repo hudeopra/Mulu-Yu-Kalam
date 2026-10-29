@@ -57,6 +57,7 @@ export interface BookingConfirmationEmailProps {
   appointmentTime?: string;
   notes?: string | null;
   referenceImageUrls?: string[];
+  logoUrl?: string;
 }
 
 export default function BookingConfirmationEmail({
@@ -67,6 +68,7 @@ export default function BookingConfirmationEmail({
   appointmentTime = mockBookingData.appointmentTime,
   notes = mockBookingData.notes,
   referenceImageUrls = mockBookingData.referenceImageUrls,
+  logoUrl = "https://muluyukalam.com.np/assets/img/Mulu-Yu-Kalam.svg",
 }: BookingConfirmationEmailProps) {
   return (
     <Html lang="en">
@@ -224,7 +226,7 @@ export default function BookingConfirmationEmail({
               {/* Studio Logo */}
               <Section className="mt-4">
                 <Img
-                  src="https://muluyukalam.com.np/assets/img/Mulu-Yu-Kalam.svg"
+                  src={logoUrl}
                   alt="Mulu Yu Kalam Tattoo Studio Logo"
                   width={190}
                   height={40}

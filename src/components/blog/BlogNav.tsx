@@ -9,6 +9,7 @@ import { Sparkles, ArrowRight, Navigation, MousePointer2Off } from 'lucide-react
 export const BlogNav: React.FC = () => {
   const pathname = usePathname();
   const [isCursorEnabled, setIsCursorEnabled] = useState<boolean>(true);
+  const [logoUrl, setLogoUrl] = useState<string>('/assets/img/Mulu-Yu-Kalam.svg');
 
   useEffect(() => {
     // Read persisted preference
@@ -16,6 +17,13 @@ export const BlogNav: React.FC = () => {
     if (saved !== null) {
       setIsCursorEnabled(saved !== 'false');
     }
+
+    fetch('/api/admin/landing/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.settings?.logo_url) setLogoUrl(data.settings.logo_url);
+      })
+      .catch(() => {});
 
     const handleExternalToggle = (e: Event) => {
       const customEvent = e as CustomEvent<{ enabled: boolean }>;
@@ -61,7 +69,7 @@ export const BlogNav: React.FC = () => {
         {/* Left: Studio Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <Image
-            src="/assets/img/Mulu-Yu-Kalam.svg"
+            src={logoUrl}
             alt="Mulu Yu Kalam Tattoo Studio"
             width={160}
             height={42}

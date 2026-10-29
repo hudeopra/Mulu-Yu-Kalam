@@ -1,12 +1,16 @@
 import Image from 'next/image';
 
-export function Header() {
+interface HeaderProps {
+  logoUrl?: string;
+}
+
+export function Header({ logoUrl = '/assets/img/Mulu-Yu-Kalam.svg' }: HeaderProps) {
   return (
     <header className="relative w-full z-20">
       <div className="absolute top-6 md:top-10 left-1/2 -translate-x-1/2 z-20">
         <a href="#" className="block group" aria-label="Mulu Yu Kalam Home">
           <Image
-            src="/assets/img/Mulu-Yu-Kalam.svg"
+            src={logoUrl || '/assets/img/Mulu-Yu-Kalam.svg'}
             alt="Mulu Yu Kalam Logo"
             width={350}
             height={74}

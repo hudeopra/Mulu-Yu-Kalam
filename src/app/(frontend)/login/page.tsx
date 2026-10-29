@@ -25,8 +25,15 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isTimeout, setIsTimeout] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('/assets/img/Mulu-Yu-Kalam.svg');
 
   useEffect(() => {
+    fetch('/api/admin/landing/settings')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.settings?.logo_url) setLogoUrl(data.settings.logo_url);
+      })
+      .catch(() => {});
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('reason') === 'timeout') {
@@ -106,7 +113,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block group">
             <Image
-              src="/assets/img/Mulu-Yu-Kalam.svg"
+              src={logoUrl}
               alt="Mulu Yu Kalam"
               width={224}
               height={60}

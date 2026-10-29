@@ -212,3 +212,66 @@ export async function suspendAppointmentStorageImages(
   return updatedUrls;
 }
 
+export interface SiteAssetUploadOptions {
+  folder: 'gallery' | 'settings';
+  filenamePrefix: string;
+  previousStoragePath?: string | null;
+  bucketName?: string;
+}
+
+/**
+ * Uploads a site asset (gallery slot, logo, banner, favicon) with automatic deletion
+ * of the superseded previous asset from Supabase Storage to avoid overcrowding.
+ */
+export async function uploadAndReplaceSiteAsset(
+  file: File,
+  options: SiteAssetUploadOptions,
+): Promise<{ publicUrl: string; storagePath: string }> {
+  const bucketName = options.bucketName || DEFAULT_BUCKET;
+
+  // 1. Delete superseded file from storage if previous storage path exists
+  if (options.previousStoragePath) {
+    try {
+      await removeStorageFiles([options.previousStoragePath], bucketName);
+    } catch (err) {
+      console.warn('[StorageService] Could not remove previous asset:', err);
+    }
+  }
+
+  // 2. Determine file extension and sanitize
+  const ext = file.name.split('.').pop() || 'webp';
+  const cleanExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+  const filePath = `${options.folder}/${options.filenamePrefix}-${Date.now()}.${cleanExt}`;
+
+  const mimeType =
+    file.type ||
+    (/\.webp$/i.test(file.name)
+      ? 'image/webp'
+      : /\.png$/i.test(file.name)
+        ? 'image/png'
+        : /\.svg$/i.test(file.name)
+          ? 'image/svg+xml'
+          : 'image/jpeg');
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucketName)
+    .upload(filePath, file, {
+      contentType: mimeType,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to upload asset: ${uploadError.message}`);
+  }
+
+  const { data: urlData } = supabase.storage
+    .from(bucketName)
+    .getPublicUrl(filePath);
+
+  return {
+    publicUrl: urlData.publicUrl,
+    storagePath: filePath,
+  };
+}
+
+

@@ -1,9 +1,43 @@
 import Image from 'next/image';
 import { HeroActionButtons } from './HeroActionButtons';
+import { SiteGalleryItem, DEFAULT_HERO_ITEMS } from '@/types/landing';
 
-export function HeroBanner() {
+interface HeroBannerProps {
+  bannerBgUrl?: string;
+  showcaseItems?: SiteGalleryItem[];
+}
+
+export function HeroBanner({
+  bannerBgUrl = '/assets/img/banner-bg.jpg',
+  showcaseItems = DEFAULT_HERO_ITEMS,
+}: HeroBannerProps) {
+  // Helper to get slot item with fallback
+  const getSlot = (slotNumber: number) => {
+    const found = showcaseItems.find((item) => item.slot_number === slotNumber);
+    if (found) return found;
+    return (
+      DEFAULT_HERO_ITEMS.find((item) => item.slot_number === slotNumber) || {
+        slot_number: slotNumber,
+        image_url: `/assets/img/tattoo-${slotNumber}.webp`,
+        alt: `Tattoo Showcase ${slotNumber}`,
+      }
+    );
+  };
+
+  const slot1 = getSlot(1);
+  const slot2 = getSlot(2);
+  const slot3 = getSlot(3);
+  const slot4 = getSlot(4);
+  const slot5 = getSlot(5);
+  const slot6 = getSlot(6);
+
   return (
-    <section className="relative min-h-screen pt-32 lg:pt-48 bg-[url('/assets/img/banner-bg.jpg')] bg-cover bg-center bg-no-repeat overflow-hidden flex flex-col justify-between">
+    <section
+      className="relative min-h-screen pt-32 lg:pt-48 bg-cover bg-center bg-no-repeat overflow-hidden flex flex-col justify-between"
+      style={{
+        backgroundImage: `url('${bannerBgUrl || '/assets/img/banner-bg.jpg'}')`,
+      }}
+    >
       {/* Background Title layer */}
       <div className="absolute top-60 lg:top-44 left-1/2 -translate-x-1/2 w-11/12 max-w-7xl text-center pointer-events-none select-none z-0">
         <h1 className="text-5xl leading-20 text-7xl md:text-8xl md:mt-16 lg:text-[108px] xl:text-[130px] font-extrabold uppercase tracking-tight text-[#fc6001e6]/90 ">
@@ -23,8 +57,8 @@ export function HeroBanner() {
               {/* Item 1 */}
               <div className="hero-tattoo-item-1 overflow-hidden rounded-xl shadow-lg group relative">
                 <Image
-                  src="/assets/img/tattoo-1.webp"
-                  alt="Tattoo Showcase 1"
+                  src={slot1.image_url}
+                  alt={slot1.alt}
                   width={320}
                   height={220}
                   priority
@@ -35,8 +69,8 @@ export function HeroBanner() {
               {/* Item 2 */}
               <div className="hero-tattoo-item-2 overflow-hidden rounded-xl shadow-lg group relative">
                 <Image
-                  src="/assets/img/tattoo-2.webp"
-                  alt="Tattoo Showcase 2"
+                  src={slot2.image_url}
+                  alt={slot2.alt}
                   width={320}
                   height={220}
                   priority
@@ -47,8 +81,8 @@ export function HeroBanner() {
               {/* Item 3 */}
               <div className="hero-tattoo-item-3 overflow-hidden rounded-xl shadow-lg group relative">
                 <Image
-                  src="/assets/img/tattoo-3.webp"
-                  alt="Tattoo Showcase 3"
+                  src={slot3.image_url}
+                  alt={slot3.alt}
                   width={320}
                   height={220}
                   priority
@@ -59,8 +93,8 @@ export function HeroBanner() {
               {/* Item 4 */}
               <div className="hero-tattoo-item-4 overflow-hidden rounded-xl shadow-lg group relative">
                 <Image
-                  src="/assets/img/tattoo-4.webp"
-                  alt="Tattoo Showcase 4"
+                  src={slot4.image_url}
+                  alt={slot4.alt}
                   width={200}
                   height={110}
                   priority
@@ -71,8 +105,8 @@ export function HeroBanner() {
               {/* Item 5 */}
               <div className="hero-tattoo-item-5 overflow-hidden rounded-xl shadow-lg group relative">
                 <Image
-                  src="/assets/img/tattoo-5.webp"
-                  alt="Tattoo Showcase 5"
+                  src={slot5.image_url}
+                  alt={slot5.alt}
                   width={200}
                   height={110}
                   priority
@@ -83,8 +117,8 @@ export function HeroBanner() {
               {/* Item 6 */}
               <div className="hero-tattoo-item-6 overflow-hidden rounded-xl shadow-lg group relative">
                 <Image
-                  src="/assets/img/tattoo-6.webp"
-                  alt="Tattoo Showcase 6"
+                  src={slot6.image_url}
+                  alt={slot6.alt}
                   width={200}
                   height={110}
                   priority

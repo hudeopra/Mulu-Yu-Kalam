@@ -1,3 +1,4 @@
+import { landingService } from '@/services/landing';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Josefin_Sans } from 'next/font/google';
@@ -18,7 +19,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || 'https://muluyukalam.com.np',
   ),
@@ -381,6 +382,24 @@ const jsonLd = [
     ],
   },
 ];
+
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const settings = await landingService.getSettings();
+    const favicon = settings.favicon_url || '/assets/img/unalome-favicon.png';
+    return {
+      ...baseMetadata,
+      icons: {
+        icon: [{ url: favicon }],
+        shortcut: favicon,
+        apple: favicon,
+      },
+    };
+  } catch {
+    return baseMetadata;
+  }
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

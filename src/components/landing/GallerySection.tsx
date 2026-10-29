@@ -1,93 +1,18 @@
 import Image from 'next/image';
+import { SiteGalleryItem, DEFAULT_GALLERY_ITEMS } from '@/types/landing';
 
-interface GalleryItem {
-  id: number;
-  itemClass: string;
-  imgSrc: string;
-  alt: string;
+interface GallerySectionProps {
+  galleryItems?: SiteGalleryItem[];
 }
 
-export function GallerySection() {
-  const galleryItems: GalleryItem[] = [
-    {
-      id: 1,
-      itemClass: 'gallery-item-1',
-      imgSrc: '/assets/img/tattoo-1.webp',
-      alt: 'Tattoo Artwork 1',
-    },
-    {
-      id: 2,
-      itemClass: 'gallery-item-2',
-      imgSrc: '/assets/img/gallery.jpg',
-      alt: 'Tattoo Artwork 2',
-    },
-    {
-      id: 3,
-      itemClass: 'gallery-item-3',
-      imgSrc: '/assets/img/tattoo-2.webp',
-      alt: 'Tattoo Artwork 3',
-    },
-    {
-      id: 4,
-      itemClass: 'gallery-item-4',
-      imgSrc: '/assets/img/tattoo-3.webp',
-      alt: 'Tattoo Artwork 4',
-    },
-    {
-      id: 5,
-      itemClass: 'gallery-item-5',
-      imgSrc: '/assets/img/tattoo-4.webp',
-      alt: 'Tattoo Artwork 5',
-    },
-    {
-      id: 6,
-      itemClass: 'gallery-item-6',
-      imgSrc: '/assets/img/gallery.jpg',
-      alt: 'Tattoo Artwork 6',
-    },
-    {
-      id: 7,
-      itemClass: 'gallery-item-7',
-      imgSrc: '/assets/img/tattoo-5.webp',
-      alt: 'Tattoo Artwork 7',
-    },
-    {
-      id: 8,
-      itemClass: 'gallery-item-8',
-      imgSrc: '/assets/img/gallery.jpg',
-      alt: 'Tattoo Artwork 8',
-    },
-    {
-      id: 9,
-      itemClass: 'gallery-item-9',
-      imgSrc: '/assets/img/tattoo-6.webp',
-      alt: 'Tattoo Artwork 9',
-    },
-    {
-      id: 11,
-      itemClass: 'gallery-item-11',
-      imgSrc: '/assets/img/gallery.jpg',
-      alt: 'Tattoo Artwork 11',
-    },
-    {
-      id: 12,
-      itemClass: 'gallery-item-12',
-      imgSrc: '/assets/img/tattoo-2.webp',
-      alt: 'Tattoo Artwork 12',
-    },
-    {
-      id: 13,
-      itemClass: 'gallery-item-13',
-      imgSrc: '/assets/img/tattoo-1.webp',
-      alt: 'Tattoo Artwork 13',
-    },
-    {
-      id: 14,
-      itemClass: 'gallery-item-14',
-      imgSrc: '/assets/img/gallery.jpg',
-      alt: 'Tattoo Artwork 14',
-    },
-  ];
+export function GallerySection({
+  galleryItems = DEFAULT_GALLERY_ITEMS,
+}: GallerySectionProps) {
+  // Ensure items are ordered by display_order / slot_number
+  const items =
+    galleryItems && galleryItems.length > 0
+      ? galleryItems
+      : DEFAULT_GALLERY_ITEMS;
 
   return (
     <section id="gallery" className="pb-20 md:pb-28 bg-white overflow-hidden">
@@ -104,18 +29,19 @@ export function GallerySection() {
           </div>
 
           {/* Gallery Items 1 through 9, 11 through 14 */}
-          {galleryItems.map((item) => (
+          {items.map((item) => (
             <div
-              key={item.id}
-              className={`${item.itemClass} rounded-2xl overflow-hidden relative shadow-md group border border-black/5 bg-gray-100`}
+              key={`${item.section || 'gallery'}-${item.slot_number}`}
+              className={`${item.item_class} rounded-2xl overflow-hidden relative shadow-md group border border-black/5 bg-gray-100`}
             >
               <Image
-                src={item.imgSrc}
+                src={item.image_url}
                 alt={item.alt}
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
                 className="object-cover transition-transform duration-500 ease-out group-hover:scale-110"
               />
+              {/* On-Hover Title Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                 <span className="text-white text-xs sm:text-sm font-semibold tracking-wider uppercase">
                   {item.alt}

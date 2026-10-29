@@ -99,8 +99,8 @@ export function AdminSidebar(props?: any) {
   const isTagsActive = pathname
     ? pathname.startsWith('/cms/collections/feature-tags')
     : false;
-  const isUsersActive = pathname
-    ? pathname.startsWith('/cms/collections/users')
+  const isTeamActive = pathname
+    ? pathname.startsWith('/admin/team')
     : false;
 
   const handleSignOut = async () => {
@@ -177,16 +177,28 @@ export function AdminSidebar(props?: any) {
             )}
 
             {isAdmin && (
-              <li>
-                <Link
-                  href="/admin/permissions"
-                  onClick={() => setIsMobileOpen(false)}
-                  className={`studio-sidebar__link ${isPermissionsActive ? 'is-active' : ''}`}
-                >
-                  <Shield />
-                  <span>Permission Matrix</span>
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link
+                    href="/admin/team"
+                    onClick={() => setIsMobileOpen(false)}
+                    className={`studio-sidebar__link ${isTeamActive ? 'is-active' : ''}`}
+                  >
+                    <Users />
+                    <span>Team Management</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/permissions"
+                    onClick={() => setIsMobileOpen(false)}
+                    className={`studio-sidebar__link ${isPermissionsActive ? 'is-active' : ''}`}
+                  >
+                    <Shield />
+                    <span>Permission Matrix</span>
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </div>
@@ -250,18 +262,7 @@ export function AdminSidebar(props?: any) {
               </Link>
             </li>
 
-            {isAdmin && (
-              <li>
-                <Link
-                  href="/cms/collections/users"
-                  onClick={() => setIsMobileOpen(false)}
-                  className={`studio-sidebar__link ${isUsersActive ? 'is-active' : ''}`}
-                >
-                  <Users />
-                  <span>Team Members</span>
-                </Link>
-              </li>
-            )}
+
           </ul>
         </div>
       </div>

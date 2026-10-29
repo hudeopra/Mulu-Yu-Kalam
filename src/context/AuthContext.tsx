@@ -37,23 +37,7 @@ const getAutoLogoutConfig = (userRole?: string | null) => {
     return { enabled: true, timeoutMs: DEFAULT_TIMEOUT_MS };
   }
 
-  // 1. Check admin-configured role session policies in localStorage
-  try {
-    const stored = localStorage.getItem('studio_role_security_policies');
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      const roleKey = (userRole?.toLowerCase() || 'author') as 'admin' | 'artist' | 'author';
-      const roleMinutes = parsed?.[roleKey]?.autoLogoutMinutes;
-      if (typeof roleMinutes === 'number') {
-        if (roleMinutes <= 0) {
-          return { enabled: false, timeoutMs: 0 };
-        }
-        return { enabled: true, timeoutMs: roleMinutes * 60 * 1000 };
-      }
-    }
-  } catch {}
-
-  // 2. Fallback to recommended role defaults (60m admin, 30m artist, 15m author)
+  // Recommended role defaults (60m admin, 30m artist, 15m author)
   const roleKey = (userRole?.toLowerCase() || 'author') as 'admin' | 'artist' | 'author';
   const defaultMinutes =
     roleKey === 'admin' ? 60 : roleKey === 'artist' ? 30 : 15;
@@ -162,24 +146,12 @@ export function AuthProvider({
     }
   };
 
-  // Sync role security policies from permissions API on mount
   useEffect(() => {
-    fetch('/api/permissions')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.securityPolicies) {
-          try {
-            localStorage.setItem(
-              'studio_role_security_policies',
-              JSON.stringify(data.securityPolicies),
-            );
-          } catch {}
-        }
-      })
-      .catch(() => {});
-  }, []);
+    // Clean up deprecated studio_role_security_policies if present
+    try {
+      localStorage.removeItem('studio_role_security_policies');
+    } catch {}
 
-  useEffect(() => {
     // 1. Check Supabase session first
     if (isSupabaseConfigured) {
       supabase.auth.getSession().then(async ({ data: { session } }) => {

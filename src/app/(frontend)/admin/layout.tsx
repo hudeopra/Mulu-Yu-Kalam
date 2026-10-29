@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AdminAuthGuard } from "@/components/admin/AdminAuthGuard";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Studio Administration Dashboard | Mulu Yu Kalam",
@@ -25,6 +26,7 @@ export default function AdminLayout({
           {children}
         </div>
       </div>
+      <Toaster position="top-right" richColors />
     </AdminAuthGuard>
   );
 }

@@ -74,12 +74,6 @@ export default function PermissionsPage() {
           if (data.securityPolicies) {
             setSecurityPolicies(data.securityPolicies);
             setInitialSecurityPolicies(data.securityPolicies);
-            try {
-              localStorage.setItem(
-                'studio_role_security_policies',
-                JSON.stringify(data.securityPolicies),
-              );
-            } catch {}
           }
         }
       } catch (err: any) {
@@ -222,12 +216,6 @@ export default function PermissionsPage() {
       if (data.securityPolicies) {
         setSecurityPolicies(data.securityPolicies);
         setInitialSecurityPolicies(data.securityPolicies);
-        try {
-          localStorage.setItem(
-            'studio_role_security_policies',
-            JSON.stringify(data.securityPolicies),
-          );
-        } catch {}
       }
 
       setSaveSuccessMessage(

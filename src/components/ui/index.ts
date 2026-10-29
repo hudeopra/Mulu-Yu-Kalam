@@ -7,5 +7,7 @@ export * from './field';
 export * from './input-group';
 export * from './alert';
 export * from './separator';
+export * from './dialog';
+export * from './sonner';
 export { CursorTrail, type CursorTrailProps } from './CursorTrail';
 export { PublicLandingClient } from './PublicLandingClient';

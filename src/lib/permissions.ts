@@ -29,6 +29,66 @@ export function hasPermission(
 }
 
 /**
+ * Parses and merges stored database rows into a complete RolePermissionsMatrix and RoleSecurityPolicies.
+ */
+export function parsePermissionsRows(data: Array<{ role: string; permissions: any }>): {
+  matrix: RolePermissionsMatrix;
+  securityPolicies: RoleSecurityPolicies;
+} {
+  const mergedMatrix: RolePermissionsMatrix = {
+    admin: { ...DEFAULT_PERMISSIONS_MATRIX.admin },
+    artist: { ...DEFAULT_PERMISSIONS_MATRIX.artist },
+    author: { ...DEFAULT_PERMISSIONS_MATRIX.author },
+  };
+
+  const mergedPolicies: RoleSecurityPolicies = {
+    admin: { ...DEFAULT_SECURITY_POLICIES.admin },
+    artist: { ...DEFAULT_SECURITY_POLICIES.artist },
+    author: { ...DEFAULT_SECURITY_POLICIES.author },
+  };
+
+  if (!Array.isArray(data)) {
+    return { matrix: mergedMatrix, securityPolicies: mergedPolicies };
+  }
+
+  for (const row of data) {
+    const r = row.role as AppRole;
+    let permissionsObj = row.permissions;
+    if (typeof permissionsObj === 'string') {
+      try {
+        permissionsObj = JSON.parse(permissionsObj);
+      } catch {
+        permissionsObj = null;
+      }
+    }
+
+    if (permissionsObj && typeof permissionsObj === 'object') {
+      const { _security_policy, ...perms } = permissionsObj as any;
+
+      if (mergedMatrix[r]) {
+        mergedMatrix[r] = {
+          ...mergedMatrix[r],
+          ...perms,
+          ...(r === 'admin' ? DEFAULT_PERMISSIONS_MATRIX.admin : {}), // Admin remains strictly full access
+        };
+      }
+
+      if (_security_policy && typeof _security_policy === 'object') {
+        mergedPolicies[r] = {
+          ...mergedPolicies[r],
+          ..._security_policy,
+        };
+      }
+    }
+  }
+
+  return {
+    matrix: mergedMatrix,
+    securityPolicies: mergedPolicies,
+  };
+}
+
+/**
  * Fetches both the dynamic permissions matrix and role session security policies from Supabase.
  */
 export async function getStoredPermissionsAndPolicies(): Promise<{
@@ -47,44 +107,7 @@ export async function getStoredPermissionsAndPolicies(): Promise<{
       };
     }
 
-    const mergedMatrix: RolePermissionsMatrix = {
-      admin: { ...DEFAULT_PERMISSIONS_MATRIX.admin },
-      artist: { ...DEFAULT_PERMISSIONS_MATRIX.artist },
-      author: { ...DEFAULT_PERMISSIONS_MATRIX.author },
-    };
-
-    const mergedPolicies: RoleSecurityPolicies = {
-      admin: { ...DEFAULT_SECURITY_POLICIES.admin },
-      artist: { ...DEFAULT_SECURITY_POLICIES.artist },
-      author: { ...DEFAULT_SECURITY_POLICIES.author },
-    };
-
-    for (const row of data) {
-      const r = row.role as AppRole;
-      if (row.permissions && typeof row.permissions === 'object') {
-        const { _security_policy, ...perms } = row.permissions as any;
-
-        if (mergedMatrix[r]) {
-          mergedMatrix[r] = {
-            ...mergedMatrix[r],
-            ...perms,
-            ...(r === 'admin' ? DEFAULT_PERMISSIONS_MATRIX.admin : {}), // Admin remains strictly full access
-          };
-        }
-
-        if (_security_policy && typeof _security_policy === 'object') {
-          mergedPolicies[r] = {
-            ...mergedPolicies[r],
-            ..._security_policy,
-          };
-        }
-      }
-    }
-
-    return {
-      matrix: mergedMatrix,
-      securityPolicies: mergedPolicies,
-    };
+    return parsePermissionsRows(data);
   } catch (err) {
     console.warn('[Permissions] Failed to fetch stored matrix & policies, using defaults:', err);
     return {

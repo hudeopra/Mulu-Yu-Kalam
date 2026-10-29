@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { toast } from 'sonner';
 import {
   User as UserIcon,
   Mail,
@@ -11,20 +12,26 @@ import {
   Eye,
   EyeOff,
   AtSign,
-  CheckCircle2,
-  AlertCircle,
   Save,
   RotateCcw,
   ShieldCheck,
+  ShieldAlert,
+  KeyRound,
+  AlertTriangle,
 } from 'lucide-react';
+import {
+  PasswordStrengthBar,
+  GeneratePasswordButton,
+} from '@/components/admin/PasswordStrengthIndicator';
 
 interface ProfileFormData {
   name: string;
   username: string;
   publicEmail: string;
   email: string;
-  password: string;
-  confirmPassword: string;
+  currentPassword?: string;
+  password?: string;
+  confirmPassword?: string;
 }
 
 export default function ProfilePage() {
@@ -35,6 +42,7 @@ export default function ProfilePage() {
     username: '',
     publicEmail: '',
     email: '',
+    currentPassword: '',
     password: '',
     confirmPassword: '',
   });
@@ -44,6 +52,7 @@ export default function ProfilePage() {
     username: '',
     publicEmail: '',
     email: '',
+    currentPassword: '',
     password: '',
     confirmPassword: '',
   });
@@ -52,15 +61,18 @@ export default function ProfilePage() {
   const [userCreatedAt, setUserCreatedAt] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Independent eye-toggle states for each password field
+  const [showCurrentPassword, setShowCurrentPassword] =
+    useState<boolean>(false);
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
 
   // Load current user profile from unified API
   useEffect(() => {
     async function loadProfile() {
       setIsLoading(true);
-      setErrorMessage(null);
       try {
         const res = await fetch('/api/user/profile');
         if (res.ok) {
@@ -71,6 +83,7 @@ export default function ProfilePage() {
               username: data.user.username || '',
               publicEmail: data.user.publicEmail || '',
               email: data.user.email || '',
+              currentPassword: '',
               password: '',
               confirmPassword: '',
             };
@@ -86,6 +99,7 @@ export default function ProfilePage() {
             username: (user.user_metadata?.username as string) || '',
             publicEmail: '',
             email: user.email || '',
+            currentPassword: '',
             password: '',
             confirmPassword: '',
           };
@@ -97,7 +111,7 @@ export default function ProfilePage() {
         const message =
           err instanceof Error ? err.message : 'Failed to load profile';
         console.error('[ProfilePage] Load error:', err);
-        setErrorMessage(message);
+        toast.error(message);
       } finally {
         setIsLoading(false);
       }
@@ -112,34 +126,72 @@ export default function ProfilePage() {
 
   const handleReset = () => {
     setFormData(initialData);
-    setErrorMessage(null);
-    setSuccessMessage(null);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    toast.info('Discarded unsaved profile changes.');
+  };
+
+  const handlePasswordGenerated = (generated: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      password: generated,
+      confirmPassword: generated,
+    }));
+    setShowNewPassword(true);
+    setShowConfirmPassword(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
 
-    // 1. Password confirmation check
-    if (formData.password && formData.password !== formData.confirmPassword) {
-      setErrorMessage('New password and confirmation do not match.');
-      setIsSaving(false);
-      return;
-    }
+    // 1. Password validation checks if a new password is being set
+    if (formData.password) {
+      if (!formData.currentPassword) {
+        toast.error(
+          'Current password is required to authorize updating your password.',
+        );
+        setIsSaving(false);
+        return;
+      }
 
-    // 2. Password length check
-    if (formData.password && formData.password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
-      setIsSaving(false);
-      return;
+      if (formData.password !== formData.confirmPassword) {
+        toast.error('New password and confirmation do not match.');
+        setIsSaving(false);
+        return;
+      }
+
+      if (formData.password.length < 6) {
+        toast.error('New password must be at least 6 characters long.');
+        setIsSaving(false);
+        return;
+      }
+
+      // Verify current password against Supabase if configured
+      if (isSupabaseConfigured && user?.email) {
+        try {
+          const { error: verifyErr } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: formData.currentPassword,
+          });
+          if (verifyErr) {
+            toast.error(
+              'Current password verification failed. Please check your current password.',
+            );
+            setIsSaving(false);
+            return;
+          }
+        } catch {
+          // If offline or network issue, proceed to backend handler
+        }
+      }
     }
 
     try {
-      // 3. Update Payload CMS User Profile via internal API
+      // 2. Update Payload CMS User Profile via internal API
       const res = await fetch('/api/user/profile', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
@@ -155,22 +207,41 @@ export default function ProfilePage() {
         throw new Error(resData.error || 'Failed to update CMS profile');
       }
 
-      // 4. Update Supabase Auth if password was changed & Supabase is live
-      if (formData.password && isSupabaseConfigured) {
-        const { error: sbError } = await supabase.auth.updateUser({
-          password: formData.password,
+      // 3. Update Supabase Auth to keep metadata and credentials in sync across both systems
+      if (isSupabaseConfigured) {
+        const sbAttributes: {
+          password?: string;
+          email?: string;
+          data: {
+            name: string;
+            username: string;
+          };
+        } = {
           data: {
             name: formData.name,
             username: formData.username,
           },
-        });
+        };
 
+        if (formData.password) {
+          sbAttributes.password = formData.password;
+        }
+
+        if (
+          formData.email &&
+          formData.email.toLowerCase().trim() !==
+            initialData.email.toLowerCase().trim()
+        ) {
+          sbAttributes.email = formData.email.toLowerCase().trim();
+        }
+
+        const { error: sbError } = await supabase.auth.updateUser(sbAttributes);
         if (sbError) {
           console.warn('[ProfilePage] Supabase auth sync warning:', sbError);
         }
       }
 
-      // 5. Refresh context state
+      // 4. Refresh context state
       await refreshUser();
 
       // Update initial baseline
@@ -179,23 +250,29 @@ export default function ProfilePage() {
         username: formData.username,
         publicEmail: formData.publicEmail,
         email: formData.email,
+        currentPassword: '',
         password: '',
         confirmPassword: '',
       };
       setFormData(updatedInitial);
       setInitialData(updatedInitial);
-      setSuccessMessage(
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
+
+      toast.success(
         'Profile and credentials updated successfully across Supabase & CMS.',
       );
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : 'Could not save profile changes.';
-      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
   };
 
+  const isAuthor = userRole === 'author';
   const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
   const formattedDate = userCreatedAt
     ? new Date(userCreatedAt).toLocaleDateString('en-US', {
@@ -210,40 +287,34 @@ export default function ProfilePage() {
     formData.username !== initialData.username ||
     formData.publicEmail !== initialData.publicEmail ||
     formData.email !== initialData.email ||
-    Boolean(formData.password);
+    Boolean(formData.password) ||
+    Boolean(formData.currentPassword);
 
   return (
     <div className="min-h-screen bg-[#faf7f2] font-sans text-gray-900 pb-20 selection:bg-[#ff7b01] selection:text-white">
       {/* Top Banner */}
       <div className="bg-white border-b border-[#f0e8dc] sticky top-0 z-20 shadow-2xs backdrop-blur-md bg-white/95">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            {!isAuthor && (
+              <Link
+                href="/admin"
+                className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
+              >
+                &larr; Appointments Feed
+              </Link>
+            )}
             <Link
-              href="/admin"
-              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors"
+              href="/cms"
+              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
             >
-              &larr; Back to Dashboard
+              &larr; Blog CMS Dashboard
             </Link>
           </div>
         </div>
       </div>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Notifications */}
-        {successMessage ? (
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-center gap-3 animate-in fade-in duration-200">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span className="font-semibold">{successMessage}</span>
-          </div>
-        ) : null}
-
-        {errorMessage ? (
-          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex items-center gap-3 animate-in fade-in duration-200">
-            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-            <span className="font-semibold">{errorMessage}</span>
-          </div>
-        ) : null}
-
         {isLoading ? (
           <div className="bg-white rounded-3xl p-12 text-center text-[#9c8a77] border border-[#f0e8dc] shadow-xs">
             <div className="inline-block w-8 h-8 border-3 border-[#ff7b01] border-t-transparent rounded-full animate-spin mb-3" />
@@ -276,11 +347,6 @@ export default function ProfilePage() {
                   Member since: {formattedDate}
                 </p>
               </div>
-
-              <div className="shrink-0 flex items-center gap-2 bg-[#faf7f2] border border-[#ede3d4] px-3.5 py-2 rounded-2xl text-[11px] text-[#554433] font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#ff7b01]" />
-                <span>Protected Role Session</span>
-              </div>
             </div>
 
             {/* Section 1: Public Author & Byline Details */}
@@ -291,7 +357,8 @@ export default function ProfilePage() {
                   <span>Author Bylines & Profile</span>
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">
-                  These details identify you across the studio system and on published blog articles.
+                  These details identify you across the studio system and on
+                  published blog articles.
                 </p>
               </div>
 
@@ -328,7 +395,6 @@ export default function ProfilePage() {
                       onChange={(e) => handleChange('username', e.target.value)}
                       placeholder="e.g. maya_ink"
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
-                      required
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-1.5">
@@ -352,7 +418,8 @@ export default function ProfilePage() {
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-1.5">
-                    Used for authenticating into both Studio Appointments and CMS.
+                    Used for authenticating into both Studio Appointments and
+                    CMS.
                   </p>
                 </div>
 
@@ -373,75 +440,157 @@ export default function ProfilePage() {
                     />
                   </div>
                   <p className="text-[11px] text-gray-400 mt-1.5">
-                    Optional contact address displayed to clients on author bio cards.
+                    Optional contact address displayed to clients on author bio
+                    cards.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Section 2: Password Management */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#f0e8dc] shadow-xs space-y-6">
-              <div className="border-b border-[#f0e8dc] pb-4">
-                <h3 className="text-base font-bold text-[#2e0249] flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-[#ff7b01]" />
-                  <span>Security & Credentials</span>
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  Update your authentication credentials. Leave blank if you don't wish to change your password.
-                </p>
+            {/* Section 2: Security & Credentials (DANGER ZONE) */}
+            <div className="bg-gradient-to-b from-white to-red-50/20 rounded-3xl p-6 sm:p-8 border-2 border-red-200 shadow-sm space-y-6">
+              <div className="border-b border-red-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-red-950 flex items-center gap-2">
+                    <ShieldAlert className="w-5 h-5 text-red-600" />
+                    <span>Security & Credentials (Danger Zone)</span>
+                  </h3>
+                  <p className="text-xs text-red-800/80 mt-1">
+                    Updating credentials alters your studio sign-in keys across
+                    Supabase and CMS. Requires entering your current password to
+                    authorize changes.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-300 self-start sm:self-auto shrink-0">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                  Sensitive Action
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
-                    New Password
+                {/* Current Password Field */}
+                <div className="sm:col-span-2 max-w-md">
+                  <label className="block text-xs font-bold text-red-950 uppercase tracking-wider mb-2">
+                    Current Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={(e) => handleChange('password', e.target.value)}
-                      placeholder="Leave blank to keep current password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={formData.currentPassword || ''}
+                      onChange={(e) =>
+                        handleChange('currentPassword', e.target.value)
+                      }
+                      placeholder="Enter current password to authorize changes"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-red-200 bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                      onClick={() =>
+                        setShowCurrentPassword(!showCurrentPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
                       aria-label={
-                        showPassword ? 'Hide password' : 'Show password'
+                        showCurrentPassword
+                          ? 'Hide current password'
+                          : 'Show current password'
                       }
                     >
-                      {showPassword ? (
+                      {showCurrentPassword ? (
                         <EyeOff className="w-4 h-4" />
                       ) : (
                         <Eye className="w-4 h-4" />
                       )}
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-1.5">
-                    Must be at least 6 characters long if changed.
+                  <p className="text-[11px] text-red-700/70 mt-1.5">
+                    Required whenever modifying password credentials.
                   </p>
                 </div>
 
-                <div>
+                {/* New Password Field with Strength Indicator & Generate Button */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider">
+                      New Password
+                    </label>
+                    <GeneratePasswordButton
+                      onGenerate={handlePasswordGenerated}
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={formData.password || ''}
+                      onChange={(e) => handleChange('password', e.target.value)}
+                      placeholder="Leave blank to keep current password"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+                      aria-label={
+                        showNewPassword ? 'Hide password' : 'Show password'
+                      }
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Password Strength Indicator on side / below new password */}
+                  <PasswordStrengthBar
+                    password={formData.password || ''}
+                    className="pt-1"
+                  />
+                  {!formData.password && (
+                    <p className="text-[11px] text-gray-400">
+                      Must be at least 6 characters long if changed.
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm New Password Field */}
+                <div className="space-y-2">
                   <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider mb-2">
                     Confirm New Password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.confirmPassword}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={formData.confirmPassword || ''}
                       onChange={(e) =>
                         handleChange('confirmPassword', e.target.value)
                       }
                       placeholder="Re-type new password"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
                     />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
+                      aria-label={
+                        showConfirmPassword
+                          ? 'Hide confirm password'
+                          : 'Show confirm password'
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-1.5">
+                  <p className="text-[11px] text-gray-400">
                     Re-enter your new password to verify.
                   </p>
                 </div>

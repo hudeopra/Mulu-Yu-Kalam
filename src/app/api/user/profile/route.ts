@@ -52,14 +52,16 @@ export async function GET(req: NextRequest) {
     }
 
     // 3. Find user in Payload collection (blog_users)
+    const normalizedEmail = userEmail.toLowerCase().trim();
     const userDocs = await payload.find({
       collection: 'users',
       where: {
         email: {
-          equals: userEmail,
+          equals: normalizedEmail,
         },
       },
       limit: 1,
+      overrideAccess: true,
     });
 
     if (!userDocs.docs[0]) {
@@ -86,7 +88,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function PATCH(req: NextRequest) {
+async function handleProfileUpdate(req: NextRequest) {
   try {
     const payload = await getPayload({ config });
     const body = await req.json();
@@ -132,14 +134,16 @@ export async function PATCH(req: NextRequest) {
     }
 
     // 3. Find user in Payload collection
+    const normalizedEmail = userEmail.toLowerCase().trim();
     const userDocs = await payload.find({
       collection: 'users',
       where: {
         email: {
-          equals: userEmail,
+          equals: normalizedEmail,
         },
       },
       limit: 1,
+      overrideAccess: true,
     });
 
     if (!userDocs.docs[0]) {
@@ -154,14 +158,17 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (typeof username === 'string') {
-      updateData.username = username
+      const cleanUsername = username
         .toLowerCase()
         .trim()
         .replace(/[^a-z0-9._-]/g, '');
+      // If empty string, explicitly set to null to avoid Postgres UNIQUE constraint collision
+      updateData.username = cleanUsername || null;
     }
 
     if (typeof publicEmail === 'string') {
-      updateData.publicEmail = publicEmail.trim();
+      const cleanPublicEmail = publicEmail.trim();
+      updateData.publicEmail = cleanPublicEmail || null;
     }
 
     if (
@@ -181,6 +188,7 @@ export async function PATCH(req: NextRequest) {
       collection: 'users',
       id: userDoc.id,
       data: updateData,
+      overrideAccess: true,
     });
 
     return NextResponse.json({
@@ -196,8 +204,16 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to update profile';
-    console.error('[Profile API PATCH] Error:', err);
+    console.error('[Profile API Update] Error:', err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+export async function PATCH(req: NextRequest) {
+  return handleProfileUpdate(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handleProfileUpdate(req);
 }
 

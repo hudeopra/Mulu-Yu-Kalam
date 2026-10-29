@@ -33,6 +33,7 @@ export const Users: CollectionConfig = {
     admin: ({ req: { user } }) => Boolean(user),
   },
   auth: {
+    maxLoginAttempts: 0, // Disables auto-lockout when using dual Supabase & Payload auth
     strategies: [
       {
         name: 'supabase',
@@ -63,15 +64,18 @@ export const Users: CollectionConfig = {
               return { user: null }
             }
 
+            const normalizedEmail = sbUser.email.toLowerCase().trim()
+
             // Check if user already exists in Payload
             const existing = await payload.find({
               collection: 'users',
               where: {
                 email: {
-                  equals: sbUser.email,
+                  equals: normalizedEmail,
                 },
               },
               limit: 1,
+              overrideAccess: true,
             })
 
             if (existing.docs.length > 0) {
@@ -89,10 +93,11 @@ export const Users: CollectionConfig = {
             const newUser = await payload.create({
               collection: 'users',
               data: {
-                email: sbUser.email,
+                email: normalizedEmail,
                 password: Math.random().toString(36).slice(-10) + 'A1!xyz',
                 role: 'admin',
               },
+              overrideAccess: true,
             })
 
             return {
@@ -132,9 +137,10 @@ export const Users: CollectionConfig = {
         beforeValidate: [
           ({ value }) => {
             if (typeof value === 'string') {
-              return value.toLowerCase().trim().replace(/[^a-z0-9._-]/g, '')
+              const cleaned = value.toLowerCase().trim().replace(/[^a-z0-9._-]/g, '')
+              return cleaned || null
             }
-            return value
+            return value || null
           },
         ],
       },
@@ -145,6 +151,17 @@ export const Users: CollectionConfig = {
       label: 'Public Email',
       admin: {
         description: 'Optional public contact email for this author. If left empty, the site default from .env is used.',
+      },
+      hooks: {
+        beforeValidate: [
+          ({ value }) => {
+            if (typeof value === 'string') {
+              const cleaned = value.trim()
+              return cleaned || null
+            }
+            return value || null
+          },
+        ],
       },
     },
     {

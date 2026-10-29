@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { Loader2, ShieldAlert } from "lucide-react";
@@ -13,6 +13,7 @@ export function AdminAuthGuard({
 }) {
   const { user, isLoading, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -37,9 +38,10 @@ export function AdminAuthGuard({
     return null;
   }
 
-  // Author role has no access to appointment bookings
+  // Author role has no access to appointment bookings, but CAN access their own profile (/admin/profile)
   const userRole = (user.role as string) || (user.user_metadata?.role as string) || 'author';
-  if (userRole === 'author') {
+  const isProfileRoute = pathname === '/admin/profile';
+  if (userRole === 'author' && !isProfileRoute) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-[#2e0249] p-4">
         <div className="max-w-md w-full p-8 bg-white rounded-3xl shadow-xl border border-gray-100 flex flex-col items-center text-center gap-4">

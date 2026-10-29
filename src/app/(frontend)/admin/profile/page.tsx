@@ -137,9 +137,9 @@ export default function ProfilePage() {
     }
 
     try {
-      // 3. Update Payload CMS User Profile via internal API
+      // 3. Update Payload CMS User Profile via internal API (both PATCH and POST are supported)
       const res = await fetch('/api/user/profile', {
-        method: 'POST',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
@@ -155,15 +155,34 @@ export default function ProfilePage() {
         throw new Error(resData.error || 'Failed to update CMS profile');
       }
 
-      // 4. Update Supabase Auth if password was changed & Supabase is live
-      if (formData.password && isSupabaseConfigured) {
-        const { error: sbError } = await supabase.auth.updateUser({
-          password: formData.password,
+      // 4. Update Supabase Auth to keep metadata and credentials in sync across both systems
+      if (isSupabaseConfigured) {
+        const sbAttributes: {
+          password?: string;
+          email?: string;
+          data: {
+            name: string;
+            username: string;
+          };
+        } = {
           data: {
             name: formData.name,
             username: formData.username,
           },
-        });
+        };
+
+        if (formData.password) {
+          sbAttributes.password = formData.password;
+        }
+
+        if (
+          formData.email &&
+          formData.email.toLowerCase().trim() !== initialData.email.toLowerCase().trim()
+        ) {
+          sbAttributes.email = formData.email.toLowerCase().trim();
+        }
+
+        const { error: sbError } = await supabase.auth.updateUser(sbAttributes);
 
         if (sbError) {
           console.warn('[ProfilePage] Supabase auth sync warning:', sbError);
@@ -196,6 +215,7 @@ export default function ProfilePage() {
     }
   };
 
+  const isAuthor = userRole === 'author';
   const displayRole = userRole.charAt(0).toUpperCase() + userRole.slice(1);
   const formattedDate = userCreatedAt
     ? new Date(userCreatedAt).toLocaleDateString('en-US', {
@@ -217,12 +237,20 @@ export default function ProfilePage() {
       {/* Top Banner */}
       <div className="bg-white border-b border-[#f0e8dc] sticky top-0 z-20 shadow-2xs backdrop-blur-md bg-white/95">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {!isAuthor && (
+              <Link
+                href="/admin"
+                className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
+              >
+                &larr; Appointments Feed
+              </Link>
+            )}
             <Link
-              href="/admin"
-              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors"
+              href="/cms"
+              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-1.5 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
             >
-              &larr; Back to Dashboard
+              &larr; Blog CMS Dashboard
             </Link>
           </div>
         </div>

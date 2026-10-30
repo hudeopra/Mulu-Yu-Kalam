@@ -25,13 +25,15 @@ export default function GalleryAdminPage() {
   const [activeTab, setActiveTab] = useState<'gallery' | 'hero'>('gallery');
   const [heroItems, setHeroItems] =
     useState<SiteGalleryItem[]>(DEFAULT_HERO_ITEMS);
-  const [galleryItems, setGalleryItems] =
-    useState<SiteGalleryItem[]>(DEFAULT_GALLERY_ITEMS);
+  const [galleryItems, setGalleryItems] = useState<SiteGalleryItem[]>(
+    DEFAULT_GALLERY_ITEMS,
+  );
 
   const [initialHero, setInitialHero] =
     useState<SiteGalleryItem[]>(DEFAULT_HERO_ITEMS);
-  const [initialGallery, setInitialGallery] =
-    useState<SiteGalleryItem[]>(DEFAULT_GALLERY_ITEMS);
+  const [initialGallery, setInitialGallery] = useState<SiteGalleryItem[]>(
+    DEFAULT_GALLERY_ITEMS,
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -63,8 +65,7 @@ export default function GalleryAdminPage() {
     loadGallery();
   }, []);
 
-  const isHeroDirty =
-    JSON.stringify(heroItems) !== JSON.stringify(initialHero);
+  const isHeroDirty = JSON.stringify(heroItems) !== JSON.stringify(initialHero);
   const isGalleryDirty =
     JSON.stringify(galleryItems) !== JSON.stringify(initialGallery);
   const isDirty = isHeroDirty || isGalleryDirty;
@@ -203,9 +204,6 @@ export default function GalleryAdminPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#ff7b01] uppercase tracking-wider bg-[#fff5eb] px-2.5 py-0.5 rounded-full border border-[#ffbd5b]/40">
-                Media & Showcase
-              </span>
               {isDirty && (
                 <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                   Unsaved changes
@@ -218,14 +216,6 @@ export default function GalleryAdminPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              target="_blank"
-              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-2 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
-            >
-              View Live Page &rarr;
-            </Link>
-
             {isDirty && (
               <button
                 type="button"
@@ -261,8 +251,12 @@ export default function GalleryAdminPage() {
             </p>
             <p>
               Each grid slot maintains the exact visual layout of the studio.
-              Replacing an image automatically removes the old file from Supabase
-              Storage under the <code className="font-mono font-bold text-[#ff7b01]">gallery/</code> prefix, ensuring no orphaned files accumulate.
+              Replacing an image automatically removes the old file from
+              Supabase Storage under the{' '}
+              <code className="font-mono font-bold text-[#ff7b01]">
+                gallery/
+              </code>{' '}
+              prefix, ensuring no orphaned files accumulate.
             </p>
           </div>
         </div>
@@ -389,4 +383,3 @@ export default function GalleryAdminPage() {
     </div>
   );
 }
-

@@ -109,9 +109,6 @@ export default function AboutAdminPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#ff7b01] uppercase tracking-wider bg-[#fff5eb] px-2.5 py-0.5 rounded-full border border-[#ffbd5b]/40">
-                Landing Page Content
-              </span>
               {isDirty && (
                 <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                   Unsaved changes
@@ -124,14 +121,6 @@ export default function AboutAdminPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              target="_blank"
-              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-2 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
-            >
-              View Live Page &rarr;
-            </Link>
-
             {isDirty && (
               <button
                 type="button"
@@ -162,7 +151,9 @@ export default function AboutAdminPage() {
         {isLoading ? (
           <div className="bg-white rounded-3xl p-12 text-center text-gray-500 border border-[#f0e8dc]">
             <div className="inline-block w-8 h-8 border-3 border-[#ff7b01] border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs font-semibold">Loading About Section Content...</p>
+            <p className="text-xs font-semibold">
+              Loading About Section Content...
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSave} className="space-y-8">
@@ -174,7 +165,9 @@ export default function AboutAdminPage() {
                   <span>Studio Narrative & Story</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Edit the primary text paragraphs displayed in the About section. Use the toolbar buttons to emphasize keywords in bold or studio colors.
+                  Edit the primary text paragraphs displayed in the About
+                  section. Use the toolbar buttons to emphasize keywords in bold
+                  or studio colors.
                 </p>
               </div>
 
@@ -186,7 +179,9 @@ export default function AboutAdminPage() {
                   <input
                     type="text"
                     value={data.title}
-                    onChange={(e) => setData({ ...data, title: e.target.value })}
+                    onChange={(e) =>
+                      setData({ ...data, title: e.target.value })
+                    }
                     className="w-full px-4 py-2.5 text-sm bg-white rounded-xl border border-[#f0e8dc] focus:ring-2 focus:ring-[#ff7b01] focus:outline-none"
                     placeholder="About Mulu Yu Kalam"
                   />
@@ -234,13 +229,16 @@ export default function AboutAdminPage() {
                   <span>Animated Milestone Counters</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Configure the 3 statistics counters shown alongside the narrative. Numbers smoothly count up when scrolled into view.
+                  Configure the 3 statistics counters shown alongside the
+                  narrative. Numbers smoothly count up when scrolled into view.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {data.counters.map((counter, idx) => {
-                  const colorConfig = COUNTER_COLOR_MAP[counter.color] || COUNTER_COLOR_MAP.purple;
+                  const colorConfig =
+                    COUNTER_COLOR_MAP[counter.color] ||
+                    COUNTER_COLOR_MAP.purple;
                   return (
                     <div
                       key={idx}
@@ -307,7 +305,9 @@ export default function AboutAdminPage() {
                             }
                             className="w-full px-3 py-2 text-xs font-semibold bg-white rounded-xl border border-[#f0e8dc] focus:ring-2 focus:ring-[#ff7b01] focus:outline-none"
                           >
-                            {(Object.keys(COUNTER_COLOR_MAP) as CounterColor[]).map((c) => (
+                            {(
+                              Object.keys(COUNTER_COLOR_MAP) as CounterColor[]
+                            ).map((c) => (
                               <option key={c} value={c}>
                                 {COUNTER_COLOR_MAP[c].label}
                               </option>
@@ -320,7 +320,9 @@ export default function AboutAdminPage() {
                       <div
                         className={`p-4 rounded-xl ${colorConfig.bg} text-center transition-all`}
                       >
-                        <p className={`text-3xl font-black ${colorConfig.text}`}>
+                        <p
+                          className={`text-3xl font-black ${colorConfig.text}`}
+                        >
                           {counter.target}+
                         </p>
                         <p className="text-xs font-medium text-gray-700 mt-1">
@@ -346,7 +348,8 @@ export default function AboutAdminPage() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Two highlight callout cards rendered below the narrative text (e.g. Custom Artwork and Hygiene Standards).
+                  Two highlight callout cards rendered below the narrative text
+                  (e.g. Custom Artwork and Hygiene Standards).
                 </p>
               </div>
 
@@ -402,4 +405,3 @@ export default function AboutAdminPage() {
     </div>
   );
 }
-

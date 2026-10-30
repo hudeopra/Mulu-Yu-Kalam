@@ -9,7 +9,10 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
     if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Email and password required' },
+        { status: 400 },
+      );
     }
 
     const cookieHeader = req.headers.get('cookie') || '';
@@ -17,7 +20,10 @@ export async function POST(req: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json({ error: 'Supabase configuration missing' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Supabase configuration missing' },
+        { status: 500 },
+      );
     }
 
     // Verify caller credentials via Supabase SSR client
@@ -37,8 +43,15 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase().trim();
 
     // Verify identity: caller must have a valid Supabase session matching this email
-    if (sbErr || !sbUser || sbUser.email?.toLowerCase().trim() !== normalizedEmail) {
-      return NextResponse.json({ error: 'Unauthorized credentials' }, { status: 401 });
+    if (
+      sbErr ||
+      !sbUser ||
+      sbUser.email?.toLowerCase().trim() !== normalizedEmail
+    ) {
+      return NextResponse.json(
+        { error: 'Unauthorized credentials' },
+        { status: 401 },
+      );
     }
 
     const payload = await getPayload({ config });
@@ -65,7 +78,10 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // Provision user in Payload CMS with matching credentials and role
-      const userRole = (sbUser.user_metadata?.role as any) || (sbUser.app_metadata?.role as any) || 'author';
+      const userRole =
+        (sbUser.user_metadata?.role as any) ||
+        (sbUser.app_metadata?.role as any) ||
+        'author';
       await payload.create({
         collection: 'users',
         data: {

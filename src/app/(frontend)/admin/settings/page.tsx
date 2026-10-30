@@ -22,8 +22,9 @@ import { SiteSettings, DEFAULT_SITE_SETTINGS } from '@/types/landing';
 
 export default function SettingsAdminPage() {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
-  const [initialSettings, setInitialSettings] =
-    useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
+  const [initialSettings, setInitialSettings] = useState<SiteSettings>(
+    DEFAULT_SITE_SETTINGS,
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [uploadingTarget, setUploadingTarget] = useState<string | null>(null);
@@ -50,8 +51,7 @@ export default function SettingsAdminPage() {
     loadSettings();
   }, []);
 
-  const isDirty =
-    JSON.stringify(settings) !== JSON.stringify(initialSettings);
+  const isDirty = JSON.stringify(settings) !== JSON.stringify(initialSettings);
 
   const handleAssetUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -127,9 +127,6 @@ export default function SettingsAdminPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#ff7b01] uppercase tracking-wider bg-[#fff5eb] px-2.5 py-0.5 rounded-full border border-[#ffbd5b]/40">
-                Studio Global Configuration
-              </span>
               {isDirty && (
                 <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                   Unsaved changes
@@ -142,14 +139,6 @@ export default function SettingsAdminPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              target="_blank"
-              className="text-xs font-semibold text-[#554433] hover:text-[#ff7b01] px-3 py-2 rounded-xl transition-colors bg-[#faf7f2] border border-[#ede3d4]"
-            >
-              View Live Page &rarr;
-            </Link>
-
             {isDirty && (
               <button
                 type="button"
@@ -191,7 +180,10 @@ export default function SettingsAdminPage() {
                   <span>Branding & Visual Media</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Upload your brand identity assets. The main logo automatically synchronizes across the landing page, navigation header, footer, admin sidebar, login screen, and booking confirmation emails.
+                  Upload your brand identity assets. The main logo automatically
+                  synchronizes across the landing page, navigation header,
+                  footer, admin sidebar, login screen, and booking confirmation
+                  emails.
                 </p>
               </div>
 
@@ -205,7 +197,7 @@ export default function SettingsAdminPage() {
                     <p className="text-[11px] text-gray-500">
                       Primary studio logo (SVG / transparent PNG recommended).
                     </p>
-                    <div className="p-4 rounded-xl bg-[#2e0249] flex items-center justify-center min-h-[90px]">
+                    <div className="p-4 rounded-xl  flex items-center justify-center min-h-[90px]">
                       <Image
                         src={settings.logo_url}
                         alt="Current Studio Logo"
@@ -219,7 +211,9 @@ export default function SettingsAdminPage() {
                   <label className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-[#ff7b01] bg-white hover:bg-[#ffecd0] border border-[#ffbd5b]/40 rounded-xl cursor-pointer transition-colors">
                     <Upload className="w-3.5 h-3.5" />
                     <span>
-                      {uploadingTarget === 'logo_url' ? 'Uploading...' : 'Replace Logo'}
+                      {uploadingTarget === 'logo_url'
+                        ? 'Uploading...'
+                        : 'Replace Logo'}
                     </span>
                     <input
                       type="file"
@@ -315,7 +309,8 @@ export default function SettingsAdminPage() {
                   <span>Contact Information & Studio Inquiries</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  These details feed into the Contact section cards, footer, and inquiry dialogs across the website.
+                  These details feed into the Contact section cards, footer, and
+                  inquiry dialogs across the website.
                 </p>
               </div>
 
@@ -402,7 +397,9 @@ export default function SettingsAdminPage() {
                     placeholder="Copyright © {year} Mulu Yu Kalam. All rights reserved."
                   />
                   <p className="text-[11px] text-gray-400 mt-1">
-                    Tip: Use <code className="font-mono text-[#ff7b01]">{'{year}'}</code> to automatically output the current year.
+                    Tip: Use{' '}
+                    <code className="font-mono text-[#ff7b01]">{'{year}'}</code>{' '}
+                    to automatically output the current year.
                   </p>
                 </div>
               </div>
@@ -416,7 +413,8 @@ export default function SettingsAdminPage() {
                   <span>Social Media Profiles</span>
                 </h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Links that populate the floating social bar in the About section and contact cards.
+                  Links that populate the floating social bar in the About
+                  section and contact cards.
                 </p>
               </div>
 
@@ -444,7 +442,10 @@ export default function SettingsAdminPage() {
                     type="url"
                     value={settings.instagram_url}
                     onChange={(e) =>
-                      setSettings({ ...settings, instagram_url: e.target.value })
+                      setSettings({
+                        ...settings,
+                        instagram_url: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 text-xs bg-white rounded-xl border border-[#f0e8dc] focus:ring-2 focus:ring-[#ff7b01] focus:outline-none"
                     placeholder="https://www.instagram.com/mulu_yu_kalam/"
@@ -488,4 +489,3 @@ export default function SettingsAdminPage() {
     </div>
   );
 }
-

@@ -114,9 +114,7 @@ export function AdminSidebar(props?: any) {
   const isTagsActive = pathname
     ? pathname.startsWith('/cms/collections/feature-tags')
     : false;
-  const isTeamActive = pathname
-    ? pathname.startsWith('/admin/team')
-    : false;
+  const isTeamActive = pathname ? pathname.startsWith('/admin/team') : false;
 
   const handleSignOut = async () => {
     // 1. Terminate Supabase Auth session
@@ -222,7 +220,7 @@ export function AdminSidebar(props?: any) {
         <div className="studio-sidebar__group">
           <p className="studio-sidebar__group-label">Blog & Content (CMS)</p>
           <ul className="studio-sidebar__nav-list">
-            <li>
+            {/* <li>
               <Link
                 href="/cms"
                 onClick={() => setIsMobileOpen(false)}
@@ -231,7 +229,7 @@ export function AdminSidebar(props?: any) {
                 <LayoutDashboard />
                 <span>CMS Dashboard</span>
               </Link>
-            </li>
+            </li> */}
 
             <li>
               <Link
@@ -276,8 +274,6 @@ export function AdminSidebar(props?: any) {
                 <span>Feature Badges</span>
               </Link>
             </li>
-
-
           </ul>
         </div>
 

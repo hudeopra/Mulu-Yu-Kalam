@@ -216,7 +216,7 @@ export function AppointmentFormFields({
 
         {/* Additional Notes */}
         <TextareaField
-          label="Additional Information (if any)"
+          label="Additional Information (Optional)"
           id="notes"
           {...register('notes')}
           rows={3}

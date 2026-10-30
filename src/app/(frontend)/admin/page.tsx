@@ -46,8 +46,13 @@ export default function AdminPage() {
   // Load view preference on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('admin_appointments_view') as AdminViewMode | null;
-      if (saved && (saved === 'table' || saved === 'kanban' || saved === 'calendar')) {
+      const saved = localStorage.getItem(
+        'admin_appointments_view',
+      ) as AdminViewMode | null;
+      if (
+        saved &&
+        (saved === 'table' || saved === 'kanban' || saved === 'calendar')
+      ) {
         setViewMode(saved);
       }
     } catch {
@@ -180,10 +185,7 @@ export default function AdminPage() {
   };
 
   // Quick reschedule callback directly from calendar drag or day view
-  const handleRescheduleAppointment = async (
-    id: string,
-    newDate: string,
-  ) => {
+  const handleRescheduleAppointment = async (id: string, newDate: string) => {
     try {
       const updated = await appointmentsService.updateAppointment(id, {
         appointment_date: newDate,
@@ -253,11 +255,6 @@ export default function AdminPage() {
                 <p className="text-2xl font-extrabold text-amber-600">
                   {stats.pending}
                 </p>
-                {stats.pending > 0 ? (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 animate-pulse">
-                    Action Needed
-                  </span>
-                ) : null}
               </div>
             </div>
           </div>

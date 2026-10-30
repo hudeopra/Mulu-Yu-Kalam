@@ -110,10 +110,10 @@ export function AppointmentDataTable({
   return (
     <div className="space-y-4">
       {/* Search Bar, Refresh & Status Tabs Controls */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-black/5 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between items-center gap-3">
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-black/5 shadow-xs space-y-4 ">
+        <div className="flex flex-wrap md:flex-nowrap flex-col sm:flex-row sm:items-center justify-between items-center gap-3">
           {/* Global Search Box */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1  order-2 md:order-1">
             <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
             <input
               type="text"
@@ -132,7 +132,7 @@ export function AppointmentDataTable({
               </button>
             ) : null}
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold scrollbar-none border-t border-gray-100 ">
+          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 text-xs font-semibold scrollbar-none border-t border-gray-100 order 1 md:order-2 w-full md:w-auto">
             {(
               [
                 { id: 'all', label: 'All', count: stats.total },
@@ -169,7 +169,7 @@ export function AppointmentDataTable({
             ))}
           </div>
           {/* Table Page Size & Refresh Button */}
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-2 justify-end order-2 md:order-3">
             <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 ">
               <span className="text-[11px] font-semibold text-gray-500">
                 Rows:

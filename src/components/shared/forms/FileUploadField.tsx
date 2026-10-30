@@ -41,7 +41,7 @@ interface UploadedItem {
 }
 
 export function FileUploadField({
-  label = 'Tattoo References / Designs (if any)',
+  label = 'Tattoo References / Designs (optional)',
   labelClassName,
   value,
   onChange,
@@ -368,4 +368,3 @@ export function FileUploadField({
 // Convenient alias for backwards compatibility
 export const FileUpload = FileUploadField;
 export type FileUploadProps = FileUploadFieldProps;
-

@@ -111,7 +111,8 @@ export default function TeamManagementPage() {
         setDangerEmail(data.members[0].email || '');
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Error fetching team';
+      const message =
+        err instanceof Error ? err.message : 'Error fetching team';
       toast.error(message);
     } finally {
       setIsLoading(false);
@@ -158,7 +159,9 @@ export default function TeamManagementPage() {
         throw new Error(data.error || 'Failed to update member');
       }
 
-      toast.success(`${formData.name || selectedMember.email} profile updated successfully.`);
+      toast.success(
+        `${formData.name || selectedMember.email} profile updated successfully.`,
+      );
       const updatedList = members.map((m) =>
         m.id === selectedMember.id ? { ...m, ...data.member } : m,
       );
@@ -180,7 +183,10 @@ export default function TeamManagementPage() {
       return;
     }
 
-    if (dangerEmail.toLowerCase().trim() === selectedMember.email.toLowerCase().trim()) {
+    if (
+      dangerEmail.toLowerCase().trim() ===
+      selectedMember.email.toLowerCase().trim()
+    ) {
       toast.info('Email address is unchanged.');
       return;
     }
@@ -217,7 +223,8 @@ export default function TeamManagementPage() {
       setSelectedMember({ ...selectedMember, email: data.member.email });
       setFormData((prev) => ({ ...prev, email: data.member.email }));
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update email';
+      const message =
+        err instanceof Error ? err.message : 'Failed to update email';
       toast.error(message);
     } finally {
       setIsUpdatingEmail(false);
@@ -255,13 +262,16 @@ export default function TeamManagementPage() {
         throw new Error(data.error || 'Failed to update password');
       }
 
-      toast.success(`Password for ${selectedMember.name || selectedMember.email} updated successfully.`);
+      toast.success(
+        `Password for ${selectedMember.name || selectedMember.email} updated successfully.`,
+      );
       setIsPasswordModalOpen(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
       setShowNewPassword(false);
       setShowConfirmPassword(false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Password update failed';
+      const message =
+        err instanceof Error ? err.message : 'Password update failed';
       toast.error(message);
     } finally {
       setIsUpdatingPassword(false);
@@ -306,7 +316,9 @@ export default function TeamManagementPage() {
         throw new Error(data.error || 'Failed to create team member');
       }
 
-      toast.success(`Team member ${data.member.name || data.member.email} created successfully.`);
+      toast.success(
+        `Team member ${data.member.name || data.member.email} created successfully.`,
+      );
       setMembers((prev) => [...prev, data.member]);
       setSelectedMember(data.member);
       handleSelectMember(data.member);
@@ -331,7 +343,10 @@ export default function TeamManagementPage() {
   // 5. Delete Member Action
   const handleDeleteMember = async () => {
     if (!selectedMember) return;
-    if (user?.email && selectedMember.email.toLowerCase() === user.email.toLowerCase()) {
+    if (
+      user?.email &&
+      selectedMember.email.toLowerCase() === user.email.toLowerCase()
+    ) {
       toast.error('You cannot delete your own administrative account.');
       return;
     }
@@ -408,8 +423,9 @@ export default function TeamManagementPage() {
               Team Management
             </h1>
             <p className="text-xs sm:text-sm text-gray-200 leading-relaxed">
-              Manage studio tattoo artists, authors, and system administrators. Configure designation
-              roles, author bylines, password credentials, and primary sign-in access.
+              Manage studio tattoo artists, authors, and system administrators.
+              Configure designation roles, author bylines, password credentials,
+              and primary sign-in access.
             </p>
           </div>
         </div>
@@ -417,12 +433,14 @@ export default function TeamManagementPage() {
         {isLoading ? (
           <div className="bg-white rounded-3xl p-12 text-center text-[#9c8a77] border border-[#f0e8dc] shadow-xs">
             <div className="inline-block w-8 h-8 border-3 border-[#ff7b01] border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs font-semibold">Loading studio team members...</p>
+            <p className="text-xs font-semibold">
+              Loading studio team members...
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column: Team Directory */}
-            <div className="lg:col-span-5 space-y-3">
+            <div className="lg:col-span-4 space-y-3">
               <div className="flex items-center justify-between pb-1">
                 <h2 className="text-sm font-bold uppercase tracking-wider text-[#554433] flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#ff7b01]" />
@@ -433,7 +451,9 @@ export default function TeamManagementPage() {
               <div className="space-y-2.5">
                 {members.map((member) => {
                   const isSelected = selectedMember?.id === member.id;
-                  const isSelf = user?.email && member.email.toLowerCase() === user.email.toLowerCase();
+                  const isSelf =
+                    user?.email &&
+                    member.email.toLowerCase() === user.email.toLowerCase();
 
                   return (
                     <button
@@ -485,7 +505,7 @@ export default function TeamManagementPage() {
 
             {/* Right Column: Selected Member Management Form */}
             {selectedMember ? (
-              <div className="lg:col-span-7 space-y-6">
+              <div className="lg:col-span-8 space-y-6">
                 {/* 1. General Info & Role Form */}
                 <form
                   onSubmit={handleUpdateGeneralInfo}
@@ -495,10 +515,14 @@ export default function TeamManagementPage() {
                     <div>
                       <h3 className="text-base font-bold text-[#2e0249] flex items-center gap-2">
                         <UserCheck className="w-4 h-4 text-[#ff7b01]" />
-                        <span>Edit Member: {selectedMember.name || selectedMember.email}</span>
+                        <span>
+                          Edit Member:{' '}
+                          {selectedMember.name || selectedMember.email}
+                        </span>
                       </h3>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Update editorial bylines, designations, and internal handles.
+                        Update editorial bylines, designations, and internal
+                        handles.
                       </p>
                     </div>
 
@@ -521,7 +545,9 @@ export default function TeamManagementPage() {
                       <input
                         type="text"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                         placeholder="e.g. Maya Shrestha"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
                         required
@@ -535,7 +561,9 @@ export default function TeamManagementPage() {
                       <input
                         type="text"
                         value={formData.username}
-                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, username: e.target.value })
+                        }
                         placeholder="e.g. maya_ink"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
                       />
@@ -548,7 +576,12 @@ export default function TeamManagementPage() {
                       <input
                         type="email"
                         value={formData.publicEmail}
-                        onChange={(e) => setFormData({ ...formData, publicEmail: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            publicEmail: e.target.value,
+                          })
+                        }
                         placeholder="Optional public bio email"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
                       />
@@ -563,14 +596,23 @@ export default function TeamManagementPage() {
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            role: e.target.value as 'admin' | 'artist' | 'author',
+                            role: e.target.value as
+                              | 'admin'
+                              | 'artist'
+                              | 'author',
                           })
                         }
                         className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all cursor-pointer"
                       >
-                        <option value="author">Author (CMS Articles Only)</option>
-                        <option value="artist">Artist (Appointments + CMS)</option>
-                        <option value="admin">Admin (Full System Access)</option>
+                        <option value="author">
+                          Author (CMS Articles Only)
+                        </option>
+                        <option value="artist">
+                          Artist (Appointments + CMS)
+                        </option>
+                        <option value="admin">
+                          Admin (Full System Access)
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -605,8 +647,8 @@ export default function TeamManagementPage() {
                         <span>Danger Zone: Primary Sign-in Access</span>
                       </h4>
                       <p className="text-xs text-red-800/80 mt-1">
-                        Changing the primary email modifies the member&apos;s authentication credential
-                        across all studio services.
+                        Changing the primary email modifies the member&apos;s
+                        authentication credential across all studio services.
                       </p>
                     </div>
                     <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800 uppercase tracking-wider">
@@ -641,18 +683,25 @@ export default function TeamManagementPage() {
                           }
                           className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0"
                         >
-                          {isUpdatingEmail ? 'Updating Email...' : 'Update Sign-in Email'}
+                          {isUpdatingEmail
+                            ? 'Updating Email...'
+                            : 'Update Sign-in Email'}
                         </button>
                       </div>
                       <p className="text-[11px] text-red-700/70 mt-1.5">
-                        Current active address: <strong className="font-mono">{selectedMember.email}</strong>
+                        Current active address:{' '}
+                        <strong className="font-mono">
+                          {selectedMember.email}
+                        </strong>
                       </p>
                     </div>
 
                     {/* Member Deletion Option */}
                     <div className="pt-4 border-t border-red-100 flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-bold text-red-950">Remove Team Member</p>
+                        <p className="text-xs font-bold text-red-950">
+                          Remove Team Member
+                        </p>
                         <p className="text-[11px] text-gray-500">
                           Revokes all studio booking and blog author privileges.
                         </p>
@@ -663,13 +712,15 @@ export default function TeamManagementPage() {
                         onClick={handleDeleteMember}
                         disabled={
                           user?.email
-                            ? selectedMember.email.toLowerCase() === user.email.toLowerCase()
+                            ? selectedMember.email.toLowerCase() ===
+                              user.email.toLowerCase()
                             : false
                         }
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                         title={
                           user?.email &&
-                          selectedMember.email.toLowerCase() === user.email.toLowerCase()
+                          selectedMember.email.toLowerCase() ===
+                            user.email.toLowerCase()
                             ? 'Cannot delete your own account'
                             : 'Permanently remove staff'
                         }
@@ -742,7 +793,10 @@ export default function TeamManagementPage() {
                     type={showNewPassword ? 'text' : 'password'}
                     value={passwordData.newPassword}
                     onChange={(e) =>
-                      setPasswordData({ ...passwordData, newPassword: e.target.value })
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
                     }
                     placeholder="Enter new password (min. 6 chars)"
                     className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
@@ -752,14 +806,23 @@ export default function TeamManagementPage() {
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
-                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showNewPassword ? 'Hide password' : 'Show password'
+                    }
                   >
-                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showNewPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
 
                 {/* Password Strength Indicator */}
-                <PasswordStrengthBar password={passwordData.newPassword} className="pt-1" />
+                <PasswordStrengthBar
+                  password={passwordData.newPassword}
+                  className="pt-1"
+                />
               </div>
 
               {/* Confirm Password with Independent Toggle */}
@@ -786,9 +849,15 @@ export default function TeamManagementPage() {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showConfirmPassword ? 'Hide password' : 'Show password'
+                    }
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -828,7 +897,8 @@ export default function TeamManagementPage() {
                     Invite New Team Member
                   </h3>
                   <p className="text-[11px] text-gray-400">
-                    Creates unified access across Appointments Feed and Blog CMS.
+                    Creates unified access across Appointments Feed and Blog
+                    CMS.
                   </p>
                 </div>
               </div>
@@ -852,7 +922,10 @@ export default function TeamManagementPage() {
                     type="text"
                     value={newMemberData.name}
                     onChange={(e) =>
-                      setNewMemberData({ ...newMemberData, name: e.target.value })
+                      setNewMemberData({
+                        ...newMemberData,
+                        name: e.target.value,
+                      })
                     }
                     placeholder="e.g. Maya Shrestha"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
@@ -868,7 +941,10 @@ export default function TeamManagementPage() {
                     type="text"
                     value={newMemberData.username}
                     onChange={(e) =>
-                      setNewMemberData({ ...newMemberData, username: e.target.value })
+                      setNewMemberData({
+                        ...newMemberData,
+                        username: e.target.value,
+                      })
                     }
                     placeholder="e.g. maya_ink"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
@@ -883,7 +959,10 @@ export default function TeamManagementPage() {
                     type="email"
                     value={newMemberData.email}
                     onChange={(e) =>
-                      setNewMemberData({ ...newMemberData, email: e.target.value })
+                      setNewMemberData({
+                        ...newMemberData,
+                        email: e.target.value,
+                      })
                     }
                     placeholder="staff@muluyukalam.com.np"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
@@ -905,9 +984,15 @@ export default function TeamManagementPage() {
                     }
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all cursor-pointer"
                   >
-                    <option value="author">Author (Blog CMS articles & bylines only)</option>
-                    <option value="artist">Artist (Studio Appointments + Blog CMS)</option>
-                    <option value="admin">Administrator (Full System & User Control)</option>
+                    <option value="author">
+                      Author (Blog CMS articles & bylines only)
+                    </option>
+                    <option value="artist">
+                      Artist (Studio Appointments + Blog CMS)
+                    </option>
+                    <option value="admin">
+                      Administrator (Full System & User Control)
+                    </option>
                   </select>
                 </div>
 
@@ -936,7 +1021,10 @@ export default function TeamManagementPage() {
                       type={showAddPassword ? 'text' : 'password'}
                       value={newMemberData.password}
                       onChange={(e) =>
-                        setNewMemberData({ ...newMemberData, password: e.target.value })
+                        setNewMemberData({
+                          ...newMemberData,
+                          password: e.target.value,
+                        })
                       }
                       placeholder="Minimum 6 characters"
                       className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#ede3d4] bg-white text-xs sm:text-sm text-gray-800 focus:outline-none focus:border-[#ff7b01] focus:ring-2 focus:ring-[#ff7b01]/20 transition-all"
@@ -946,9 +1034,15 @@ export default function TeamManagementPage() {
                       type="button"
                       onClick={() => setShowAddPassword(!showAddPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
-                      aria-label={showAddPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showAddPassword ? 'Hide password' : 'Show password'
+                      }
                     >
-                      {showAddPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showAddPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   <PasswordStrengthBar password={newMemberData.password} />
@@ -956,7 +1050,8 @@ export default function TeamManagementPage() {
 
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="block text-xs font-bold text-[#554433] uppercase tracking-wider">
-                    Confirm Initial Password <span className="text-red-500">*</span>
+                    Confirm Initial Password{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -975,11 +1070,21 @@ export default function TeamManagementPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowAddConfirmPassword(!showAddConfirmPassword)}
+                      onClick={() =>
+                        setShowAddConfirmPassword(!showAddConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 cursor-pointer"
-                      aria-label={showAddConfirmPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showAddConfirmPassword
+                          ? 'Hide password'
+                          : 'Show password'
+                      }
                     >
-                      {showAddConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showAddConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1008,4 +1113,3 @@ export default function TeamManagementPage() {
     </div>
   );
 }
-

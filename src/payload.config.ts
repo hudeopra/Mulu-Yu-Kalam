@@ -148,10 +148,11 @@ export default buildConfig({
   db: postgresAdapter({
     push: false,
     tablesFilter: ['blog_*', 'payload_*', '_blog_*'],
+    transactionOptions: false,
     pool: {
       connectionString: dbConnectionString,
-      max: process.env.NODE_ENV === 'production' ? 2 : 10,
-      idleTimeoutMillis: 5000,
+      max: 10,
+      idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 10000,
       ssl: dbConnectionString.includes('localhost')
         ? false

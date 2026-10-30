@@ -1,21 +1,27 @@
 import type { CollectionConfig } from 'payload'
 import { jwtSign } from 'payload'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
+import crypto from 'crypto'
 
-function isTokenUnexpired(cookieHeader: string, cookiePrefix: string): boolean {
+function verifyPayloadToken(
+  token: string,
+  secret: string,
+): { id: number | string; email?: string } | null {
   try {
-    const tokenName = `${cookiePrefix}-token`
-    const match = cookieHeader.match(new RegExp(`${tokenName}=([^;]+)`))
-    if (!match || !match[1]) return false
-    const parts = match[1].split('.')
-    if (parts.length !== 3) return false
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'))
-    if (payload.exp && payload.exp * 1000 > Date.now()) {
-      return true
-    }
-    return false
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    const [headerB64, payloadB64, signatureB64] = parts
+    const expectedSig = crypto
+      .createHmac('sha256', secret)
+      .update(`${headerB64}.${payloadB64}`)
+      .digest('base64url')
+    if (signatureB64 !== expectedSig) return null
+    const data = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf8'))
+    if (data.exp && data.exp * 1000 < Date.now()) return null
+    if (!data.id) return null
+    return data
   } catch {
-    return false
+    return null
   }
 }
 
@@ -51,6 +57,7 @@ export const Users: CollectionConfig = {
     admin: ({ req: { user } }) => Boolean(user),
   },
   auth: {
+    useSessions: false, // Disables server sessions for dual Supabase & Payload JWT auth
     maxLoginAttempts: 0, // Disables auto-lockout when using dual Supabase & Payload auth
     tokenExpiration: 30 * 24 * 60 * 60, // 30-day session token (prevents premature session expiration)
     strategies: [
@@ -61,10 +68,31 @@ export const Users: CollectionConfig = {
           const cookiePrefix = payload.config.cookiePrefix || 'payload'
           const tokenCookieName = `${cookiePrefix}-token`
 
-          // FAST PATH 1: If an unexpired payload-token cookie exists, skip external Supabase call
-          // and let Payload's native local-jwt strategy authenticate in memory (0ms network overhead)
-          if (isTokenUnexpired(cookieHeader, cookiePrefix)) {
-            return { user: null }
+          // FAST PATH 1: If an unexpired payload-token cookie exists, verify directly in memory
+          // with 0ms network latency and return the user document immediately
+          const tokenMatch = cookieHeader.match(new RegExp(`${tokenCookieName}=([^;]+)`))
+          if (tokenMatch && tokenMatch[1]) {
+            const verified = verifyPayloadToken(tokenMatch[1], payload.secret)
+            if (verified?.id) {
+              try {
+                const userDoc = await payload.findByID({
+                  collection: 'users',
+                  id: verified.id,
+                  overrideAccess: true,
+                })
+                if (userDoc) {
+                  return {
+                    user: {
+                      ...userDoc,
+                      collection: 'users',
+                      _strategy: 'supabase',
+                    },
+                  }
+                }
+              } catch {
+                // If user retrieval fails, fall through to Supabase auth check below
+              }
+            }
           }
 
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

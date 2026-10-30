@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     let userEmail: string | null = null;
+    let sbUserObj: any = null;
 
     // 1. Identify user from Supabase session
     if (supabaseUrl && supabaseAnonKey && cookieHeader) {
@@ -29,6 +30,7 @@ export async function GET(req: NextRequest) {
         } = await supabase.auth.getUser();
         if (sbUser?.email) {
           userEmail = sbUser.email;
+          sbUserObj = sbUser;
         }
       } catch (err) {
         console.warn('[Profile API] Supabase getUser error:', err);
@@ -51,36 +53,59 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 3. Find user in Payload collection (blog_users)
+    // 3. Find user in Payload collection (blog_users) with Supabase fallback
     const normalizedEmail = userEmail.toLowerCase().trim();
-    const userDocs = await payload.find({
-      collection: 'users',
-      where: {
-        email: {
-          equals: normalizedEmail,
+    try {
+      const userDocs = await payload.find({
+        collection: 'users',
+        where: {
+          email: {
+            equals: normalizedEmail,
+          },
         },
-      },
-      limit: 1,
-      overrideAccess: true,
-    });
+        limit: 1,
+        overrideAccess: true,
+      });
 
-    if (!userDocs.docs[0]) {
-      return NextResponse.json({ error: 'User record not found' }, { status: 404 });
+      if (userDocs.docs[0]) {
+        const doc = userDocs.docs[0];
+        return NextResponse.json({
+          user: {
+            id: doc.id,
+            email: doc.email,
+            name: doc.name || '',
+            username: doc.username || '',
+            publicEmail: doc.publicEmail || '',
+            role: doc.role || 'author',
+            createdAt: doc.createdAt,
+            updatedAt: doc.updatedAt,
+          },
+        });
+      }
+    } catch (dbErr) {
+      console.warn('[Profile API] DB query fallback to Supabase session:', dbErr);
     }
 
-    const doc = userDocs.docs[0];
-    return NextResponse.json({
-      user: {
-        id: doc.id,
-        email: doc.email,
-        name: doc.name || '',
-        username: doc.username || '',
-        publicEmail: doc.publicEmail || '',
-        role: doc.role || 'author',
-        createdAt: doc.createdAt,
-        updatedAt: doc.updatedAt,
-      },
-    });
+    // Fallback: If DB query had transient latency or user doc not found, return Supabase user metadata
+    if (sbUserObj) {
+      return NextResponse.json({
+        user: {
+          id: sbUserObj.id,
+          email: sbUserObj.email,
+          name: (sbUserObj.user_metadata?.name as string) || '',
+          username: (sbUserObj.user_metadata?.username as string) || '',
+          publicEmail: '',
+          role:
+            (sbUserObj.user_metadata?.role as string) ||
+            (sbUserObj.app_metadata?.role as string) ||
+            'author',
+          createdAt: sbUserObj.created_at,
+          updatedAt: sbUserObj.updated_at || sbUserObj.created_at,
+        },
+      });
+    }
+
+    return NextResponse.json({ error: 'User record not found' }, { status: 404 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal Server Error';
     console.error('[Profile API GET] Error:', err);
@@ -216,4 +241,3 @@ export async function PATCH(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return handleProfileUpdate(req);
 }
-

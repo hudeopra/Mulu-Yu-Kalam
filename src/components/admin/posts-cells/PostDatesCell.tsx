@@ -12,6 +12,7 @@ function formatDateOnly(dateValue?: string | Date | number | null): string {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      timeZone: 'UTC',
     }).format(d);
   } catch {
     return String(dateValue);
@@ -68,7 +69,12 @@ export const PostDatesCell: React.FC<DefaultCellComponentProps> = ({
         <span style={{ fontWeight: 700, color: isDraft ? '#b45309' : '#047857' }}>
           {topPrefix}
         </span>
-        <span style={{ fontWeight: 500, color: '#374151' }}>{topDateFormatted}</span>
+        <span
+          suppressHydrationWarning
+          style={{ fontWeight: 500, color: '#374151' }}
+        >
+          {topDateFormatted}
+        </span>
       </div>
 
       {/* Bottom Line: Created (Date only, Truncated) */}
@@ -87,7 +93,12 @@ export const PostDatesCell: React.FC<DefaultCellComponentProps> = ({
         title={bottomLineFull}
       >
         <span style={{ fontWeight: 600, color: '#6b7280' }}>Created: </span>
-        <span style={{ color: '#9ca3af' }}>{createdFormatted}</span>
+        <span
+          suppressHydrationWarning
+          style={{ color: '#9ca3af' }}
+        >
+          {createdFormatted}
+        </span>
       </div>
     </div>
   );

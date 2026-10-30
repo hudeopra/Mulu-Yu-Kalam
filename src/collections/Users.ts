@@ -1,5 +1,23 @@
 import type { CollectionConfig } from 'payload'
+import { jwtSign } from 'payload'
 import { createServerClient, parseCookieHeader } from '@supabase/ssr'
+
+function isTokenUnexpired(cookieHeader: string, cookiePrefix: string): boolean {
+  try {
+    const tokenName = `${cookiePrefix}-token`
+    const match = cookieHeader.match(new RegExp(`${tokenName}=([^;]+)`))
+    if (!match || !match[1]) return false
+    const parts = match[1].split('.')
+    if (parts.length !== 3) return false
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'))
+    if (payload.exp && payload.exp * 1000 > Date.now()) {
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
+}
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -40,11 +58,12 @@ export const Users: CollectionConfig = {
         name: 'supabase',
         authenticate: async ({ headers, payload }) => {
           const cookieHeader = headers.get('cookie') || ''
-          const tokenCookieName = `${payload.config.cookiePrefix || 'payload'}-token`
+          const cookiePrefix = payload.config.cookiePrefix || 'payload'
+          const tokenCookieName = `${cookiePrefix}-token`
 
-          // FAST PATH 1: If payload-token cookie exists, skip external Supabase call
+          // FAST PATH 1: If an unexpired payload-token cookie exists, skip external Supabase call
           // and let Payload's native local-jwt strategy authenticate in memory (0ms network overhead)
-          if (cookieHeader.includes(tokenCookieName)) {
+          if (isTokenUnexpired(cookieHeader, cookiePrefix)) {
             return { user: null }
           }
 
@@ -81,6 +100,7 @@ export const Users: CollectionConfig = {
             const normalizedEmail = sbUser.email.toLowerCase().trim()
 
             // Check if user already exists in Payload
+            let userDoc: any = null
             const existing = await payload.find({
               collection: 'users',
               where: {
@@ -93,33 +113,57 @@ export const Users: CollectionConfig = {
             })
 
             if (existing.docs.length > 0) {
-              const user = existing.docs[0]
-              return {
-                user: {
-                  ...user,
-                  collection: 'users',
-                  _strategy: 'supabase',
+              userDoc = existing.docs[0]
+            } else {
+              // Auto-provision Supabase user into Payload
+              userDoc = await payload.create({
+                collection: 'users',
+                data: {
+                  email: normalizedEmail,
+                  password: Math.random().toString(36).slice(-10) + 'A1!xyz',
+                  role: (sbUser.user_metadata?.role as any) || 'admin',
+                  name: (sbUser.user_metadata?.name as string) || '',
+                  username: (sbUser.user_metadata?.username as string) || '',
                 },
-              }
+                overrideAccess: true,
+              })
             }
 
-            // Auto-provision Supabase admin into Payload
-            const newUser = await payload.create({
-              collection: 'users',
-              data: {
-                email: normalizedEmail,
-                password: Math.random().toString(36).slice(-10) + 'A1!xyz',
-                role: 'admin',
-              },
-              overrideAccess: true,
-            })
+            if (!userDoc) {
+              return { user: null }
+            }
+
+            // Issue a fresh payload-token cookie in responseHeaders so subsequent requests
+            // use local-jwt directly with zero Supabase network latency
+            const responseHeaders = new Headers()
+            try {
+              const { token } = await jwtSign({
+                fieldsToSign: {
+                  id: userDoc.id,
+                  collection: 'users',
+                  email: userDoc.email,
+                },
+                secret: payload.secret,
+                tokenExpiration: 30 * 24 * 60 * 60,
+              })
+              if (token) {
+                const isProd = process.env.NODE_ENV === 'production'
+                responseHeaders.append(
+                  'Set-Cookie',
+                  `${tokenCookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isProd ? '; Secure' : ''}`,
+                )
+              }
+            } catch (signErr) {
+              console.warn('[Users auth] jwtSign error:', signErr)
+            }
 
             return {
               user: {
-                ...newUser,
+                ...userDoc,
                 collection: 'users',
                 _strategy: 'supabase',
               },
+              responseHeaders,
             }
           } catch (e) {
             console.error('[Payload Supabase Auth Strategy] Error:', e)

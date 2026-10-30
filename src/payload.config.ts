@@ -16,6 +16,19 @@ import { Posts } from './collections/Posts';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+// Ensure Supabase connection uses port 6543 (PgBouncer Transaction Mode) in serverless production
+let dbConnectionString = process.env.DATABASE_URI || '';
+if (dbConnectionString.includes('.pooler.supabase.com:5432')) {
+  dbConnectionString = dbConnectionString.replace(':5432', ':6543');
+}
+if (
+  dbConnectionString.includes(':6543') &&
+  !dbConnectionString.includes('pgbouncer=true')
+) {
+  dbConnectionString +=
+    (dbConnectionString.includes('?') ? '&' : '?') + 'pgbouncer=true';
+}
+
 export default buildConfig({
   admin: {
     theme: 'light',
@@ -136,11 +149,11 @@ export default buildConfig({
     push: false,
     tablesFilter: ['blog_*', 'payload_*', '_blog_*'],
     pool: {
-      connectionString: process.env.DATABASE_URI || '',
-      max: process.env.NODE_ENV === 'production' ? 4 : 10,
-      idleTimeoutMillis: 10000,
+      connectionString: dbConnectionString,
+      max: process.env.NODE_ENV === 'production' ? 2 : 10,
+      idleTimeoutMillis: 5000,
       connectionTimeoutMillis: 10000,
-      ssl: process.env.DATABASE_URI?.includes('localhost')
+      ssl: dbConnectionString.includes('localhost')
         ? false
         : { rejectUnauthorized: false },
     },

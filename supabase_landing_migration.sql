@@ -147,41 +147,28 @@ ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_about ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_gallery ENABLE ROW LEVEL SECURITY;
 
--- 5. RLS Policies: Public Read Access (for fast landing page loading without auth)
+-- 5. RLS Policies: Allow Read and Write Access (matching studio operations model)
 DO $$ BEGIN
   DROP POLICY IF EXISTS "Public can view site settings" ON public.site_settings;
-  CREATE POLICY "Public can view site settings" ON public.site_settings
-    FOR SELECT USING (true);
+  DROP POLICY IF EXISTS "Authenticated users can update site settings" ON public.site_settings;
+  DROP POLICY IF EXISTS "Allow all access for site_settings" ON public.site_settings;
+  CREATE POLICY "Allow all access for site_settings" ON public.site_settings
+    FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 EXCEPTION WHEN undefined_object THEN null; END $$;
 
 DO $$ BEGIN
   DROP POLICY IF EXISTS "Public can view site about" ON public.site_about;
-  CREATE POLICY "Public can view site about" ON public.site_about
-    FOR SELECT USING (true);
+  DROP POLICY IF EXISTS "Authenticated users can update site about" ON public.site_about;
+  DROP POLICY IF EXISTS "Allow all access for site_about" ON public.site_about;
+  CREATE POLICY "Allow all access for site_about" ON public.site_about
+    FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 EXCEPTION WHEN undefined_object THEN null; END $$;
 
 DO $$ BEGIN
   DROP POLICY IF EXISTS "Public can view site gallery" ON public.site_gallery;
-  CREATE POLICY "Public can view site gallery" ON public.site_gallery
-    FOR SELECT USING (true);
-EXCEPTION WHEN undefined_object THEN null; END $$;
-
--- 6. RLS Policies: Authenticated Admin / Editor Write Access
-DO $$ BEGIN
-  DROP POLICY IF EXISTS "Authenticated users can update site settings" ON public.site_settings;
-  CREATE POLICY "Authenticated users can update site settings" ON public.site_settings
-    FOR ALL USING (auth.role() = 'authenticated');
-EXCEPTION WHEN undefined_object THEN null; END $$;
-
-DO $$ BEGIN
-  DROP POLICY IF EXISTS "Authenticated users can update site about" ON public.site_about;
-  CREATE POLICY "Authenticated users can update site about" ON public.site_about
-    FOR ALL USING (auth.role() = 'authenticated');
-EXCEPTION WHEN undefined_object THEN null; END $$;
-
-DO $$ BEGIN
   DROP POLICY IF EXISTS "Authenticated users can update site gallery" ON public.site_gallery;
-  CREATE POLICY "Authenticated users can update site gallery" ON public.site_gallery
-    FOR ALL USING (auth.role() = 'authenticated');
+  DROP POLICY IF EXISTS "Allow all access for site_gallery" ON public.site_gallery;
+  CREATE POLICY "Allow all access for site_gallery" ON public.site_gallery
+    FOR ALL TO anon, authenticated, service_role USING (true) WITH CHECK (true);
 EXCEPTION WHEN undefined_object THEN null; END $$;
 

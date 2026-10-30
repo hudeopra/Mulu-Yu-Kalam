@@ -34,6 +34,7 @@ export const Users: CollectionConfig = {
   },
   auth: {
     maxLoginAttempts: 0, // Disables auto-lockout when using dual Supabase & Payload auth
+    tokenExpiration: 30 * 24 * 60 * 60, // 30-day session token (prevents premature session expiration)
     strategies: [
       {
         name: 'supabase',

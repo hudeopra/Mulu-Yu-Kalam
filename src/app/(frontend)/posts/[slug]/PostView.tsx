@@ -53,7 +53,7 @@ export function PostView({
   const { data: post } = useLivePreview<Post>({
     initialData: initialPost,
     serverURL,
-    depth: 2,
+    depth: 0,
   });
 
   // Reading Progress Bar State (0 - 100%)
@@ -350,11 +350,12 @@ export function PostView({
                     )}
 
                     {post.publishedAt && (
-                      <span className="flex items-center gap-1.5 font-medium">
+                      <span className="flex items-center gap-1.5 font-medium" suppressHydrationWarning>
                         <Calendar className="w-4 h-4 text-[#ff7b01]" />
                         {new Date(post.publishedAt).toLocaleDateString(
                           'en-US',
                           {
+                            timeZone: 'UTC',
                             month: 'long',
                             day: 'numeric',
                             year: 'numeric',

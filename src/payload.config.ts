@@ -137,6 +137,9 @@ export default buildConfig({
     tablesFilter: ['blog_*', 'payload_*', '_blog_*'],
     pool: {
       connectionString: process.env.DATABASE_URI || '',
+      max: process.env.NODE_ENV === 'production' ? 4 : 10,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000,
     },
   }),
   sharp,

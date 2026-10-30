@@ -45,48 +45,64 @@ export async function generateStaticParams() {
 }
 
 /**
+ * Cached auth check to avoid repeated Supabase / Payload user lookups per request.
+ */
+const getAuthUser = cache(async () => {
+  try {
+    const headers = await getHeaders()
+    const payload = await getPayload({ config: configPromise })
+    const { user } = await payload.auth({ headers })
+    return user
+  } catch {
+    return null
+  }
+})
+
+/**
  * Deduplicate database query between generateMetadata() and PostPage().
  * React cache() guarantees this only hits PostgreSQL ONCE per request.
  */
-const queryPostBySlug = cache(async (slug: string, isDraft: boolean, user?: any) => {
-  const payload = await getPayload({ config: configPromise })
+const queryPostBySlug = cache(async (slug: string, isDraft: boolean) => {
+  try {
+    const payload = await getPayload({ config: configPromise })
 
-  const result = await payload.find({
-    collection: 'posts',
-    where: {
-      and: [
-        {
-          slug: {
-            equals: slug,
+    const result = await payload.find({
+      collection: 'posts',
+      where: {
+        and: [
+          {
+            slug: {
+              equals: slug,
+            },
           },
-        },
-        ...(isDraft
-          ? []
-          : [
-              {
-                _status: {
-                  equals: 'published' as const,
+          ...(isDraft
+            ? []
+            : [
+                {
+                  _status: {
+                    equals: 'published' as const,
+                  },
                 },
-              },
-            ]),
-      ],
-    },
-    draft: isDraft,
-    user,
-    depth: 2,
-    limit: 1,
-  })
+              ]),
+        ],
+      },
+      draft: isDraft,
+      overrideAccess: isDraft,
+      depth: 2,
+      limit: 1,
+    })
 
-  return result.docs?.[0] || null
+    return result.docs?.[0] || null
+  } catch {
+    return null
+  }
 })
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
   const { slug = '' } = await paramsPromise
-  const headers = await getHeaders()
-  const payload = await getPayload({ config: configPromise })
-  const { user } = await payload.auth({ headers })
+  const user = await getAuthUser()
 
-  const post = await queryPostBySlug(slug, Boolean(user), user)
+  const post = await queryPostBySlug(slug, Boolean(user))
   if (!post) {
     return {
       title: 'Story Not Found | Mulu Yu Kalam Journal',
@@ -130,15 +146,15 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
 
 export default async function PostPage({ params: paramsPromise }: Args) {
   const { slug = '' } = await paramsPromise
-  const headers = await getHeaders()
-  const payload = await getPayload({ config: configPromise })
-  const { user } = await payload.auth({ headers })
+  const user = await getAuthUser()
 
-  const post = await queryPostBySlug(slug, Boolean(user), user)
+  const post = await queryPostBySlug(slug, Boolean(user))
 
   if (!post) {
     notFound()
   }
+
+  const payload = await getPayload({ config: configPromise })
 
   const heroImage =
     typeof post.heroImage === 'object' && post.heroImage !== null
@@ -154,17 +170,77 @@ export default async function PostPage({ params: paramsPromise }: Args) {
   const collectedIds = new Set<number>([post.id, ...manualRelated.map((p) => p.id)])
   let finalRelatedPosts: Post[] = [...manualRelated]
 
-  // 2. Auto-match by Category (boosted by featureTag) if fewer than 3
-  if (finalRelatedPosts.length < 3) {
-    const categoryIds = (post.categories || [])
-      .map((cat) => (typeof cat === 'object' && cat !== null ? cat.id : (cat as number)))
-      .filter(Boolean)
+  // Safe wrapper for related and pagination queries so database hiccups do not fail the main article
+  let prevPost: Pick<Post, 'slug' | 'title' | 'publishedAt'> | null = null
+  let nextPost: Pick<Post, 'slug' | 'title' | 'publishedAt'> | null = null
 
-    if (categoryIds.length > 0) {
-      const categoryResult = await payload.find({
+  try {
+    // 2. Auto-match by Category (boosted by featureTag) if fewer than 3
+    if (finalRelatedPosts.length < 3) {
+      const categoryIds = (post.categories || [])
+        .map((cat) => (typeof cat === 'object' && cat !== null ? cat.id : (cat as number)))
+        .filter(Boolean)
+
+      if (categoryIds.length > 0) {
+        const categoryResult = await payload.find({
+          collection: 'posts',
+          depth: 2,
+          limit: 8,
+          where: {
+            and: [
+              {
+                id: {
+                  not_in: Array.from(collectedIds),
+                },
+              },
+              {
+                _status: {
+                  equals: 'published',
+                },
+              },
+              {
+                categories: {
+                  in: categoryIds,
+                },
+              },
+            ],
+          },
+        })
+
+        // Boost featured stories
+        const sortedCatPosts = [...categoryResult.docs].sort((a: Post, b: Post) => {
+          const tagA =
+            typeof a.featureTag === 'object' && a.featureTag !== null ? (a.featureTag as any) : null
+          const tagB =
+            typeof b.featureTag === 'object' && b.featureTag !== null ? (b.featureTag as any) : null
+
+          if (tagA && !tagB) return -1
+          if (!tagA && tagB) return 1
+          if (tagA && tagB) {
+            const priorityA = tagA.priority ?? 0
+            const priorityB = tagB.priority ?? 0
+            if (priorityB !== priorityA) return priorityB - priorityA
+          }
+
+          const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
+          const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
+          return dateB - dateA
+        })
+
+        for (const p of sortedCatPosts) {
+          if (finalRelatedPosts.length >= 3) break
+          finalRelatedPosts.push(p)
+          collectedIds.add(p.id)
+        }
+      }
+    }
+
+    // 3. Fallback: Fill remaining slots with newest published posts
+    if (finalRelatedPosts.length < 3) {
+      const fallbackResult = await payload.find({
         collection: 'posts',
         depth: 2,
-        limit: 8,
+        limit: 3 - finalRelatedPosts.length,
         where: {
           and: [
             {
@@ -177,139 +253,87 @@ export default async function PostPage({ params: paramsPromise }: Args) {
                 equals: 'published',
               },
             },
+          ],
+        },
+        sort: '-publishedAt',
+      })
+
+      finalRelatedPosts = [...finalRelatedPosts, ...fallbackResult.docs]
+    }
+
+    // --- CHRONOLOGICAL PREVIOUS & NEXT ARTICLES ---
+    const currentPublishedAt = post.publishedAt || post.createdAt
+
+    const [prevResult, nextResult] = await Promise.all([
+      // Previous (older article)
+      payload.find({
+        collection: 'posts',
+        where: {
+          and: [
             {
-              categories: {
-                in: categoryIds,
+              _status: {
+                equals: 'published',
+              },
+            },
+            {
+              id: {
+                not_equals: post.id,
+              },
+            },
+            {
+              publishedAt: {
+                less_than_equal: currentPublishedAt,
               },
             },
           ],
         },
-      })
+        sort: '-publishedAt',
+        limit: 1,
+        depth: 0,
+        select: {
+          slug: true,
+          title: true,
+          publishedAt: true,
+        },
+      }),
+      // Next (newer article)
+      payload.find({
+        collection: 'posts',
+        where: {
+          and: [
+            {
+              _status: {
+                equals: 'published',
+              },
+            },
+            {
+              id: {
+                not_equals: post.id,
+              },
+            },
+            {
+              publishedAt: {
+                greater_than_equal: currentPublishedAt,
+              },
+            },
+          ],
+        },
+        sort: 'publishedAt',
+        limit: 1,
+        depth: 0,
+        select: {
+          slug: true,
+          title: true,
+          publishedAt: true,
+        },
+      }),
+    ])
 
-      // Boost featured stories
-      const sortedCatPosts = [...categoryResult.docs].sort((a: Post, b: Post) => {
-        const tagA =
-          typeof a.featureTag === 'object' && a.featureTag !== null ? (a.featureTag as any) : null
-        const tagB =
-          typeof b.featureTag === 'object' && b.featureTag !== null ? (b.featureTag as any) : null
-
-        if (tagA && !tagB) return -1
-        if (!tagA && tagB) return 1
-        if (tagA && tagB) {
-          const priorityA = tagA.priority ?? 0
-          const priorityB = tagB.priority ?? 0
-          if (priorityB !== priorityA) return priorityB - priorityA
-        }
-
-        const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
-        const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
-        return dateB - dateA
-      })
-
-      for (const p of sortedCatPosts) {
-        if (finalRelatedPosts.length >= 3) break
-        finalRelatedPosts.push(p)
-        collectedIds.add(p.id)
-      }
-    }
+    prevPost = (prevResult.docs[0] as Pick<Post, 'slug' | 'title' | 'publishedAt'>) || null
+    nextPost = (nextResult.docs[0] as Pick<Post, 'slug' | 'title' | 'publishedAt'>) || null
+  } catch (err) {
+    console.warn('[PostPage] Non-critical error fetching related or pagination stories:', err)
   }
-
-  // 3. Fallback: Fill remaining slots with newest published posts
-  if (finalRelatedPosts.length < 3) {
-    const fallbackResult = await payload.find({
-      collection: 'posts',
-      depth: 2,
-      limit: 3 - finalRelatedPosts.length,
-      where: {
-        and: [
-          {
-            id: {
-              not_in: Array.from(collectedIds),
-            },
-          },
-          {
-            _status: {
-              equals: 'published',
-            },
-          },
-        ],
-      },
-      sort: '-publishedAt',
-    })
-
-    finalRelatedPosts = [...finalRelatedPosts, ...fallbackResult.docs]
-  }
-
-  // --- CHRONOLOGICAL PREVIOUS & NEXT ARTICLES ---
-  const currentPublishedAt = post.publishedAt || post.createdAt
-
-  const [prevResult, nextResult] = await Promise.all([
-    // Previous (older article)
-    payload.find({
-      collection: 'posts',
-      where: {
-        and: [
-          {
-            _status: {
-              equals: 'published',
-            },
-          },
-          {
-            id: {
-              not_equals: post.id,
-            },
-          },
-          {
-            publishedAt: {
-              less_than_equal: currentPublishedAt,
-            },
-          },
-        ],
-      },
-      sort: '-publishedAt',
-      limit: 1,
-      depth: 0,
-      select: {
-        slug: true,
-        title: true,
-        publishedAt: true,
-      },
-    }),
-    // Next (newer article)
-    payload.find({
-      collection: 'posts',
-      where: {
-        and: [
-          {
-            _status: {
-              equals: 'published',
-            },
-          },
-          {
-            id: {
-              not_equals: post.id,
-            },
-          },
-          {
-            publishedAt: {
-              greater_than_equal: currentPublishedAt,
-            },
-          },
-        ],
-      },
-      sort: 'publishedAt',
-      limit: 1,
-      depth: 0,
-      select: {
-        slug: true,
-        title: true,
-        publishedAt: true,
-      },
-    }),
-  ])
-
-  const prevPost = (prevResult.docs[0] as Pick<Post, 'slug' | 'title' | 'publishedAt'>) || null
-  const nextPost = (nextResult.docs[0] as Pick<Post, 'slug' | 'title' | 'publishedAt'>) || null
 
   // --- GOOGLE ARTICLE & BREADCRUMB SCHEMA.ORG STRUCTURED DATA ---
   const firstCategory =

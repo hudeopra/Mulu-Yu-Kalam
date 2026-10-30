@@ -40,10 +40,23 @@ export const Users: CollectionConfig = {
         name: 'supabase',
         authenticate: async ({ headers, payload }) => {
           const cookieHeader = headers.get('cookie') || ''
+          const tokenCookieName = `${payload.config.cookiePrefix || 'payload'}-token`
+
+          // FAST PATH 1: If payload-token cookie exists, skip external Supabase call
+          // and let Payload's native local-jwt strategy authenticate in memory (0ms network overhead)
+          if (cookieHeader.includes(tokenCookieName)) {
+            return { user: null }
+          }
+
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
           const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
           if (!supabaseUrl || !supabaseAnonKey || !cookieHeader) {
+            return { user: null }
+          }
+
+          // FAST PATH 2: If no Supabase auth cookie is present, avoid external network request
+          if (!cookieHeader.includes('sb-') && !cookieHeader.includes('supabase-')) {
             return { user: null }
           }
 

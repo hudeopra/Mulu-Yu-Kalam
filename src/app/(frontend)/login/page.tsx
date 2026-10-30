@@ -60,9 +60,24 @@ export default function LoginPage() {
   };
 
   // If already logged in, redirect immediately to intended target or /admin
+  // GUARD: If redirect is /cms, verify that Payload CMS session is actually authenticated
+  // before bouncing to prevent infinite redirect ping-pong between /cms and /login
   useEffect(() => {
-    if (user) {
-      window.location.href = getRedirectTarget();
+    if (!user) return;
+    const target = getRedirectTarget();
+
+    if (target.startsWith('/cms')) {
+      fetch('/api/users/me')
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.user) {
+            window.location.href = target;
+          }
+          // If Payload session is unauthenticated, stay on login page so user can authenticate
+        })
+        .catch(() => {});
+    } else {
+      window.location.href = target;
     }
   }, [user]);
 

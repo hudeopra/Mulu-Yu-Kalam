@@ -140,6 +140,9 @@ export default buildConfig({
       max: process.env.NODE_ENV === 'production' ? 4 : 10,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 10000,
+      ssl: process.env.DATABASE_URI?.includes('localhost')
+        ? false
+        : { rejectUnauthorized: false },
     },
   }),
   sharp,

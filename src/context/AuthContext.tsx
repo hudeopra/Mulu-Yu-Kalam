@@ -210,6 +210,24 @@ export function AuthProvider({
           supabaseSuccess = true;
           supabaseUser = data.user;
           supabaseSession = data.session;
+
+          // If Payload login failed (e.g. password was not synced), sync credentials to Payload now
+          if (!payloadSuccess) {
+            try {
+              const syncRes = await fetch('/api/auth/sync-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+              });
+              if (syncRes.ok) {
+                const syncData = await syncRes.json();
+                payloadUser = syncData.user;
+                payloadSuccess = true;
+              }
+            } catch (syncErr) {
+              console.warn('[Unified Auth] Payload session sync error:', syncErr);
+            }
+          }
         } else if (payloadSuccess) {
           // User exists in Payload CMS: auto-sync into Supabase Auth
           try {
